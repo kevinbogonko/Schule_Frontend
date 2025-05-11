@@ -201,15 +201,15 @@ const Marklist2 = () => {
   };
 
 return (
-  <div className="p-4">
+  <div className="p-0">
     <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
-      Manage Student Marks
+      Exam Marklist
     </h1>
 
-    <div className="flex flex-col lg:flex-row gap-4">
+    <div className="flex flex-col lg:flex-row gap-2">
       <div className="w-full lg:w-1/4">
         <ReusableDiv
-          className="ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-4"
+          className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-2"
           tag="Manage Student Marks"
           icon={FaUsersGear}
         >

@@ -136,14 +136,14 @@ const Stream = () => {
   }, [selectedForm, modalState.addStream]);
 
   return (
-    <div className="p-2 md:p-4">
+    <div className="p-0 md:p-0">
       <div className="mb-4 md:mb-6">
         <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-500">
           Manage Streams
         </h1>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-2">
         {(showLoadingOverlay || loading) && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-700 p-4 md:p-6 rounded-lg shadow-lg text-center max-w-xs md:max-w-sm">
@@ -157,7 +157,7 @@ const Stream = () => {
 
         <div className="w-full lg:w-1/4">
           <ReusableDiv
-            className="ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-4"
+            className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-2"
             tag="Manage Streams"
             icon={FaUsersGear}
           >

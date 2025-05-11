@@ -482,8 +482,8 @@ const ResultSMS = () => {
   };
 
   return (
-    <div>
-      <div className="my-4 w-full flex flex-col lg:flex-row">
+    <div className="p-0">
+      <div className="my-2 w-full flex flex-col lg:flex-row">
         {(showLoadingOverlay || loading) && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-lg text-center max-w-sm w-full mx-4">
@@ -497,7 +497,7 @@ const ResultSMS = () => {
 
         <div className="w-full lg:w-1/3 lg:pr-4">
           <ReusableDiv
-            className="ring-1 h-fit mb-4 bg-blue-100 dark:bg-gray-800"
+            className="ml-0 mr-0 ring-1 h-fit mb-4 bg-blue-100 dark:bg-gray-800"
             tag="Select Exam"
             icon={PiExam}
             collapsible={true}
@@ -567,10 +567,10 @@ const ResultSMS = () => {
           </ReusableDiv>
         </div>
         <div className="w-full lg:w-2/3">
-          <div className="flex flex-col lg:flex-row mb-2 gap-4">
+          <div className="flex flex-col lg:flex-row mb-2 gap-2">
             <div className="w-full lg:w-1/2">
               <ReusableDiv
-                className="ring-1 h-fit mb-2 bg-blue-100 dark:bg-gray-800"
+                className="ml-0 mr-0 ring-0 h-fit mb-2 bg-blue-100 dark:bg-gray-800"
                 tag="Process Report"
                 icon={TbReport}
                 collapsible={true}
@@ -714,7 +714,7 @@ const ResultSMS = () => {
             </div>
             <div className="w-full lg:w-1/2">
               <ReusableDiv
-                className="h-fit bg-blue-100 dark:bg-gray-800"
+                className="ml-0 mr-0 h-fit bg-blue-100 dark:bg-gray-800"
                 tag="SMS Parameters"
                 icon={TbMessage2Cog}
                 collapsible={true}
@@ -811,7 +811,7 @@ const ResultSMS = () => {
           </div>
         </div>
       </div>
-      <ReusableDiv className="dark:bg-gray-800">
+      <ReusableDiv className="ml-0 mr-0 dark:bg-gray-800">
         <TableComponent
           columns={columns}
           data={smsLogs}

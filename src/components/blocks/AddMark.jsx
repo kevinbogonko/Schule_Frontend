@@ -380,16 +380,16 @@ const AddMark = () => {
     : studentData;
 
   return (
-    <div className="p-4">
+    <div className="p-0">
       <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
-        Manage Students
+        Add Student's Mark
       </h1>
 
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-2">
         {/* Controls Section */}
         <div className="w-full lg:w-1/4">
           <ReusableDiv
-            className="ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-4"
+            className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-2"
             tag="Manage Students"
             icon={FaUsersGear}
           >
@@ -512,7 +512,7 @@ const AddMark = () => {
           {studentData.length > 0 &&
             (selectedForm === "3" || selectedForm === "4") && (
               <ReusableDiv
-                className="ring-1 h-fit bg-blue-100 dark:bg-gray-800"
+                className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
                 tag="Paper Setup"
                 icon={GrDocumentConfig}
                 collapsible={true}

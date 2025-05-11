@@ -68,7 +68,6 @@ const Student = () => {
 
         setLoading(true);
         try {
-          console.log("API baseURL:", api.defaults.baseURL);
           const streamRes = await api.post("/stream/getstreams", {
             year: selectedYear,
             form: selectedForm,
@@ -160,12 +159,12 @@ const Student = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-0">
       <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
         Student Management
       </h1>
 
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-2">
         {/* Loading Overlay */}
         {(showLoadingOverlay || loading) && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -181,7 +180,7 @@ const Student = () => {
         {/* Form Controls */}
         <div className="w-full lg:w-1/4">
           <ReusableDiv
-            className="ring-1 h-fit bg-blue-100 dark:bg-gray-800"
+            className="ml-0 mr-0 mb-2 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
             tag="Manage Students"
             icon={FaUsersGear}
           >

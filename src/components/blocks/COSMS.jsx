@@ -214,11 +214,11 @@ const COSMS = () => {
   };
 
   return (
-    <div className="p-4">
-      <div className="my-4 w-full flex flex-col lg:flex-row gap-4">
+    <div className="p-0">
+      <div className="my-2 w-full flex flex-col lg:flex-row gap-2">
         <div className="w-full lg:w-1/4">
           <ReusableDiv
-            className="ring-1 h-fit mb-4 bg-blue-100 dark:bg-gray-800"
+            className="ml-0 mr-0 ring-1 h-fit mb-2 bg-blue-100 dark:bg-gray-800"
             tag="Select Exam"
             icon={PiExam}
             collapsible={true}
@@ -288,7 +288,7 @@ const COSMS = () => {
         <div className="w-full lg:w-3/4">
           <div className="flex">
             <ReusableDiv
-              className="flex-1 ring-1 mb-4 bg-blue-100 dark:bg-gray-800"
+              className="ml-0 mr-0 flex-1 ring-1 mb-2 bg-blue-100 dark:bg-gray-800"
               tag="Process Report"
               icon={TbReport}
               collapsible={true}
@@ -377,7 +377,7 @@ const COSMS = () => {
           </div>
         </div>
       </div>
-      <ReusableDiv>
+      <ReusableDiv className="ml-0 mr-0">
         {loading ? (
           <div className="flex justify-center items-center p-8">
             <FaSpinner className="animate-spin text-blue-500 text-2xl" />
