@@ -59,6 +59,7 @@ const Student = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log(fetchData)
       if (selectedForm && selectedYear) {
         // Show overlay after 50ms to prevent flash on quick loads
         loadingTimeoutRef.current = setTimeout(() => {
@@ -79,6 +80,7 @@ const Student = () => {
 
           const payload = { form: selectedForm };
           const studentRes = await api.post("/student/getstudents", payload);
+          console.log(studentRes)
           const transformedData = studentRes.data.map((student) => ({
             ...student,
             name: `${student.fname} ${student.lname}`,
@@ -89,6 +91,7 @@ const Student = () => {
           }));
           setStudentData(transformedData);
         } catch (err) {
+          console.log(err)
           setError(err.message || "Something went wrong");
           console.error("Error fetching data:", err);
         } finally {
