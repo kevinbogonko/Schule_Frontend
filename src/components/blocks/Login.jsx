@@ -36,12 +36,14 @@ const Login = () => {
     // Sanitize inputs
     const sanitizedEmail = sanitizeInput(email);
     const sanitizedPassword = sanitizeInput(password);
-
+    console.log("API baseURL:", api.defaults.baseURL);
     try {
       const response = await api.post("/auth/login", {
         username: sanitizedEmail,
         password: sanitizedPassword,
       });
+
+      console.log(response)
 
       // Destructure tokens from response.data
       const { access_token, refresh_token, expires_in, csrf_token } =
@@ -64,6 +66,7 @@ const Login = () => {
       // Redirect to dashboard
       navigate("/dashboard");
     } catch (err) {
+      console.log(err)
       setIsLoading(false);
       setError(
         err.response?.data?.message || "Login failed. Please try again."
