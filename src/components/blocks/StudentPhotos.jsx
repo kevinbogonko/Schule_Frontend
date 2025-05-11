@@ -7,7 +7,7 @@ import { FaSpinner } from "react-icons/fa";
 import { FaUsersGear } from "react-icons/fa6";
 import api from "../../hooks/api";
 import { formOptions, yearOptions } from "../../utils/CommonData";
-import RUStudentPhoto from "../snippets/ruStudentPhoto";
+import RUStudentPhoto from "../snippets/RUStudentPhoto";
 
 const StudentPhotos = () => {
   const [studentData, setStudentData] = useState([]);
