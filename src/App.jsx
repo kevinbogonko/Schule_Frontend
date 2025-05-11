@@ -1,0 +1,68 @@
+import React, { useState } from "react";
+import "./App.css";
+import Badge from "./components/Badge";
+import AddMark from "./components/blocks/AddMark";
+import GradingScale from "./components/blocks/Grading";
+import Marklist from "./components/blocks/Marklist";
+import Student from "./components/blocks/Student";
+import StudentReport from "./components/blocks/StudentReport";
+import Dropdown from "./components/Dropdown";
+import { ToastProvider } from "./components/Toast";
+import Report from "./components/blocks/Report";
+import Staff from "./components/blocks/Staff";
+import SubjectTeacher from "./components/blocks/SubjectTeacher";
+import ClassTeacher from "./components/blocks/ClassTeacher";
+import Stream from "./components/blocks/Stream";
+import Remark from "./components/blocks/Remark";
+import ResultSMS from "./components/blocks/ResultSMS";
+import GenerateTT from "./components/blocks/GenerateTT";
+import TimetableDnD from "./components/blocks/TimeTableDnD";
+import COSMS from "./components/blocks/COSMS";
+import Dashboard from "./components/blocks/Dashboard";
+import ImageUploader from "./components/snippets/ImageUploader";
+import StudentPhotos from "./components/blocks/StudentPhotos";
+import StaffPhotos from "./components/blocks/StaffPhotos"
+import Login from "./components/blocks/Login";
+import Particulars from "./components/blocks/Particulars";
+import Marksheet from "./components/blocks/Marksheet";
+import Marklist2 from "./components/blocks/Marklist2";
+import MarklistPDFReport from "./components/blocks/MarklistPDFReport";
+import { Route, Routes } from "react-router";
+
+
+function App() {
+
+  return (
+    <ToastProvider>
+      <>
+        {/* <StudentReport /> */}
+        {/* <ResultSMS /> */}
+        {/* <Student /> */}
+        {/* <StudentPhotos /> */}
+        {/* <Stream /> */}
+        {/* <Staff /> */}
+        {/* <StaffPhotos /> */}
+        {/* <SubjectTeacher /> */}
+        {/* <ClassTeacher/> */}
+        {/* <AddMark /> */}
+        {/* <GradingScale /> */}
+        {/* <MarklistPDFReport /> */}
+        {/* <Marklist /> */}
+        {/* <Marklist2 /> */}
+        {/* <Marksheet /> */}
+        {/* <Report /> */}
+        {/* <Remark /> */}
+        {/* <GenerateTT /> */}
+        {/* <COSMS /> */}
+        {/* <Particulars /> */}
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+        {/* <Dashboard /> */}
+      </>
+    </ToastProvider>
+  );
+}
+
+export default App;
