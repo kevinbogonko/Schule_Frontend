@@ -170,106 +170,169 @@ const Grading = () => {
         };
         fetchExamOptions();
     }, [selectedForm, selectedTerm, selectedYear]);
+return (
+  <div className="p-4">
+    <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
+      Manage Grading Scale
+    </h1>
 
-    return (
-        <div className="w-full my-4 flex flex-1 gap-2">
-            <ReusableDiv className="w-1/4 ring-1 h-fit bg-blue-100" tag="Manage Grading Scale" icon={FaUsersGear}>
-                <div className="flex flex-wrap pb-4">
-                    <div className="w-full flex flex-col mb-2">
-                        <label htmlFor="year">Year</label>
-                        <ReusableSelect
-                            id="year"
-                            placeholder="Select Year"
-                            options={yearOptions}
-                            value={yearOptions.find(opt => opt.value === selectedYear) || undefined}
-                            onChange={(e) => {
-                                setSelectedYear(e.target.value);
-                                resetBelow('year');
-                            }}
-                        />
-                    </div>
-                    <div className="w-full flex flex-col mb-2">
-                        <label htmlFor="form">Form</label>
-                        <ReusableSelect
-                            id="form"
-                            placeholder="Select Form"
-                            options={formOptions}
-                            value={formOptions.find(opt => opt.value === selectedForm) || undefined}
-                            onChange={(e) => {
-                                setSelectedForm(e.target.value);
-                                resetBelow('form');
-                            }}
-                            disabled={!selectedYear}
-                        />
-                    </div>
-                    <div className="w-full flex flex-col mb-2">
-                        <label htmlFor="term">Term</label>
-                        <ReusableSelect
-                            id="term"
-                            placeholder="Select Term"
-                            options={termOptions}
-                            value={termOptions.find(opt => opt.value === selectedTerm) || undefined}
-                            onChange={(e) => {
-                                setSelectedTerm(e.target.value);
-                                resetBelow('term');
-                            }}
-                            disabled={!selectedForm}
-                        />
-                    </div>
-                    <div className="w-full flex flex-col mb-2">
-                        <label htmlFor="exam">Exam</label>
-                        <ReusableSelect
-                            id="exam"
-                            placeholder="Select Exam"
-                            options={examOptions}
-                            value={examOptions.find(opt => opt.value === selectedExam) || undefined}
-                            onChange={(e) => {
-                                setSelectedExam(e.target.value);
-                                resetBelow('exam');
-                            }}
-                            disabled={!selectedTerm}
-                        />
-                    </div>
-                </div>
-            </ReusableDiv>
-            
-            
-            <TableComponent 
-                columns={columns} 
-                data={gradingScales} 
-                loading={loading}
-                excludedColumns={excludedColumns}
-                showSelectAllCheckbox={false}
-                staticColumns={staticColumns}
-                staticColumnBg='bg-gray-50'
-                buttons={{
-                    actionButtons: {
-                        show: true,
-                        options: [
-                            { 
-                                label: "Edit",
-                                icon: updateLoading && selectedRowId ? <FaSpinner className="animate-spin w-4 h-4" /> : <BsPencil className="w-4 h-4" />,
-                                onClick: handleEditClick,
-                                disabled: updateLoading
-                            }
-                        ]
-                    }
+    <div className="flex flex-col lg:flex-row gap-4">
+      {/* Controls Section */}
+      <div className="w-full lg:w-1/4">
+        <ReusableDiv
+          className="ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-4"
+          tag="Manage Grading Scale"
+          icon={FaUsersGear}
+        >
+          <div className="flex flex-col space-y-3 pb-4">
+            <div className="w-full">
+              <label
+                htmlFor="year"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Year
+              </label>
+              <ReusableSelect
+                id="year"
+                placeholder="Select Year"
+                options={yearOptions}
+                value={
+                  yearOptions.find((opt) => opt.value === selectedYear) ||
+                  undefined
+                }
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  resetBelow("year");
                 }}
-            />
+                className="w-full"
+              />
+            </div>
 
-            {modalState.viewGradeMark && (
-                <GradingRU
-                    isOpen={modalState.viewGradeMark}
-                    onClose={() => setModalState(prev => ({...prev, viewGradeMark: false}))}
-                    onSubmit={handleUpdateGradingScale}
-                    loading={updateLoading}
-                    selectedExam={selectedExam}
-                    selectedSubject={selectedRowId}
-                    initialData={subjectScale}
-                />
-            )}
+            <div className="w-full">
+              <label
+                htmlFor="form"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Form
+              </label>
+              <ReusableSelect
+                id="form"
+                placeholder="Select Form"
+                options={formOptions}
+                value={
+                  formOptions.find((opt) => opt.value === selectedForm) ||
+                  undefined
+                }
+                onChange={(e) => {
+                  setSelectedForm(e.target.value);
+                  resetBelow("form");
+                }}
+                disabled={!selectedYear}
+                className="w-full"
+              />
+            </div>
+
+            <div className="w-full">
+              <label
+                htmlFor="term"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Term
+              </label>
+              <ReusableSelect
+                id="term"
+                placeholder="Select Term"
+                options={termOptions}
+                value={
+                  termOptions.find((opt) => opt.value === selectedTerm) ||
+                  undefined
+                }
+                onChange={(e) => {
+                  setSelectedTerm(e.target.value);
+                  resetBelow("term");
+                }}
+                disabled={!selectedForm}
+                className="w-full"
+              />
+            </div>
+
+            <div className="w-full">
+              <label
+                htmlFor="exam"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Exam
+              </label>
+              <ReusableSelect
+                id="exam"
+                placeholder="Select Exam"
+                options={examOptions}
+                value={
+                  examOptions.find((opt) => opt.value === selectedExam) ||
+                  undefined
+                }
+                onChange={(e) => {
+                  setSelectedExam(e.target.value);
+                  resetBelow("exam");
+                }}
+                disabled={!selectedTerm}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </ReusableDiv>
+      </div>
+
+      {/* Table Section */}
+      <div className="w-full lg:w-3/4">
+        <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md p-2 md:p-4">
+          <TableComponent
+            columns={columns}
+            data={gradingScales}
+            loading={loading}
+            excludedColumns={excludedColumns}
+            staticColumns={staticColumns}
+            staticColumnBg="bg-gray-50"
+            showSelectAllCheckbox={false}
+            buttons={{
+              actionButtons: {
+                show: true,
+                options: [
+                  {
+                    label: "Edit",
+                    icon:
+                      updateLoading && selectedRowId ? (
+                        <FaSpinner className="animate-spin w-4 h-4" />
+                      ) : (
+                        <BsPencil className="w-4 h-4" />
+                      ),
+                    onClick: handleEditClick,
+                    disabled: updateLoading,
+                  },
+                ],
+              },
+            }}
+          />
         </div>
-    )
+      </div>
+    </div>
+
+    {/* Modal */}
+    {modalState.viewGradeMark && (
+      <GradingRU
+        isOpen={modalState.viewGradeMark}
+        onClose={() =>
+          setModalState((prev) => ({ ...prev, viewGradeMark: false }))
+        }
+        onSubmit={handleUpdateGradingScale}
+        loading={updateLoading}
+        selectedExam={selectedExam}
+        selectedSubject={selectedRowId}
+        initialData={subjectScale}
+      />
+    )}
+  </div>
+);
 }
 
 export default Grading

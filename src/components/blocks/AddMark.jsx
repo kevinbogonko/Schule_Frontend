@@ -88,6 +88,7 @@ const AddMark = () => {
 
         try {
           const response = await api.post('/exam/exams', payload);
+          console.log(response)
           setExamOptions(response.data.map(exam => ({
             value: exam.exam_name,
             label: exam.exam_name
@@ -379,159 +380,222 @@ const AddMark = () => {
     : studentData;
 
   return (
-    <div className="my-4 flex flex-1 gap-2">
-      <div className='w-1/4 flex flex-col'>
-        <ReusableDiv className="ring-1 h-fit bg-blue-100" tag="Manage Students" icon={FaUsersGear}>
-          <div className="flex flex-wrap pb-4">
-            <div className="w-full flex flex-col mb-2">
-              <label htmlFor="year">Year</label>
-              <ReusableSelect
-                id="year"
-                placeholder="Select Year"
-                options={yearOptions}
-                value={yearOptions.find(opt => opt.value === selectedYear) || undefined}
-                onChange={(e) => {
-                  setSelectedYear(e.target.value);
-                  resetBelow('year');
-                }}
-              />
-            </div>
-            <div className="w-full flex flex-col mb-2">
-              <label htmlFor="form">Form</label>
-              <ReusableSelect
-                id="form"
-                placeholder="Select Form"
-                options={formOptions}
-                value={formOptions.find(opt => opt.value === selectedForm) || undefined}
-                onChange={(e) => {
-                  setSelectedForm(e.target.value);
-                  resetBelow('form');
-                }}
-                disabled={!selectedYear}
-              />
-            </div>
-            <div className="w-full flex flex-col mb-2">
-              <label htmlFor="term">Term</label>
-              <ReusableSelect
-                id="term"
-                placeholder="Select Term"
-                options={termOptions}
-                value={termOptions.find(opt => opt.value === selectedTerm) || undefined}
-                onChange={(e) => {
-                  setSelectedTerm(e.target.value);
-                  resetBelow('term');
-                }}
-                disabled={!selectedForm}
-              />
-            </div>
-            <div className="w-full flex flex-col mb-2">
-              <label htmlFor="exam">Exam</label>
-              <ReusableSelect
-                id="exam"
-                placeholder="Select Exam"
-                options={examOptions}
-                value={selectedExam}
-                onChange={(e) => {
-                  setSelectedExam(e.target.value);
-                  resetBelow('exam');
-                }}
-                disabled={!selectedTerm}
-              />
-            </div>
-            <div className="w-full flex flex-col mb-2">
-              <label htmlFor="subject">Subject</label>
-              <ReusableSelect
-                id="subject"
-                placeholder="Select Subject"
-                options={subjectOptions}
-                value={selectedSubject}
-                onChange={(e) => {
-                  setSelectedSubject(e.target.value);
-                  resetBelow('subject');
-                }}
-                disabled={!selectedExam}
-              />
-            </div>
-          </div>
-        </ReusableDiv>
+    <div className="p-4">
+      <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
+        Manage Students
+      </h1>
 
-        {studentData.length > 0 && (selectedForm === '3' || selectedForm === '4') && (
-          <ReusableDiv className='mt-4 ring-1 h-fit bg-blue-100' tag="Paper Setup" icon={GrDocumentConfig} collapsible={true}>
-            <div>
-              <ReusableInput
-                type='text'
-                disabled={true}
-                placeholder='Subject Code'
-                value={selectedSubject}
-                className='mb-2'
-              />
-              <ReusableSelect
-                id="paper_subject"
-                placeholder="Select Papers"
-                className='w-full mb-2'
-                options={paperOptions}
-                value={papers}
-                onChange={(e) => setPapers(parseInt(e.target.value))}
-              />
-              {papers === 3 && (
-                <>
-                  <ReusableSelect
-                    id="formula"
-                    placeholder="Select Formula"
-                    className='w-full mb-2'
-                    options={formulaOptions}
-                    value={calculationMethod}
-                    onChange={(e) => setCalculationMethod(e.target.value)}
-                  />
-              </>
-
-              )}
-            </div>
-            <Button 
-              variant='primary' 
-              icon={MdDone}
-              onClick={handleUpdatePaperSetup}
-              loading={isUpdatingPaperSetup}
-            >
-              Apply
-            </Button>
-          </ReusableDiv>
-        )}
-      </div>
-
-      <div className="relative flex-1">
-        {isRefreshing && (
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <div className="animate-pulse bg-white bg-opacity-70 p-4 rounded-lg">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          </div>
-        )}
-        
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedSubject + selectedExam}
-            initial={{ opacity: 0.5 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Controls Section */}
+        <div className="w-full lg:w-1/4">
+          <ReusableDiv
+            className="ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-4"
+            tag="Manage Students"
+            icon={FaUsersGear}
           >
-            <TableMarkComponent
-              columns={getColumns()}
-              data={displayData}
-              subjectCode={selectedSubject}
-              loading={loading}
-              numberColumns={getNumberColumns()}
-              markCalculation={getMarkCalculation()}
-              gradingScale={gradingScale}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-            />
-          </motion.div>
-        </AnimatePresence>
+            <div className="flex flex-col space-y-3 pb-4">
+              <div className="w-full">
+                <label
+                  htmlFor="year"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Year
+                </label>
+                <ReusableSelect
+                  id="year"
+                  placeholder="Select Year"
+                  options={yearOptions}
+                  value={
+                    yearOptions.find((opt) => opt.value === selectedYear) ||
+                    undefined
+                  }
+                  onChange={(e) => {
+                    setSelectedYear(e.target.value);
+                    resetBelow("year");
+                  }}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="w-full">
+                <label
+                  htmlFor="form"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Form
+                </label>
+                <ReusableSelect
+                  id="form"
+                  placeholder="Select Form"
+                  options={formOptions}
+                  value={
+                    formOptions.find((opt) => opt.value === selectedForm) ||
+                    undefined
+                  }
+                  onChange={(e) => {
+                    setSelectedForm(e.target.value);
+                    resetBelow("form");
+                  }}
+                  disabled={!selectedYear}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="w-full">
+                <label
+                  htmlFor="term"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Term
+                </label>
+                <ReusableSelect
+                  id="term"
+                  placeholder="Select Term"
+                  options={termOptions}
+                  value={
+                    termOptions.find((opt) => opt.value === selectedTerm) ||
+                    undefined
+                  }
+                  onChange={(e) => {
+                    setSelectedTerm(e.target.value);
+                    resetBelow("term");
+                  }}
+                  disabled={!selectedForm}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="w-full">
+                <label
+                  htmlFor="exam"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Exam
+                </label>
+                <ReusableSelect
+                  id="exam"
+                  placeholder="Select Exam"
+                  options={examOptions}
+                  value={selectedExam}
+                  onChange={(e) => {
+                    setSelectedExam(e.target.value);
+                    resetBelow("exam");
+                  }}
+                  disabled={!selectedTerm}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="w-full">
+                <label
+                  htmlFor="subject"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Subject
+                </label>
+                <ReusableSelect
+                  id="subject"
+                  placeholder="Select Subject"
+                  options={subjectOptions}
+                  value={selectedSubject}
+                  onChange={(e) => {
+                    setSelectedSubject(e.target.value);
+                    resetBelow("subject");
+                  }}
+                  disabled={!selectedExam}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </ReusableDiv>
+
+          {studentData.length > 0 &&
+            (selectedForm === "3" || selectedForm === "4") && (
+              <ReusableDiv
+                className="ring-1 h-fit bg-blue-100 dark:bg-gray-800"
+                tag="Paper Setup"
+                icon={GrDocumentConfig}
+                collapsible={true}
+              >
+                <div className="flex flex-col space-y-3 pb-4">
+                  <ReusableInput
+                    type="text"
+                    disabled={true}
+                    placeholder="Subject Code"
+                    value={selectedSubject}
+                  />
+                  <ReusableSelect
+                    id="paper_subject"
+                    placeholder="Select Papers"
+                    options={paperOptions}
+                    value={papers}
+                    onChange={(e) => setPapers(parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  {papers === 3 && (
+                    <ReusableSelect
+                      id="formula"
+                      placeholder="Select Formula"
+                      options={formulaOptions}
+                      value={calculationMethod}
+                      onChange={(e) => setCalculationMethod(e.target.value)}
+                      className="w-full"
+                    />
+                  )}
+                  <Button
+                    variant="primary"
+                    icon={MdDone}
+                    onClick={handleUpdatePaperSetup}
+                    loading={isUpdatingPaperSetup}
+                    className="mt-2"
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </ReusableDiv>
+            )}
+        </div>
+
+        {/* Table Section */}
+        <div className="w-full lg:w-3/4 relative min-h-[400px]">
+          {isRefreshing && (
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/70">
+              <div className="p-4 rounded-lg">
+                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            </div>
+          )}
+          {/* TableComponent should go here */}
+          <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md p-2 md:p-4">
+            {/* Add your <TableComponent /> here */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedSubject + selectedExam}
+                initial={{ opacity: 0.5 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="h-full"
+              >
+                <TableMarkComponent
+                  columns={getColumns()}
+                  data={displayData}
+                  subjectCode={selectedSubject}
+                  loading={loading}
+                  numberColumns={getNumberColumns()}
+                  markCalculation={getMarkCalculation()}
+                  gradingScale={gradingScale}
+                  onSubmit={handleSubmit}
+                  onCancel={handleCancel}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </div>
-  )
+  );
+
 }
 
 export default AddMark;

@@ -214,18 +214,23 @@ const COSMS = () => {
   };
 
   return (
-    <div>
-      <div className="my-4 w-full flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-1/4">
+    <div className="p-4">
+      <div className="my-4 w-full flex flex-col lg:flex-row gap-4">
+        <div className="w-full lg:w-1/4">
           <ReusableDiv
-            className="ring-1 h-fit mb-4 bg-blue-100"
+            className="ring-1 h-fit mb-4 bg-blue-100 dark:bg-gray-800"
             tag="Select Exam"
             icon={PiExam}
             collapsible={true}
           >
             <div className="flex flex-col space-y-4 pb-4">
               <div className="w-full flex flex-col">
-                <label htmlFor="year">Year</label>
+                <label
+                  htmlFor="year"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Year
+                </label>
                 <Dropdown
                   id="year"
                   placeholder="Select Year"
@@ -238,7 +243,12 @@ const COSMS = () => {
                 />
               </div>
               <div className="w-full flex flex-col">
-                <label htmlFor="term">Term</label>
+                <label
+                  htmlFor="term"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Term
+                </label>
                 <Dropdown
                   id="term"
                   placeholder="Select Term"
@@ -252,7 +262,12 @@ const COSMS = () => {
                 />
               </div>
               <div className="w-full flex flex-col">
-                <label htmlFor="form">Form</label>
+                <label
+                  htmlFor="form"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Form
+                </label>
                 <Dropdown
                   id="form"
                   placeholder="Select Form"
@@ -270,18 +285,20 @@ const COSMS = () => {
           </ReusableDiv>
         </div>
 
-        <div className="w-full md:w-3/4">
+        <div className="w-full lg:w-3/4">
           <div className="flex">
             <ReusableDiv
-              className="flex-1 ring-1 mb-4 bg-blue-100"
+              className="flex-1 ring-1 mb-4 bg-blue-100 dark:bg-gray-800"
               tag="Process Report"
               icon={TbReport}
               collapsible={true}
             >
               <div className="flex flex-col space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-1/2">
-                    <label className="block mb-1">Event</label>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="w-full md:w-1/2">
+                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Event
+                    </label>
                     <Dropdown
                       options={eventOptions}
                       value={selectedEvent}
@@ -289,8 +306,10 @@ const COSMS = () => {
                       placeholder="Select Event"
                     />
                   </div>
-                  <div className="w-1/2">
-                    <label className="block mb-1">Event Type</label>
+                  <div className="w-full md:w-1/2">
+                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Event Type
+                    </label>
                     <Dropdown
                       options={
                         selectedEvent ? eventTypeOptions[selectedEvent] : []
@@ -305,19 +324,23 @@ const COSMS = () => {
 
                 {selectedEventType && (
                   <div className="space-y-4">
-                    <div className="flex flex-col space-y-4 p-4 bg-blue-50 rounded ring-0">
+                    <div className="flex flex-col space-y-4 p-4 bg-blue-50 dark:bg-gray-900 rounded">
                       {showClosingElements && (
-                        <div className="flex gap-4">
-                          <div className="w-1/2">
-                            <label className="block mb-1">Closing Date</label>
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="w-full md:w-1/2">
+                            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Closing Date
+                            </label>
                             <ReusableInput
                               type="date"
                               value={closingDate}
                               onChange={(e) => setClosingDate(e.target.value)}
                             />
                           </div>
-                          <div className="w-1/2">
-                            <label className="block mb-1">Signout Time</label>
+                          <div className="w-full md:w-1/2">
+                            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Signout Time
+                            </label>
                             <TimeInput
                               value={signoutTime}
                               onChange={setSignoutTime}
@@ -325,72 +348,32 @@ const COSMS = () => {
                           </div>
                         </div>
                       )}
-                      <div className="flex gap-4">
-                        <div className="w-1/2">
-                          <label className="block mb-1">Opening Date</label>
+                      <div className="flex flex-col md:flex-row gap-4">
+                        <div className="w-full md:w-1/2">
+                          <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Opening Date
+                          </label>
                           <ReusableInput
                             type="date"
                             value={openingDate}
                             onChange={(e) => setOpeningDate(e.target.value)}
                           />
                         </div>
-                        <div className="w-1/2">
-                          <label className="block mb-1">Report by</label>
+                        <div className="w-full md:w-1/2">
+                          <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Report by
+                          </label>
                           <TimeInput
                             value={reportByTime}
                             onChange={setReportByTime}
                           />
                         </div>
                       </div>
-                      <div>
-                        <label className="block mb-1">Extra information</label>
-                        <ReusableTextarea
-                          value={extraInfo}
-                          onChange={(e) => setExtraInfo(e.target.value)}
-                          optional="true"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-4 justify-end">
-                      <Button
-                        variant="secondary"
-                        onClick={handleClearForm}
-                        disabled={!openingDate && !closingDate && !extraInfo}
-                      >
-                        Clear
-                      </Button>
-                      <Button
-                        variant="primary"
-                        onClick={handleSendSMS}
-                        disabled={!isSendEnabled() || sending}
-                      >
-                        {sending ? (
-                          <>
-                            <FaSpinner className="animate-spin mr-2" />
-                            Sending...
-                          </>
-                        ) : (
-                          "Send"
-                        )}
-                      </Button>
                     </div>
                   </div>
                 )}
               </div>
             </ReusableDiv>
-
-            {previewMessage && (
-              <ReusableDiv
-                className="flex-1 ring-1 mb-4 bg-blue-50"
-                tag="SMS Preview"
-                icon={MdOutlinePreview}
-                collapsible={true}
-              >
-                <div className="p-4 whitespace-pre-wrap text-md bg-white rounded">
-                  {previewMessage}
-                </div>
-              </ReusableDiv>
-            )}
           </div>
         </div>
       </div>
