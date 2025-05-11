@@ -68,6 +68,7 @@ const Student = () => {
 
         setLoading(true);
         try {
+          console.log("API baseURL:", api.defaults.baseURL);
           const streamRes = await api.post("/stream/getstreams", {
             year: selectedYear,
             form: selectedForm,
