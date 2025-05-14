@@ -16,7 +16,11 @@ import {
   FiSun,
   FiMoon,
 } from "react-icons/fi";
-import {FaChalkboard, FaChalkboardTeacher} from "react-icons/fa"
+import { FaChalkboard, FaChalkboardTeacher } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
+// Import your components
 import Student from "../../components/blocks/Student";
 import StudentsPhotos from "../../components/blocks/StaffPhotos";
 import Stream from "./Stream";
@@ -55,6 +59,43 @@ const Dashboard = () => {
   });
   const sidebarRef = useRef(null);
   const profileRef = useRef(null);
+
+  const { user, logout, checkAuth } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsProfileDropdownOpen(false);
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifyAuth = async () => {
+      try {
+        await checkAuth();
+        if (!user && isMounted) {
+          navigate("/login");
+        }
+      } catch (error) {
+        if (isMounted) {
+          navigate("/login");
+        }
+      }
+    };
+
+    verifyAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, navigate, checkAuth]);
 
   // Apply smooth dark mode transitions
   useEffect(() => {
@@ -121,134 +162,174 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const menuItems = [
-    { id: "home", label: "Home", icon: <FiHome className="text-lg" /> },
-    {
-      id: "streams",
-      label: "Forms",
-      icon: <FaChalkboard className="text-lg" />,
-      subItems: [
-        // { id: "student-list", label: "Student List", component: <Student /> },
+  // Role-based menu items
+  const getMenuItems = () => {
+    const baseItems = [
+      { id: "home", label: "Home", icon: <FiHome className="text-lg" /> },
+    ];
+
+    if (user?.role === "admin") {
+      baseItems.push(
         {
-          id: "class-streams",
-          label: "Streams",
-          component: <Stream />,
+          id: "streams",
+          label: "Forms",
+          icon: <FaChalkboard className="text-lg" />,
+          subItems: [
+            { id: "class-streams", label: "Streams", component: <Stream /> },
+            {
+              id: "class-teachers",
+              label: "Class Teachers",
+              component: <ClassTeacher />,
+            },
+          ],
         },
         {
-          id: "class-teachers",
-          label: "Class Teachers",
-          component: <ClassTeacher />,
-        },
-      ],
-    },
-    {
-      id: "students",
-      label: "Students",
-      icon: <FiUsers className="text-lg" />,
-      subItems: [
-        { id: "student-list", label: "Student List", component: <Student /> },
-        {
-          id: "student-photos",
-          label: "Student Photos",
-          component: <StudentsPhotos />,
-        },
-        {
-          id: "student-grades",
-          label: "Student Grades",
-          component: <Student />,
-        },
-      ],
-    },
-    {
-      id: "staff",
-      label: "Teachers",
-      icon: <PiChalkboardTeacherBold className="text-lg" />,
-      subItems: [
-        { id: "staff-list", label: "Teacher List", component: <Staff /> },
-        {
-          id: "staff-photos",
-          label: "Teachers' Photos",
-          component: <StaffPhotos />,
+          id: "students",
+          label: "Students",
+          icon: <FiUsers className="text-lg" />,
+          subItems: [
+            {
+              id: "student-list",
+              label: "Student List",
+              component: <Student />,
+            },
+            {
+              id: "student-photos",
+              label: "Student Photos",
+              component: <StudentsPhotos />,
+            },
+          ],
         },
         {
-          id: "subject-teachers",
-          label: "Subject Teachers",
-          component: <SubjectTeacher />,
-        },
-      ],
-    },
-    {
-      id: "exams",
-      label: "Examinations",
-      icon: <PiExamBold className="text-lg" />,
-      subItems: [
-        // { id: "exam-list", label: "Teacher List", component: <Staff /> },
-        {
-          id: "add-mark",
-          label: "Add Marks",
-          component: <AddMark />,
-        },
-        {
-          id: "grading-scheme",
-          label: "Grading Scheme",
-          component: <Grading />,
-        },
-        { id: "marklist", label: "Marklist", component: <Marklist2 /> },
-      ],
-    },
-    {
-      id: "messages",
-      label: "Communication",
-      icon: <FiMail className="text-lg" />,
-      subItems: [
-        {
-          id: "result-sms",
-          label: "Result SMS",
-          component: <ResultSMS />,
+          id: "staff",
+          label: "Teachers",
+          icon: <PiChalkboardTeacherBold className="text-lg" />,
+          subItems: [
+            { id: "staff-list", label: "Teacher List", component: <Staff /> },
+            {
+              id: "staff-photos",
+              label: "Teachers' Photos",
+              component: <StaffPhotos />,
+            },
+            {
+              id: "subject-teachers",
+              label: "Subject Teachers",
+              component: <SubjectTeacher />,
+            },
+          ],
         },
         {
-          id: "co-sms",
-          label: "Opening/Closing SMS",
-          component: <COSMS />,
-        },
-        // { id: "marklist", label: "Marklist", component: <Marklist2 /> },
-      ],
-    },
-    {
-      id: "reports",
-      label: "Reports",
-      icon: <FiMail className="text-lg" />,
-      subItems: [
-        {
-          id: "marksheet",
-          label: "Marksheet",
-          component: <Marksheet />,
+          id: "exams",
+          label: "Examinations",
+          icon: <PiExamBold className="text-lg" />,
+          subItems: [
+            { id: "add-mark", label: "Add Marks", component: <AddMark /> },
+            {
+              id: "grading-scheme",
+              label: "Grading Scheme",
+              component: <Grading />,
+            },
+            { id: "marklist", label: "Marklist", component: <Marklist2 /> },
+          ],
         },
         {
-          id: "marklist",
-          label: "Marklist",
-          component: <MarklistPDFReport />,
+          id: "messages",
+          label: "Communication",
+          icon: <FiMail className="text-lg" />,
+          subItems: [
+            { id: "result-sms", label: "Result SMS", component: <ResultSMS /> },
+            {
+              id: "co-sms",
+              label: "Opening/Closing SMS",
+              component: <COSMS />,
+            },
+          ],
         },
         {
-          id: "report-form",
-          label: "Report Form",
-          component: <StudentReport />,
+          id: "reports",
+          label: "Reports",
+          icon: <FiMail className="text-lg" />,
+          subItems: [
+            { id: "marksheet", label: "Marksheet", component: <Marksheet /> },
+            {
+              id: "marklist",
+              label: "Marklist",
+              component: <MarklistPDFReport />,
+            },
+            {
+              id: "report-form",
+              label: "Report Form",
+              component: <StudentReport />,
+            },
+          ],
         },
-        // { id: "marklist", label: "Marklist", component: <Marklist2 /> },
-      ],
-    },
-    // { id: "messages", label: "Messages", icon: <FiMail className="text-lg" /> },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: <FiSettings className="text-lg" />,
-      subItems: [
-        { id: "particulars", label: "Particulars", component: <Particulars /> },
-        { id: "account", label: "Account" },
-        { id: "privacy", label: "Privacy" },
-      ],
-    },
-  ];
+        {
+          id: "settings",
+          label: "Settings",
+          icon: <FiSettings className="text-lg" />,
+          subItems: [
+            {
+              id: "particulars",
+              label: "Particulars",
+              component: <Particulars />,
+            },
+            { id: "account", label: "Account" },
+          ],
+        }
+      );
+    } else if (user?.role === "teacher") {
+      baseItems.push(
+        {
+          id: "students",
+          label: "Students",
+          icon: <FiUsers className="text-lg" />,
+          subItems: [
+            {
+              id: "student-list",
+              label: "Student List",
+              component: <Student />,
+            },
+          ],
+        },
+        {
+          id: "exams",
+          label: "Examinations",
+          icon: <PiExamBold className="text-lg" />,
+          subItems: [
+            { id: "add-mark", label: "Add Marks", component: <AddMark /> },
+            { id: "marklist", label: "Marklist", component: <Marklist2 /> },
+          ],
+        },
+        {
+          id: "settings",
+          label: "Settings",
+          icon: <FiSettings className="text-lg" />,
+          subItems: [{ id: "account", label: "Account" }],
+        }
+      );
+    } else if (user?.role === "student") {
+      baseItems.push(
+        {
+          id: "exams",
+          label: "Examinations",
+          icon: <PiExamBold className="text-lg" />,
+          subItems: [
+            { id: "marklist", label: "My Marks", component: <Marklist2 /> },
+          ],
+        },
+        {
+          id: "settings",
+          label: "Settings",
+          icon: <FiSettings className="text-lg" />,
+          subItems: [{ id: "account", label: "Account" }],
+        }
+      );
+    }
+
+    return baseItems;
+  };
+
+  const menuItems = getMenuItems();
 
   const toggleSubmenu = (menuId) => {
     setActiveSubmenu(activeSubmenu === menuId ? null : menuId);
@@ -636,6 +717,10 @@ const Dashboard = () => {
                 </button>
                 {isProfileDropdownOpen && (
                   <div className="origin-top-right absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black dark:ring-gray-600 ring-opacity-5 py-1 z-50">
+                    <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
+                      Logged in as{" "}
+                      <span className="font-medium">{user?.role}</span>
+                    </div>
                     <a
                       href="#"
                       className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
@@ -648,12 +733,12 @@ const Dashboard = () => {
                     >
                       <FiSettings className="mr-2" /> Settings
                     </a>
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
                     >
                       <FiLogOut className="mr-2" /> Logout
-                    </a>
+                    </button>
                   </div>
                 )}
               </div>

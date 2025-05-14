@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import api from "../../hooks/api";
-// import { TEST } from "../../pages/Dashboard";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +10,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const validateEmail = (email) => {
@@ -33,37 +34,13 @@ const Login = () => {
     setIsLoading(true);
     setError("");
 
-    // Sanitize inputs
-    const sanitizedEmail = sanitizeInput(email);
-    const sanitizedPassword = sanitizeInput(password);
     try {
-      const response = await api.post("/auth/login", {
-        username: sanitizedEmail,
-        password: sanitizedPassword,
-      });
+      // Sanitize inputs
+      const sanitizedEmail = sanitizeInput(email);
+      const sanitizedPassword = sanitizeInput(password);
 
-      console.log(response)
-
-      // Destructure tokens from response.data
-      const { access_token, refresh_token, expires_in, csrf_token } =
-        response.data;
-
-      // Store tokens
-      const authToken = {
-        value: access_token,
-        expires: Date.now() + expires_in * 1000,
-      };
-
-      localStorage.setItem("authToken", JSON.stringify(authToken));
-      localStorage.setItem("refreshToken", refresh_token);
-      sessionStorage.setItem("csrf_token", csrf_token);
-
-      // Set default auth Header
-      api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
-      console.log("Login Successful");
-
-      // Redirect to dashboard
-      navigate("/dashboard");
+      // Use auth context login
+      await login(sanitizedEmail, sanitizedPassword);
     } catch (err) {
       setIsLoading(false);
       setError(

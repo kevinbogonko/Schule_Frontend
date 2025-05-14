@@ -27,7 +27,14 @@ import Particulars from "./components/blocks/Particulars";
 import Marksheet from "./components/blocks/Marksheet";
 import Marklist2 from "./components/blocks/Marklist2";
 import MarklistPDFReport from "./components/blocks/MarklistPDFReport";
-import { Route, Routes } from "react-router";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "./components/context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 
 function App() {
@@ -55,11 +62,23 @@ function App() {
         {/* <GenerateTT /> */}
         {/* <COSMS /> */}
         {/* <Particulars /> */}
-        <Routes>
+        {/* <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
+        </Routes> */}
         {/* <Dashboard /> */}
+
+        <Router>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </AuthProvider>
+        </Router>
       </>
     </ToastProvider>
   );
