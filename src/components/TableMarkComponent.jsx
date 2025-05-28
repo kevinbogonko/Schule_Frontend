@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { GoSearch } from "react-icons/go";
 import { AiOutlineClear } from "react-icons/ai";
-import { FaRegSave } from "react-icons/fa";
+import { FaRegFileExcel, FaRegSave } from "react-icons/fa";
+import * as XLSX from "xlsx";
 import ReusableInput from "./ui/ReusableInput";
 import Badge from "./Badge";
 import Button from "./ui/raw/Button";
@@ -32,6 +33,11 @@ const TableMarkComponent = ({
   });
   const [editedData, setEditedData] = useState([]);
   const [inputValues, setInputValues] = useState({});
+  const [showButtons, setShowButtons] = useState(false);
+
+  useEffect(() => {
+    setShowButtons(!!subjectCode);
+  }, [subjectCode]);
 
   const getBadgeColor = (grade) => {
     if (!grade || grade === "-") return "#9CA3AF";
@@ -218,6 +224,89 @@ const TableMarkComponent = ({
     onCancel?.();
   };
 
+  const handleExcelImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+      if (jsonData.length === 0) return;
+
+      // Process the Excel data to match our table structure
+      const processedData = jsonData.map((row) => {
+        const newRow = { id: row.id || row.ID || row.Id || "" };
+
+        // Extract marks from the Excel columns (like 101, 101_1, etc.)
+        numberColumns.forEach((col) => {
+          // Try to find matching columns in the Excel file (case insensitive)
+          const excelCol = Object.keys(row).find(
+            (key) =>
+              key.toString().toLowerCase() === col.toString().toLowerCase()
+          );
+          newRow[col] = excelCol ? parseFloat(row[excelCol]) || 0 : 0;
+        });
+
+        // Copy text columns
+        textColumns.forEach((col) => {
+          const excelCol = Object.keys(row).find(
+            (key) =>
+              key.toString().toLowerCase() === col.toString().toLowerCase()
+          );
+          newRow[col] = excelCol ? row[excelCol] : "";
+        });
+
+        // Calculate mark and grade for the imported row
+        const mark = calculateMark(newRow);
+        return {
+          ...newRow,
+          mark,
+          grade: getGradeFromMark(mark),
+        };
+      });
+
+      // Update the editedData state with the imported data
+      setEditedData((prev) => {
+        // Create a map of existing data for quick lookup
+        const existingDataMap = new Map(prev.map((item) => [item.id, item]));
+
+        // Merge existing data with imported data
+        const mergedData = processedData.map((importedItem) => {
+          const existingItem = existingDataMap.get(importedItem.id);
+          return existingItem
+            ? { ...existingItem, ...importedItem }
+            : importedItem;
+        });
+
+        // Add any existing items that weren't in the import
+        prev.forEach((item) => {
+          if (!processedData.some((impItem) => impItem.id === item.id)) {
+            mergedData.push(item);
+          }
+        });
+
+        return mergedData;
+      });
+
+      // Update input values
+      const newInputValues = { ...inputValues };
+      processedData.forEach((item) => {
+        numberColumns.forEach((col) => {
+          newInputValues[`${item.id}-${col}`] = item[col].toString();
+        });
+      });
+      setInputValues(newInputValues);
+
+      // Reset file input to allow re-importing the same file
+      e.target.value = "";
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
   const renderCell = useCallback(
     (item, columnKey, index) => {
       const cellValue = item[columnKey];
@@ -335,82 +424,86 @@ const TableMarkComponent = ({
       </div>
 
       <form id="marksForm" onSubmit={handleSubmit}>
-        <div
-          className={`border border-${borderColor} rounded-md overflow-hidden`}
-        >
-          <table className="w-full">
-            <thead className="border-b border-gray-200 dark:border-gray-700 bg-transparent">
-              <tr>
-                <th className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-10">
-                  S/N
-                </th>
-                {columns.map((col) => (
-                  <th
-                    key={col.uid}
-                    className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                    onClick={() => {
-                      if (col.sortable) {
-                        setSortDescriptor((prev) => ({
-                          column: col.uid,
-                          direction:
-                            prev.direction === "ascending"
-                              ? "descending"
-                              : "ascending",
-                        }));
-                      }
-                    }}
-                  >
-                    <div
-                      className={`flex items-center ${
-                        col.sortable ? "cursor-pointer" : ""
-                      }`}
-                    >
-                      {col.name}
-                      {col.sortable && sortDescriptor.column === col.uid && (
-                        <span className="ml-1">
-                          {sortDescriptor.direction === "ascending" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
+        <div className="overflow-x-auto">
+          <div
+            className={`border border-${borderColor} rounded-md overflow-hidden min-w-max`}
+          >
+            <table className="w-full">
+              <thead className="border-b border-gray-200 dark:border-gray-700 bg-transparent">
+                <tr>
+                  <th className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-10">
+                    S/N
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={columns.length + 1}
-                    className="text-center px-4 py-6 text-sm text-gray-500 dark:text-gray-400"
-                  >
-                    Loading...
-                  </td>
+                  {columns.map((col) => (
+                    <th
+                      key={col.uid}
+                      className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      onClick={() => {
+                        if (col.sortable) {
+                          setSortDescriptor((prev) => ({
+                            column: col.uid,
+                            direction:
+                              prev.direction === "ascending"
+                                ? "descending"
+                                : "ascending",
+                          }));
+                        }
+                      }}
+                    >
+                      <div
+                        className={`flex items-center ${
+                          col.sortable ? "cursor-pointer" : ""
+                        }`}
+                      >
+                        {col.name}
+                        {col.sortable && sortDescriptor.column === col.uid && (
+                          <span className="ml-1">
+                            {sortDescriptor.direction === "ascending"
+                              ? "↑"
+                              : "↓"}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
-              ) : sortedItems.length > 0 ? (
-                sortedItems.map((item, index) => (
-                  <tr key={item.id} className={rowColors.default}>
-                    <td className="px-4 py-3">
-                      {renderCell(item, "s/n", index)}
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={columns.length + 1}
+                      className="text-center px-4 py-6 text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      Loading...
                     </td>
-                    {columns.map((col) => (
-                      <td key={`${item.id}-${col.uid}`} className="px-4 py-3">
-                        {renderCell(item, col.uid, index)}
-                      </td>
-                    ))}
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={columns.length + 1}
-                    className="text-center px-4 py-6 text-sm text-gray-500 dark:text-gray-400"
-                  >
-                    No records found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : sortedItems.length > 0 ? (
+                  sortedItems.map((item, index) => (
+                    <tr key={item.id} className={rowColors.default}>
+                      <td className="px-4 py-3">
+                        {renderCell(item, "s/n", index)}
+                      </td>
+                      {columns.map((col) => (
+                        <td key={`${item.id}-${col.uid}`} className="px-4 py-3">
+                          {renderCell(item, col.uid, index)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={columns.length + 1}
+                      className="text-center px-4 py-6 text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      No records found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </form>
 
@@ -420,27 +513,40 @@ const TableMarkComponent = ({
           totalPages={Math.ceil(filteredItems.length / rowsPerPage)}
           onPageChange={setPage}
         />
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            onClick={handleCancel}
-            size="sm"
-            icon={AiOutlineClear}
-          >
-            Reset
-          </Button>
+        {showButtons && (
+          <div className="flex gap-2 flex-wrap justify-end">
+            <Button
+              variant="secondary"
+              onClick={handleCancel}
+              size="sm"
+              icon={AiOutlineClear}
+            >
+              Reset
+            </Button>
 
-          <Button
-            type="submit"
-            variant="primary"
-            form="marksForm"
-            size="sm"
-            icon={FaRegSave}
-            loading={false}
-          >
-            Save
-          </Button>
-        </div>
+            <label className="my-4 px-4 py-2 rounded-md font-medium transition-all duration-200 focus:outline-none flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleExcelImport}
+                className="hidden"
+              />
+              <FaRegFileExcel className="mr-1" />
+              Import
+            </label>
+
+            <Button
+              type="submit"
+              variant="primary"
+              form="marksForm"
+              size="sm"
+              icon={FaRegSave}
+              loading={false}
+            >
+              Save
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

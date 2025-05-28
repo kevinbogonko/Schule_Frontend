@@ -11,7 +11,7 @@ import { useToast } from "../Toast";
 import { formOptions, yearOptions } from "../../utils/CommonData";
 import AddStudent from "../snippets/AddStudent";
 
-const Student = () => {
+const Student = ({user}) => {
   const { showToast } = useToast();
   const [studentData, setStudentData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -59,7 +59,6 @@ const Student = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log(fetchData)
       if (selectedForm && selectedYear) {
         // Show overlay after 50ms to prevent flash on quick loads
         loadingTimeoutRef.current = setTimeout(() => {
@@ -78,9 +77,8 @@ const Student = () => {
           }));
           setStreamOptions(formattedStreams);
 
-          const payload = { form: selectedForm };
+          const payload = { year: selectedYear, form: selectedForm };
           const studentRes = await api.post("/student/getstudents", payload);
-          console.log(studentRes)
           const transformedData = studentRes.data.map((student) => ({
             ...student,
             name: `${student.fname} ${student.lname}`,
@@ -91,7 +89,6 @@ const Student = () => {
           }));
           setStudentData(transformedData);
         } catch (err) {
-          console.log(err)
           setError(err.message || "Something went wrong");
           console.error("Error fetching data:", err);
         } finally {
@@ -245,7 +242,7 @@ const Student = () => {
               striped={true}
               buttons={{
                 addButton: {
-                  show: true,
+                  show: user === "admin",
                   label: "Add Student",
                   icon: <FiPlus className="w-4 h-4" />,
                   onClick: () =>
@@ -253,35 +250,51 @@ const Student = () => {
                 },
                 actionButtons: {
                   show: true,
-                  options: [
-                    {
-                      label: "View",
-                      icon: <BsEye className="w-4 h-4" />,
-                      onClick: (row) => {
-                        setRowData(row);
-                        setModalState((prev) => ({
-                          ...prev,
-                          viewStudent: true,
-                        }));
-                      },
-                    },
-                    {
-                      label: "Edit",
-                      icon: <BsPencil className="w-4 h-4" />,
-                      onClick: (row) => {
-                        setRowData(row);
-                        setModalState((prev) => ({
-                          ...prev,
-                          editStudent: true,
-                        }));
-                      },
-                    },
-                    {
-                      label: "Delete",
-                      icon: <BsTrash className="w-4 h-4" />,
-                      onClick: (row) => handleDelete(row),
-                    },
-                  ],
+                  options:
+                    user === "admin"
+                      ? [
+                          {
+                            label: "View",
+                            icon: <BsEye className="w-4 h-4" />,
+                            onClick: (row) => {
+                              setRowData(row);
+                              setModalState((prev) => ({
+                                ...prev,
+                                viewStudent: true,
+                              }));
+                            },
+                          },
+                          {
+                            label: "Edit",
+                            icon: <BsPencil className="w-4 h-4" />,
+                            onClick: (row) => {
+                              console.log(row);
+                              setRowData(row);
+                              setModalState((prev) => ({
+                                ...prev,
+                                editStudent: true,
+                              }));
+                            },
+                          },
+                          {
+                            label: "Delete",
+                            icon: <BsTrash className="w-4 h-4" />,
+                            onClick: (row) => handleDelete(row),
+                          },
+                        ]
+                      : [
+                          {
+                            label: "View",
+                            icon: <BsEye className="w-4 h-4" />,
+                            onClick: (row) => {
+                              setRowData(row);
+                              setModalState((prev) => ({
+                                ...prev,
+                                viewStudent: true,
+                              }));
+                            },
+                          }
+                        ],
                 },
               }}
               borderColor="blue-200 dark:border-gray-600"
@@ -305,7 +318,7 @@ const Student = () => {
         rowData={rowData}
         loading={loading}
         refreshTable={() => {
-          const payload = { form: selectedForm };
+          const payload = { year: selectedYear, form: selectedForm };
           api.post("/student/getstudents", payload).then((response) => {
             const transformedData = response.data.map((student) => ({
               ...student,

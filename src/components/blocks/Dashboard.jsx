@@ -19,10 +19,11 @@ import {
 import { FaChalkboard, FaChalkboardTeacher } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import api from "../../hooks/api";
 
 // Import your components
 import Student from "../../components/blocks/Student";
-import StudentsPhotos from "../../components/blocks/StaffPhotos";
+import StudentPhotos from "../../components/blocks/StudentPhotos";
 import Stream from "./Stream";
 import ClassTeacher from "./ClassTeacher";
 import Staff from "./Staff";
@@ -38,6 +39,16 @@ import { PiChalkboardTeacherBold, PiExamBold } from "react-icons/pi";
 import Marksheet from "./Marksheet";
 import MarklistPDFReport from "./MarklistPDFReport";
 import StudentReport from "./StudentReport";
+import StudentInfo from "./StudentInfo";
+import StudentAttemptedExams from "./StudentAttemptedExams";
+import StaffInfo from "./StaffInfo";
+import GlobalStream from "./GlobalStream";
+import AddMarkTeacher from "./AddMarkTeacher";
+import Subject from "./Subject";
+import MarkAnalysis from "./MarkAnalysis";
+import Promotion from "./Promotion";
+
+const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -57,6 +68,7 @@ const Dashboard = () => {
         localStorage.getItem("darkMode") !== "false")
     );
   });
+  const [imagePath, setImagePath] = useState("");
   const sidebarRef = useRef(null);
   const profileRef = useRef(null);
 
@@ -72,6 +84,39 @@ const Dashboard = () => {
       console.error("Logout error:", error);
     }
   };
+
+  // Fetch user photo based on role
+  useEffect(() => {
+    const fetchUserPhoto = async () => {
+      if (!user?.user_id || !user?.role) return;
+
+      try {
+        let response;
+        if (user.role === "teacher") {
+          response = await api.post("/teacher/getteacherphoto", {
+            id: user.user_id,
+          });
+          setImagePath(response.data.path);
+        } else if (user.role === "student") {
+          response = await api.post("/student/getstudentphoto", {
+            id: user.user_id,
+            form: 1,
+          });
+          setImagePath(response.data.path);
+        } else if (user.role === "admin") {
+          response = await api.get("/particular/getparticulars");
+          setImagePath(
+            response.data?.logo_path || "/images/defaults/logo.webp"
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching user photo:", error);
+        setImagePath("");
+      }
+    };
+
+    fetchUserPhoto();
+  }, [user]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -162,6 +207,38 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Search functionality
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    // Find menu items that match the search query
+    const matchedItems = [];
+    menuItems.forEach((item) => {
+      if (item.label.toLowerCase().includes(searchQuery.toLowerCase())) {
+        matchedItems.push(item);
+      }
+      if (item.subItems) {
+        item.subItems.forEach((subItem) => {
+          if (subItem.label.toLowerCase().includes(searchQuery.toLowerCase())) {
+            matchedItems.push({ ...subItem, parentLabel: item.label });
+          }
+        });
+      }
+    });
+
+    if (matchedItems.length > 0) {
+      // If we found matches, handle the first one
+      const firstMatch = matchedItems[0];
+      if (firstMatch.component) {
+        setActiveComponent(firstMatch.component);
+      } else if (firstMatch.subItems) {
+        setActiveMenu(firstMatch.id);
+        setActiveSubmenu(firstMatch.id);
+      }
+    }
+  };
+
   // Role-based menu items
   const getMenuItems = () => {
     const baseItems = [
@@ -191,12 +268,12 @@ const Dashboard = () => {
             {
               id: "student-list",
               label: "Student List",
-              component: <Student />,
+              component: <Student user={user?.role} />,
             },
             {
               id: "student-photos",
               label: "Student Photos",
-              component: <StudentsPhotos />,
+              component: <StudentPhotos />,
             },
           ],
         },
@@ -257,6 +334,11 @@ const Dashboard = () => {
               component: <MarklistPDFReport />,
             },
             {
+              id: "markanalysis",
+              label: "Subject Analysis",
+              component: <MarkAnalysis />,
+            },
+            {
               id: "report-form",
               label: "Report Form",
               component: <StudentReport />,
@@ -272,6 +354,26 @@ const Dashboard = () => {
               id: "particulars",
               label: "Particulars",
               component: <Particulars />,
+            },
+            {
+              id: "stream-names",
+              label: "Register Stream Names",
+              component: <GlobalStream />,
+            },
+            {
+              id: "subjects",
+              label: "Manage Subjects",
+              component: <Subject />,
+            },
+            {
+              id: "promotion",
+              label: "Promote Students",
+              component: <Promotion />,
+            },
+            {
+              id: "users",
+              label: "Users",
+              component: <Promotion />,
             },
             { id: "account", label: "Account" },
           ],
@@ -296,8 +398,24 @@ const Dashboard = () => {
           label: "Examinations",
           icon: <PiExamBold className="text-lg" />,
           subItems: [
-            { id: "add-mark", label: "Add Marks", component: <AddMark /> },
+            {
+              id: "add-mark",
+              label: "Add Marks",
+              component: <AddMarkTeacher />,
+            },
             { id: "marklist", label: "Marklist", component: <Marklist2 /> },
+          ],
+        },
+        {
+          id: "information",
+          label: "My Information",
+          icon: <PiExamBold className="text-lg" />,
+          subItems: [
+            {
+              id: "my-information",
+              label: "My Information",
+              component: <StaffInfo staffId={user?.user_id} />,
+            },
           ],
         },
         {
@@ -310,11 +428,27 @@ const Dashboard = () => {
     } else if (user?.role === "student") {
       baseItems.push(
         {
+          id: "info",
+          label: "Information",
+          icon: <PiExamBold className="text-lg" />,
+          subItems: [
+            {
+              id: "marklist",
+              label: "My Information",
+              component: <StudentInfo studentId={user?.user_id} />,
+            },
+          ],
+        },
+        {
           id: "exams",
           label: "Examinations",
           icon: <PiExamBold className="text-lg" />,
           subItems: [
-            { id: "marklist", label: "My Marks", component: <Marklist2 /> },
+            {
+              id: "marklist",
+              label: "My Marks",
+              component: <StudentAttemptedExams studentId={user?.user_id} />,
+            },
           ],
         },
         {
@@ -667,7 +801,10 @@ const Dashboard = () => {
             </div>
 
             <div className="flex-1 mx-2 sm:mx-4 max-w-md">
-              <div className="relative flex items-center">
+              <form
+                onSubmit={handleSearch}
+                className="relative flex items-center"
+              >
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FiSearch className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 transition-colors duration-300" />
                 </div>
@@ -678,7 +815,7 @@ const Dashboard = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              </div>
+              </form>
             </div>
 
             <div className="flex items-center space-x-3 sm:space-x-4">
@@ -711,9 +848,17 @@ const Dashboard = () => {
                   onClick={toggleProfileDropdown}
                   className="flex items-center justify-center focus:outline-none h-full w-full transition-transform duration-300 hover:scale-110"
                 >
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-indigo-600 dark:bg-gray-600 flex items-center justify-center text-white font-semibold text-sm sm:text-base transition-colors duration-500">
-                    JD
-                  </div>
+                  {imagePath ? (
+                    <img
+                      src={`${BACKEND_BASE_URL}${imagePath}`}
+                      alt="Profile"
+                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-indigo-600 dark:bg-gray-600 flex items-center justify-center text-white font-semibold text-sm sm:text-base transition-colors duration-500">
+                      {user?.username?.charAt(0).toUpperCase() || "U"}
+                    </div>
+                  )}
                 </button>
                 {isProfileDropdownOpen && (
                   <div className="origin-top-right absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black dark:ring-gray-600 ring-opacity-5 py-1 z-50">
@@ -723,19 +868,19 @@ const Dashboard = () => {
                     </div>
                     <a
                       href="#"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
+                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
                     >
                       <FiUser className="mr-2" /> Profile
                     </a>
                     <a
                       href="#"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
+                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
                     >
                       <FiSettings className="mr-2" /> Settings
                     </a>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
                     >
                       <FiLogOut className="mr-2" /> Logout
                     </button>

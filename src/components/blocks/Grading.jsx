@@ -82,10 +82,6 @@ const Grading = () => {
         
         setSelectedRowId(row);
         setUpdateLoading(true);
-        console.log({
-            form: selectedForm,
-            exam: selectedExam,
-            subject: row})
         
         try {
             const response = await api.post('grading/gradingscale', {
@@ -93,7 +89,6 @@ const Grading = () => {
                 exam: selectedExam,
                 subject: row
             });
-            console.log(response.data)
             setSubjectScale(response.data);
             setModalState(prev => ({...prev, viewGradeMark: true}));
         } catch (error) {

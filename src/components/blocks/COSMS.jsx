@@ -4,6 +4,8 @@ import { PiExam } from "react-icons/pi";
 import { TbReport } from "react-icons/tb";
 import { FaSpinner } from "react-icons/fa";
 import { MdDone, MdOutlinePreview } from "react-icons/md";
+import { AiOutlineClear } from "react-icons/ai";
+import { TbSend } from "react-icons/tb";
 import { formOptions, yearOptions, termOptions } from "../../utils/CommonData";
 import { useToast } from "../Toast";
 import ReusableInput from "../ui/ReusableInput";
@@ -71,13 +73,22 @@ const COSMS = () => {
       setSelectedForm("");
       setSelectedTerm("");
       setSmsLogs([]);
+      setSelectedEvent("");
+      setSelectedEventType("");
+      handleClearForm();
     }
     if (field === "form") {
       setSelectedTerm("");
       setSmsLogs([]);
+      setSelectedEvent("");
+      setSelectedEventType("");
+      handleClearForm();
     }
     if (field === "term") {
       setSmsLogs([]);
+      setSelectedEvent("");
+      setSelectedEventType("");
+      handleClearForm();
     }
   };
 
@@ -111,6 +122,7 @@ const COSMS = () => {
   const handleEventChange = (value) => {
     setSelectedEvent(value);
     setSelectedEventType("");
+    handleClearForm();
   };
 
   const handleClearForm = () => {
@@ -163,7 +175,7 @@ const COSMS = () => {
         events_data: {
           event: selectedEvent,
           event_type: selectedEventType,
-        //   message: previewMessage,
+          message: previewMessage,
           ...(selectedEvent === "closing" && {
             closing_date: closingDate,
             signout_time: signoutTime,
@@ -177,9 +189,7 @@ const COSMS = () => {
         forms: Array.isArray(selectedForm) ? selectedForm : [selectedForm],
       };
 
-      console.log(eventData)
-
-      const response = await api.post("/sms/sendcosms", eventData);
+      await api.post("/sms/sendcosms", eventData);
 
       showToast("SMS sent successfully!", "success", { duration: 3000 });
       fetchSmsLogs();
@@ -285,11 +295,11 @@ const COSMS = () => {
           </ReusableDiv>
         </div>
 
-        <div className="w-full lg:w-3/4">
-          <div className="flex">
+        <div className="w-full lg:w-3/4 flex flex-col gap-2">
+          <div className="flex flex-col lg:flex-row gap-2">
             <ReusableDiv
               className="ml-0 mr-0 flex-1 ring-1 mb-2 bg-blue-100 dark:bg-gray-800"
-              tag="Process Report"
+              tag="Term Events"
               icon={TbReport}
               collapsible={true}
             >
@@ -304,6 +314,7 @@ const COSMS = () => {
                       value={selectedEvent}
                       onChange={handleEventChange}
                       placeholder="Select Event"
+                      disabled={!selectedForm}
                     />
                   </div>
                   <div className="w-full md:w-1/2">
@@ -324,7 +335,7 @@ const COSMS = () => {
 
                 {selectedEventType && (
                   <div className="space-y-4">
-                    <div className="flex flex-col space-y-4 p-4 bg-blue-50 dark:bg-gray-900 rounded">
+                    <div className="flex flex-col space-y-4">
                       {showClosingElements && (
                         <div className="flex flex-col md:flex-row gap-4">
                           <div className="w-full md:w-1/2">
@@ -370,10 +381,54 @@ const COSMS = () => {
                         </div>
                       </div>
                     </div>
+                    <div>
+                      <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Other information
+                      </label>
+                      <ReusableTextarea
+                        value={extraInfo}
+                        onChange={(e) => setExtraInfo(e.target.value)}
+                        placeholder="Enter any additional information..."
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        icon={AiOutlineClear}
+                        className="ring-1"
+                        onClick={handleClearForm}
+                      >
+                        Clear
+                      </Button>
+                      <Button
+                        variant="primary"
+                        icon={sending ? FaSpinner : TbSend}
+                        onClick={handleSendSMS}
+                        disabled={!isSendEnabled() || sending}
+                        className={sending ? "animate-pulse" : ""}
+                      >
+                        {sending ? "Sending..." : "Send"}
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
             </ReusableDiv>
+
+            {previewMessage && (
+              <ReusableDiv
+                className="ml-0 mr-0 flex-1 ring-1 mb-2 bg-blue-100 dark:bg-gray-800"
+                tag="Message Preview"
+                icon={MdOutlinePreview}
+                collapsible={true}
+              >
+                <div className="p-4">
+                  <pre className="whitespace-pre-wrap text-sm">
+                    {previewMessage}
+                  </pre>
+                </div>
+              </ReusableDiv>
+            )}
           </div>
         </div>
       </div>
@@ -394,6 +449,10 @@ const COSMS = () => {
             rowColors={{
               default: "hover:bg-blue-50",
               selected: "bg-blue-100",
+            }}
+            buttons={{
+              addButton: {
+                show: false}
             }}
           />
         )}

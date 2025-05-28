@@ -57,3 +57,8 @@ export const formulaOptions = [
   { value: 'threePaperAvgAdd', label: 'Weighted: (P1+P2) *160 + P3' },
   { value: 'threePaperAddAgr', label: 'Weighted: (P1+P2+P3) / 2' }
 ]
+
+export const promotionOptions = [
+  { value: "all", label: "All Students" },
+  { value: "exam", label: "Weighted exam grade" },
+];

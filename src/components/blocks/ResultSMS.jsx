@@ -177,7 +177,6 @@ const ResultSMS = () => {
       if (error.response?.status === 404) {
         setSmsLogs([]);
       } else {
-        console.error("Error fetching SMS logs:", error);
         showToast("Failed to fetch SMS logs", "error", { duration: 2000 });
       }
     }
@@ -294,7 +293,6 @@ const ResultSMS = () => {
       setSchoolDetails(response.data.schoolDetails);
       setStudentResults(response.data.studentResults);
     } catch (err) {
-      console.error("Error fetching results:", err);
       setError("Failed to load results. Please try again.");
       showToast("Failed to load results. Please try again.", "error", {
         duration: 2000,
@@ -312,7 +310,6 @@ const ResultSMS = () => {
         duration: 3000,
       });
     } catch (error) {
-      console.error("API Error:", error);
       showToast(
         error?.response?.data?.message || "Failed to generate results",
         "error",
@@ -382,13 +379,12 @@ const ResultSMS = () => {
           });
 
           const formattedStreams = response.data.map((stream) => ({
-            value: stream.id,
+            value: stream.stream_id,
             label: stream.stream_name,
           }));
 
           setStreamOptions(formattedStreams);
         } catch (err) {
-          console.error("Error fetching streams:", err);
           if (err.response?.status === 404) {
             setStreamOptions([]);
           } else {
@@ -409,11 +405,13 @@ const ResultSMS = () => {
 
   useEffect(() => {
     if (selectedStream && smsType && studentResults) {
+
       const streamLabel = streamOptions.find(
         (stream) => stream.value === selectedStream
       )?.label;
 
       if (streamLabel) {
+
         const filteredStudents = studentResults.filter(
           (student) => student.stream === streamLabel
         );
@@ -467,11 +465,11 @@ const ResultSMS = () => {
         };
       });
 
+
       const response = await api.post("/sms/sendresultsms", payload);
       showToast("SMS sent successfully!", "success", { duration: 3000 });
       fetchSmsLogs(uniVal);
     } catch (err) {
-      console.error("Error sending SMS:", err);
       setSMSError("Failed to send SMS. Please try again.");
       showToast(err?.response?.data?.message || "Failed to send SMS", "error", {
         duration: 3000,

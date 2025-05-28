@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ModalForm from "../ui/raw/ModalForm";
 import { FiEdit2 } from "react-icons/fi";
 import { useToast } from "../Toast";
@@ -20,25 +20,7 @@ const RUStaffPhoto = ({
   const [imagePath, setImagePath] = useState(null);
   const [showOverlay, setShowOverlay] = useState(false);
   const { showToast } = useToast();
-
-  useEffect(() => {
-    let timeoutId;
-
-    if (modalState.viewStaffPhoto) {
-      setShowOverlay(true);
-      timeoutId = setTimeout(() => {
-        if (!imagePath) {
-          setError("Loading timed out");
-          showToast("Failed to load photo - timed out", "error");
-          handleCloseViewModal();
-        }
-      }, 10000); // 10 seconds
-    }
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [modalState.viewStaffPhoto, imagePath]); // Added imagePath to dependencies
+  const timeoutRef = useRef(null);
 
   const fetchStaffPhoto = async () => {
     if (!rowData) {
@@ -48,7 +30,9 @@ const RUStaffPhoto = ({
 
     setIsLoading(true);
     setError("");
-    setImagePath(null); // Reset image path before fetching
+    setImagePath(null);
+    setShowOverlay(true);
+
     try {
       const response = await api.post("/teacher/getteacherphoto", {
         id: rowData,
@@ -70,11 +54,33 @@ const RUStaffPhoto = ({
   };
 
   useEffect(() => {
+    // Clear any existing timeout when component unmounts or modal closes
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (modalState.viewStaffPhoto) {
+      // Set a timeout to handle cases where the image fails to load
+      timeoutRef.current = setTimeout(() => {
+        if (!imagePath) {
+          setError("Loading timed out");
+          showToast("Failed to load photo - timed out", "error");
+          handleCloseViewModal();
+        }
+      }, 10000); // 10 seconds timeout
+
       fetchStaffPhoto();
     } else {
+      // Clean up when modal closes
       setImagePath(null);
       setShowOverlay(false);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     }
   }, [modalState.viewStaffPhoto]);
 
@@ -82,7 +88,25 @@ const RUStaffPhoto = ({
     setError("");
     setImagePath(null);
     setShowOverlay(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     setModalState((prev) => ({ ...prev, viewStaffPhoto: false }));
+  };
+
+  const handleImageLoad = () => {
+    setShowOverlay(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const handleImageError = () => {
+    setError("Failed to load image");
+    setShowOverlay(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
   };
 
   return (
@@ -148,28 +172,29 @@ const RUStaffPhoto = ({
                   src={`${BACKEND_BASE_URL}${imagePath}`}
                   alt={`Teacher ${rowData || ""}`}
                   className="w-full h-full object-contain"
-                  onLoad={() => setShowOverlay(false)} // Hide overlay when image loads
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
                 />
               </div>
               <div className="mt-2 text-sm text-gray-500 text-center">
                 {rowData || "N/A"} (ID: {rowData || "N/A"})
               </div>
             </div>
-          ) : null}
+          ) : (
+            <div className="text-center p-4 text-gray-500">
+              No photo available
+            </div>
+          )}
         </div>
       </ModalForm>
 
-      {/* Loading Overlay */}
-      {showOverlay && (
+      {/* Loading Overlay - Only show when showOverlay is true and image hasn't loaded yet */}
+      {showOverlay && !imagePath && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm">
             <FaSpinner className="animate-spin text-3xl text-blue-500 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-700 mb-2">
               Loading Teacher Photo...
-            </p>
-            <p className="text-sm text-gray-500">
-              This will automatically close in 10 seconds if the photo fails to
-              load
             </p>
           </div>
         </div>

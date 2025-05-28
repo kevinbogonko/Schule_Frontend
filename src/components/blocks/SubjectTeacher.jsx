@@ -261,7 +261,7 @@ return (
 
         {unassignedSubjects.length > 0 && (
           <ReusableDiv
-            className="ring-1 h-fit bg-blue-100 dark:bg-gray-800"
+            className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
             tag="Assign Instructor"
             icon={FaUsersGear}
             collapsible={true}

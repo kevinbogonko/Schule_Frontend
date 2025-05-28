@@ -133,7 +133,7 @@ const Marklist2 = () => {
           year: selectedYear,
         });
         const formattedStreams = response.data.map((stream) => ({
-          value: stream.id,
+          value: stream.stream_id,
           label: stream.stream_name,
         }));
         setStreamOptions(formattedStreams);
@@ -358,6 +358,11 @@ return (
             rowColors={{
               default: "hover:bg-blue-50 dark:hover:bg-gray-700",
               selected: "bg-blue-100 dark:bg-gray-700",
+            }}
+            buttons={{
+              addButton: {
+                show: false,
+              },
             }}
             mobileBreakpoint="sm"
           />

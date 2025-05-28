@@ -25,6 +25,7 @@ const Stream = () => {
     viewStream: false,
   });
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
+  const [streamOptions, setStreamOptions] = useState([]);
 
   const columns = [
     { name: "STREAM", uid: "stream_name", sortable: true },
@@ -36,6 +37,23 @@ const Stream = () => {
     if (field === "year" || field === "form") {
       setSubTeacherData([]);
       setTeachers([]);
+    }
+  };
+
+  const fetchStreamNames = async () => {
+    try {
+      const response = await api.get("/stream/getstreamnames");
+      const formattedStreams = response.data.map((stream) => ({
+        value: stream.id,
+        label: stream.stream_name,
+      }));
+      setStreamOptions(formattedStreams);
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || "Failed to fetch streams",
+        "error",
+        { duration: 3000, position: "top-center" }
+      );
     }
   };
 
@@ -128,6 +146,10 @@ const Stream = () => {
       setShowLoadingOverlay(false);
     }, 300);
   };
+
+  useEffect(() => {
+    fetchStreamNames();
+  }, []);
 
   useEffect(() => {
     if (selectedForm && selectedYear) {
@@ -264,6 +286,7 @@ const Stream = () => {
         selectedYear={selectedYear}
         rowData={rowData}
         teacherOptions={teachers}
+        streamOptions={streamOptions}
         refreshTable={() => fetchStreamsAndTeachers(selectedForm, selectedYear)}
       />
     </div>

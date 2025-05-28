@@ -210,177 +210,282 @@ const StudentReport = () => {
     }, [selectedYear, selectedForm, selectedTerm]);
 
     return (
-        <div className="my-4">
-            <div className='w-full flex flex-row'>
-                <ReusableDiv className="ring-1 h-fit mb-4 bg-blue-100" tag="Select Exam" icon={PiExam} collapsible={true}>
-                    <div className="flex flex-wrap pb-4">
-                        <div className="w-full flex flex-col mb-2">
-                            <label htmlFor="year">Year</label>
-                            <ReusableSelect
-                                id="year"
-                                placeholder="Select Year"
-                                options={yearOptions}
-                                value={yearOptions.find(opt => opt.value === selectedYear) || undefined}
-                                onChange={(e) => {
-                                    const newVal = e.target.value;
-                                    resetBelow('year');
-                                    setSelectedYear(newVal);
-                                }}
-                            />
-                        </div>
-                        <div className="w-full flex flex-col mb-2">
-                            <label htmlFor="form">Form</label>
-                            <ReusableSelect
-                                id="form"
-                                placeholder="Select Form"
-                                options={formOptions}
-                                value={selectedForm ? formOptions.find(opt => opt.value === selectedForm) : undefined}
-                                onChange={(e) => {
-                                    const newVal = e.target.value;
-                                    resetBelow('form');
-                                    setSelectedForm(newVal);
-                                }}
-                                disabled={!selectedYear}
-                            />
-                        </div>
-                        <div className="w-full flex flex-col mb-2">
-                            <label htmlFor="term">Term</label>
-                            <ReusableSelect
-                                id="term"
-                                placeholder="Select Term"
-                                options={termOptions}
-                                value={termOptions.find(opt => opt.value === selectedTerm) || undefined}
-                                onChange={(e) => {
-                                    const newVal = e.target.value;
-                                    resetBelow('term');
-                                    setSelectedTerm(newVal);
-                                }}
-                                disabled={!selectedForm}
-                            />
-                        </div>
-                    </div>
-                </ReusableDiv>
+      <div className="p-0">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
+          Exam Report Processing
+        </h1>
 
-                <ReusableDiv
-                    className="ring-1 w-full h-fit bg-blue-100"
-                    tag="Process Report"
-                    icon={TbReport}
-                    collapsible={true}
-                >
-                    {loading ? <FaSpinner /> : (
-                        <div className="flex flex-col pb-1 space-y-2">
-                            <div className="flex flex-row items-center gap-2 font-medium">
-                                <div className="w-2/5">Exam</div>
-                                <div className="w-2/5">Exam Alias</div>
-                                <div className="w-1/5">Out of %</div>
-                            </div>
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Form Controls */}
+          <div className="w-full lg:w-1/2">
+            <ReusableDiv
+              className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
+              tag="Select Exam"
+              icon={PiExam}
+              collapsible={true}
+            >
+              <div className="flex flex-col space-y-3 pb-4">
+                <div className="w-full">
+                  <label
+                    htmlFor="year"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    Year
+                  </label>
+                  <ReusableSelect
+                    id="year"
+                    placeholder="Select Year"
+                    options={yearOptions}
+                    value={
+                      yearOptions.find(
+                        (option) => option.value === selectedYear
+                      ) || undefined
+                    }
+                    onChange={(e) => {
+                      const newVal = e.target.value;
+                      resetBelow("year");
+                      setSelectedYear(newVal);
+                    }}
+                    className="w-full"
+                  />
+                </div>
 
-                            {examRows.map((row, index) => {
-                                const isDisabled = examOptions.length === 0;
-                                return (
-                                    <div key={index} className="flex flex-row items-center gap-2">
-                                        <div className="w-2/5">
-                                            <Dropdown
-                                                options={getAvailableOptions(index)}
-                                                value={row.exam}
-                                                onChange={(value) => handleExamChange(index, value)}
-                                                placeholder={examRows.length === 1 ? 'Select Exam' : `Select Exam ${index + 1}`}
-                                                menuPlacement="auto"
-                                                searchable
-                                                clearable
-                                                className='z-50'
-                                                disabled={isDisabled}
-                                            />
-                                        </div>
-                                        <div className="w-2/5">
-                                            <ReusableInput
-                                                type="text"
-                                                placeholder="Exam Alias"
-                                                value={row.examAlias}
-                                                onChange={(e) => handleInputChange(index, 'examAlias', e.target.value)}
-                                                disabled={isDisabled}
-                                            />
-                                        </div>
-                                        <div className="w-1/5">
-                                            <ReusableInput
-                                                type="number"
-                                                placeholder="Out of %"
-                                                value={row.outOf}
-                                                onChange={(e) => handleInputChange(index, 'outOf', e.target.value)}
-                                                disabled={isDisabled}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                <div className="w-full">
+                  <label
+                    htmlFor="form"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    Form
+                  </label>
+                  <ReusableSelect
+                    id="form"
+                    placeholder={
+                      selectedYear ? "Select Form" : "Please select year first"
+                    }
+                    options={formOptions}
+                    value={
+                      selectedForm
+                        ? formOptions.find((opt) => opt.value === selectedForm)
+                        : undefined
+                    }
+                    onChange={(e) => {
+                      const newVal = e.target.value;
+                      resetBelow("form");
+                      setSelectedForm(newVal);
+                    }}
+                    disabled={!selectedYear}
+                    className="w-full"
+                  />
+                </div>
 
-                            <div className="flex flex-row gap-2">
-                                {examRows.length < 3 && (
-                                    <Button
-                                        onClick={addExamRow}
-                                        variant='success'
-                                        className='my-0.5'
-                                        disabled={isAddDisabled}
-                                    >
-                                        <FaPlus size={12} /> Add Exam
-                                    </Button>
-                                )}
-                                {examRows.length > 1 && (
-                                    <Button
-                                        onClick={removeExamRow}
-                                        variant='danger'
-                                        className='my-0.5'
-                                    >
-                                        <FaMinus size={12} /> Remove Exam
-                                    </Button>
-                                )}
-                            </div>
-
-                            <div className={`mt-2 flex ${examRows.length > 1 ? 'flex-row items-center gap-4 justify-between' : 'justify-start'}`}>
-                                {examRows.length > 1 && (
-                                    <div className="w-2/5">
-                                        <ReusableSelect
-                                            id="formula"
-                                            placeholder="Select Formula"
-                                            className="my-0.5"
-                                            options={getFormulaOptions()}
-                                            value={getFormulaOptions().find(opt => opt.value === selectedFormula) || undefined}
-                                            onChange={(e) => setSelectedFormula(e.target.value)}
-                                            disabled={examOptions.length === 0}
-                                        />
-                                    </div>
-                                )}
-                                <Button
-                                    variant='primary'
-                                    icon={MdDone}
-                                    onClick={handleApplyFormula}
-                                    className="my-0.5"
-                                    loading={buttonLoading}
-                                    disabled={isAddDisabled || examOptions.length === 0 || (examRows.length > 1 && !selectedFormula)}
-                                >
-                                    Apply Formula
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </ReusableDiv>
-            </div>
-            <ReusableDiv icon={GrDocumentDownload} tag='Student Report' className="flex-1 flex flex-col ring-1 h-full overflow-hidden mb-4 bg-blue-100" collapsible={true}>
-                {pdfUrl && (
-                    <div className='flex flex-col h-full overflow-auto pb-12' style={{ height: '90vh'}}>
-                        <h2>Student Report Form:</h2>
-                        <iframe 
-                            src={pdfUrl}
-                            title="PDF Report"
-                            width="100%"
-                            height="100%"
-                            // border="1px solid red"
-                            style={{ border: '1px solid #ddd', borderRadius: '4px' }}
-                        />
-                    </div>
-                )}
+                <div className="w-full">
+                  <label
+                    htmlFor="term"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    Term
+                  </label>
+                  <ReusableSelect
+                    id="term"
+                    placeholder={
+                      selectedForm ? "Select Term" : "Please select form first"
+                    }
+                    options={termOptions}
+                    value={
+                      termOptions.find(
+                        (option) => option.value === selectedTerm
+                      ) || undefined
+                    }
+                    onChange={(e) => {
+                      const newVal = e.target.value;
+                      resetBelow("term");
+                      setSelectedTerm(newVal);
+                    }}
+                    disabled={!selectedForm}
+                    className="w-full"
+                  />
+                </div>
+              </div>
             </ReusableDiv>
+          </div>
+
+          {/* Process Report Section */}
+          <div className="w-full lg:w-1/2">
+            <ReusableDiv
+              className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
+              tag="Process Report"
+              icon={TbReport}
+              collapsible={true}
+            >
+              {loading ? (
+                <div className="flex justify-center items-center h-32">
+                  <FaSpinner className="animate-spin text-2xl text-blue-600 dark:text-blue-400" />
+                </div>
+              ) : (
+                <div className="flex flex-col space-y-3 pb-4">
+                  <div className="flex flex-row items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
+                    <div className="w-2/5">Exam</div>
+                    <div className="w-2/5">Exam Alias</div>
+                    <div className="w-1/5">Out of %</div>
+                  </div>
+
+                  {examRows.map((row, index) => {
+                    const isDisabled = examOptions.length === 0;
+                    return (
+                      <div
+                        key={index}
+                        className="flex flex-row items-center gap-2"
+                      >
+                        <div className="w-2/5">
+                          <Dropdown
+                            options={getAvailableOptions(index)}
+                            value={row.exam}
+                            onChange={(value) => handleExamChange(index, value)}
+                            placeholder={
+                              examRows.length === 1
+                                ? "Select Exam"
+                                : `Select Exam ${index + 1}`
+                            }
+                            menuPlacement="auto"
+                            searchable
+                            clearable
+                            className="z-50"
+                            disabled={isDisabled}
+                          />
+                        </div>
+                        <div className="w-2/5">
+                          <ReusableInput
+                            type="text"
+                            placeholder="Exam Alias"
+                            value={row.examAlias}
+                            onChange={(e) =>
+                              handleInputChange(
+                                index,
+                                "examAlias",
+                                e.target.value
+                              )
+                            }
+                            disabled={isDisabled}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="w-1/5">
+                          <ReusableInput
+                            type="number"
+                            placeholder="Out of %"
+                            value={row.outOf}
+                            onChange={(e) =>
+                              handleInputChange(index, "outOf", e.target.value)
+                            }
+                            disabled={isDisabled}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div className="flex flex-row gap-2">
+                    {examRows.length < 3 && (
+                      <Button
+                        onClick={addExamRow}
+                        variant="success"
+                        className="my-0.5"
+                        disabled={isAddDisabled}
+                      >
+                        <FaPlus size={12} /> Add Exam
+                      </Button>
+                    )}
+                    {examRows.length > 1 && (
+                      <Button
+                        onClick={removeExamRow}
+                        variant="danger"
+                        className="my-0.5"
+                      >
+                        <FaMinus size={12} /> Remove Exam
+                      </Button>
+                    )}
+                  </div>
+
+                  <div
+                    className={`mt-2 flex ${
+                      examRows.length > 1
+                        ? "flex-row items-center gap-4 justify-between"
+                        : "justify-start"
+                    }`}
+                  >
+                    {examRows.length > 1 && (
+                      <div className="w-2/5">
+                        <ReusableSelect
+                          id="formula"
+                          placeholder="Select Formula"
+                          className="my-0.5 w-full"
+                          options={getFormulaOptions()}
+                          value={
+                            getFormulaOptions().find(
+                              (opt) => opt.value === selectedFormula
+                            ) || undefined
+                          }
+                          onChange={(e) => setSelectedFormula(e.target.value)}
+                          disabled={examOptions.length === 0}
+                        />
+                      </div>
+                    )}
+                    <Button
+                      variant="primary"
+                      icon={MdDone}
+                      onClick={handleApplyFormula}
+                      className="my-0.5"
+                      loading={buttonLoading}
+                      disabled={
+                        isAddDisabled ||
+                        examOptions.length === 0 ||
+                        (examRows.length > 1 && !selectedFormula)
+                      }
+                    >
+                      Apply Formula
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </ReusableDiv>
+          </div>
         </div>
+
+        {/* Report Viewer */}
+        <div className="mt-4">
+          <ReusableDiv
+            icon={GrDocumentDownload}
+            tag="Student Report"
+            className="ml-0 mr-0 ring-1 bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md"
+            collapsible={true}
+          >
+            {pdfUrl ? (
+              <div
+                className="flex flex-col h-full p-0"
+                style={{ minHeight: "70vh" }}
+              >
+                <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
+                  Student Report Form:
+                </h2>
+                <div className="flex-1 overflow-hidden rounded-md border border-gray-200 dark:border-gray-600">
+                  <iframe
+                    src={pdfUrl}
+                    title="PDF Report"
+                    width="100%"
+                    height="100%"
+                    className="min-h-[70vh]"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-center items-center h-64 text-gray-500 dark:text-gray-400">
+                Configure and process exams to generate report
+              </div>
+            )}
+          </ReusableDiv>
+        </div>
+      </div>
     );
 };
 

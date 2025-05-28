@@ -20,6 +20,7 @@ const StreamCRUD = ({
   modalState,
   setModalState,
   teacherOptions,
+  streamOptions,
   rowData,
   refreshTable,
   selectedForm,
@@ -64,10 +65,10 @@ const StreamCRUD = ({
         })
         .finally(() => setIsLoading(false));
     }
-  }, [modalState.editStream, modalState.viewStream]);
+  }, [modalState.editStream, modalState.viewStream, rowData, selectedForm]);
 
   const handleSubmit = async (formValues) => {
-    if (!formValues.stream_name || !formValues.teacher_id) {
+    if (!formValues.stream_id || !formValues.teacher_id) {
       setError("Please fill in all required fields!");
       return;
     }
@@ -158,6 +159,18 @@ const StreamCRUD = ({
 
   return (
     <>
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-700 p-4 md:p-6 rounded-lg shadow-lg text-center max-w-xs md:max-w-sm">
+            <FaSpinner className="animate-spin text-2xl md:text-3xl text-blue-500 mx-auto mb-3 md:mb-4" />
+            <p className="text-base md:text-lg font-medium text-gray-700 dark:text-gray-300">
+              Loading Stream Data...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Add Stream Modal */}
       <ModalForm
         isOpen={modalState.addStream}
@@ -186,17 +199,23 @@ const StreamCRUD = ({
 
             <div className="mb-2">
               <label
-                htmlFor="stream_name"
+                htmlFor="stream_id"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Stream Name *
               </label>
-              <ReusableInput
-                name="stream_name"
-                id="stream_name"
+              <ReusableSelect
+                name="stream_id"
+                id="stream_id"
+                placeholder="Select Stream"
                 className="w-full mt-1 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                value={values.stream_name}
-                onChange={handleChange}
+                options={streamOptions}
+                value={values.stream_id}
+                onChange={(value) =>
+                  handleChange({
+                    target: { name: "stream_id", value: value.target.value },
+                  })
+                }
                 required
               />
             </div>
@@ -272,17 +291,23 @@ const StreamCRUD = ({
 
             <div className="mb-2">
               <label
-                htmlFor="stream_name"
+                htmlFor="stream_id"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Stream Name *
               </label>
-              <ReusableInput
-                name="stream_name"
-                id="stream_name"
+              <ReusableSelect
+                name="stream_id"
+                id="stream_id"
+                placeholder="Select Stream"
                 className="w-full mt-1 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                value={values.stream_name}
-                onChange={handleChange}
+                options={streamOptions}
+                value={values.stream_id}
+                onChange={(value) =>
+                  handleChange({
+                    target: { name: "stream_id", value: value.target.value },
+                  })
+                }
                 required
               />
             </div>
@@ -345,55 +370,61 @@ const StreamCRUD = ({
           setModalState((prev) => ({ ...prev, viewStream: false }))
         }
       >
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-1 space-y-1">
-            <div className="mt-1 bg-white dark:bg-gray-700 p-3 rounded shadow-sm">
-              <FiEdit2 className="text-gray-500 dark:text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Stream Name
-                </p>
-                <p className="font-semibold dark:text-white">
-                  {streamData?.stream_name}
-                </p>
+        {streamData && (
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-1 space-y-1">
+              <div className="mt-1 bg-white dark:bg-gray-700 p-3 rounded shadow-sm">
+                <FiEdit2 className="text-gray-500 dark:text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Stream Name
+                  </p>
+                  <p className="font-semibold dark:text-white">
+                    {streamData.stream_name}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="bg-white dark:bg-gray-700 p-3 rounded shadow-sm">
-              <FiCalendar className="text-gray-500 dark:text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Year</p>
-                <p className="font-semibold dark:text-white">
-                  {streamData?.year}
-                </p>
+              <div className="bg-white dark:bg-gray-700 p-3 rounded shadow-sm">
+                <FiCalendar className="text-gray-500 dark:text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Year
+                  </p>
+                  <p className="font-semibold dark:text-white">
+                    {streamData.year}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="bg-white dark:bg-gray-700 p-3 rounded shadow-sm">
-              <FiUser className="text-gray-500 dark:text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Class Teacher
-                </p>
-                <p className="font-semibold dark:text-white">
-                  {(teacherOptions.value = streamData?.teacher_id || "-")}
-                </p>
+              <div className="bg-white dark:bg-gray-700 p-3 rounded shadow-sm">
+                <FiUser className="text-gray-500 dark:text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Class Teacher
+                  </p>
+                  <p className="font-semibold dark:text-white">
+                    {teacherOptions.find(
+                      (t) => t.value === streamData.teacher_id
+                    )?.label || "-"}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="bg-white dark:bg-gray-700 p-3 rounded shadow-sm">
-              <FiUser className="text-gray-500 dark:text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Status
-                </p>
-                <p className="font-semibold dark:text-white">
-                  {streamData?.status === 1 ? "Active" : "Inactive"}
-                </p>
+              <div className="bg-white dark:bg-gray-700 p-3 rounded shadow-sm">
+                <FiUser className="text-gray-500 dark:text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Status
+                  </p>
+                  <p className="font-semibold dark:text-white">
+                    {streamData.status === 1 ? "Active" : "Inactive"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </ModalForm>
     </>
   );

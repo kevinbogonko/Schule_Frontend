@@ -150,122 +150,208 @@ const Marksheet = () => {
   };
 
   return (
-    <div className="w-full my-4 flex flex-1 gap-2">
-      <ReusableDiv
-        className="w-1/4 ring-1 h-fit bg-blue-100"
-        tag="Manage Student Marks"
-        icon={FaUsersGear}
-      >
-        <div className="flex flex-wrap pb-4">
-          <div className="w-full flex flex-col mb-2">
-            <label htmlFor="year">Year</label>
-            <ReusableSelect
-              id="year"
-              placeholder="Select Year"
-              options={yearOptions}
-              value={yearOptions.find((opt) => opt.value === selectedYear)}
-              onChange={(e) => {
-                setSelectedYear(e.target.value);
-                resetBelow("year");
-              }}
-            />
-          </div>
-
-          <div className="w-full flex flex-col mb-2">
-            <label htmlFor="form">Form</label>
-            <ReusableSelect
-              id="form"
-              placeholder="Select Form"
-              options={formOptions}
-              value={formOptions.find((opt) => opt.value === selectedForm)}
-              onChange={(e) => {
-                setSelectedForm(e.target.value);
-                resetBelow("form");
-              }}
-              disabled={!selectedYear}
-            />
-          </div>
-
-          <div className="w-full flex flex-col mb-2">
-            <label htmlFor="term">Term</label>
-            <ReusableSelect
-              id="term"
-              placeholder="Select Term"
-              options={termOptions}
-              value={termOptions.find((opt) => opt.value === selectedTerm)}
-              onChange={(e) => {
-                setSelectedTerm(e.target.value);
-                resetBelow("term");
-              }}
-              disabled={!selectedForm}
-            />
-          </div>
-
-          <div className="w-full flex flex-col mb-2">
-            <label htmlFor="exam">Exam</label>
-            <ReusableSelect
-              id="exam"
-              placeholder="Select Exam"
-              options={examOptions}
-              value={examOptions.find((opt) => opt.label === selectedExam)}
-              onChange={(e) => {
-                const selected = examOptions.find(
-                  (opt) => opt.value === e.target.value
-                );
-                setSelectedExam(selected ? selected.label : null);
-                resetBelow("exam");
-              }}
-              disabled={!selectedTerm}
-            />
-          </div>
-
-          <div className="w-full flex flex-col mb-2">
-            <label htmlFor="stream">Stream</label>
-            <ReusableSelect
-              id="stream"
-              placeholder="Select Stream"
-              options={streamOptions}
-              value={streamOptions.find((opt) => opt.value === selectedStream)}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSelectedStream(value);
-                fetchPdf(value);
-              }}
-              // disabled={!selectedExam}
-            />
-          </div>
-        </div>
-      </ReusableDiv>
-
-      <ReusableDiv
-        icon={GrDocumentDownload}
-        tag="Marksheet"
-        className="flex-1 flex flex-col ring-1 h-full overflow-hidden mb-4 bg-blue-100"
-        collapsible={true}
-      >
+    <div className="p-0">
+      <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
+        Marksheet
+      </h1>
+  
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Loading Overlay */}
         {loading && (
-          <div className="flex justify-center items-center h-full">
-            <FaSpinner className="animate-spin text-xl text-blue-600" />
-            <span className="ml-2">Loading PDF...</span>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-700 p-4 md:p-6 rounded-lg shadow-lg text-center max-w-xs md:max-w-sm">
+              <FaSpinner className="animate-spin text-2xl md:text-3xl text-blue-500 mx-auto mb-3 md:mb-4" />
+              <p className="text-base md:text-lg font-medium text-gray-700 dark:text-gray-300">
+                Loading Marksheet...
+              </p>
+            </div>
           </div>
         )}
-
-        {pdfUrl && !loading && (
-          <div
-            className="flex flex-col h-full overflow-auto pb-12"
-            style={{ height: "90vh" }}
+  
+        {/* Form Controls */}
+        <div className="w-full lg:w-1/4">
+          <ReusableDiv
+            className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
+            tag="Manage Marks"
+            icon={FaUsersGear}
           >
-            <h2>Marksheet:</h2>
-            <iframe
-              src={pdfUrl}
-              title="Marksheet PDF"
-              width="100%"
-              height="100%"
-              style={{ border: "1px solid #ddd", borderRadius: "4px" }}
-            />
-          </div>
-        )}
-      </ReusableDiv>
+            <div className="flex flex-col space-y-3 pb-4">
+              <div className="w-full">
+                <label
+                  htmlFor="year"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Year
+                </label>
+                <ReusableSelect
+                  id="year"
+                  placeholder="Select Year"
+                  options={yearOptions}
+                  value={
+                    yearOptions.find(
+                      (option) => option.value === selectedYear
+                    ) || undefined
+                  }
+                  onChange={(e) => {
+                    setSelectedYear(e.target.value);
+                    resetBelow("year");
+                  }}
+                  className="w-full"
+                />
+              </div>
+  
+              <div className="w-full">
+                <label
+                  htmlFor="form"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Form
+                </label>
+                <ReusableSelect
+                  id="form"
+                  placeholder={
+                    selectedYear ? "Select Form" : "Please select year first"
+                  }
+                  options={formOptions}
+                  value={
+                    formOptions.find(
+                      (option) => option.value === selectedForm
+                    ) || undefined
+                  }
+                  onChange={(e) => {
+                    setSelectedForm(e.target.value);
+                    resetBelow("form");
+                  }}
+                  disabled={!selectedYear}
+                  className="w-full"
+                />
+              </div>
+  
+              <div className="w-full">
+                <label
+                  htmlFor="term"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Term
+                </label>
+                <ReusableSelect
+                  id="term"
+                  placeholder={
+                    selectedForm ? "Select Term" : "Please select form first"
+                  }
+                  options={termOptions}
+                  value={
+                    termOptions.find(
+                      (option) => option.value === selectedTerm
+                    ) || undefined
+                  }
+                  onChange={(e) => {
+                    setSelectedTerm(e.target.value);
+                    resetBelow("term");
+                  }}
+                  disabled={!selectedForm}
+                  className="w-full"
+                />
+              </div>
+  
+              <div className="w-full">
+                <label
+                  htmlFor="exam"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Exam
+                </label>
+                <ReusableSelect
+                  id="exam"
+                  placeholder={
+                    selectedTerm ? "Select Exam" : "Please select term first"
+                  }
+                  options={examOptions}
+                  value={
+                    examOptions.find(
+                      (option) => option.label === selectedExam
+                    ) || undefined
+                  }
+                  onChange={(e) => {
+                    const selected = examOptions.find(
+                      (opt) => opt.value === e.target.value
+                    );
+                    setSelectedExam(selected ? selected.label : null);
+                    resetBelow("exam");
+                  }}
+                  disabled={!selectedTerm}
+                  className="w-full"
+                />
+              </div>
+  
+              <div className="w-full">
+                <label
+                  htmlFor="stream"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Stream
+                </label>
+                <ReusableSelect
+                  id="stream"
+                  placeholder="Select Stream"
+                  options={streamOptions}
+                  value={
+                    streamOptions.find(
+                      (option) => option.value === selectedStream
+                    ) || undefined
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedStream(value);
+                    fetchPdf(value);
+                  }}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </ReusableDiv>
+        </div>
+  
+        {/* PDF Viewer */}
+        <div className="w-full lg:w-3/4">
+          <ReusableDiv
+            icon={GrDocumentDownload}
+            tag="Marksheet"
+            className="ml-0 mr-0 ring-1 bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md h-full"
+            collapsible={true}
+          >
+            <div className="p-0">
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <FaSpinner className="animate-spin text-xl text-blue-600 dark:text-blue-400" />
+                  <span className="ml-2 text-gray-700 dark:text-gray-300">
+                    Loading PDF...
+                  </span>
+                </div>
+              ) : pdfUrl ? (
+                <div className="flex flex-col h-full" style={{ minHeight: '70vh' }}>
+                  <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
+                    Marksheet:
+                  </h2>
+                  <div className="flex-1 overflow-hidden rounded-md border border-gray-200 dark:border-gray-600">
+                    <iframe
+                      src={pdfUrl}
+                      title="Marksheet PDF"
+                      width="100%"
+                      height="100%"
+                      className="min-h-[70vh]"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-center items-center h-64 text-gray-500 dark:text-gray-400">
+                  Select all required options to view marksheet
+                </div>
+              )}
+            </div>
+          </ReusableDiv>
+        </div>
+      </div>
     </div>
   );
 };

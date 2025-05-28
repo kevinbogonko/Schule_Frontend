@@ -90,15 +90,15 @@ const ImageUploader = ({
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg">
-      <h2 className="text-xl font-semibold mb-4">
+    <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-0">
+      <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
         {multiple ? "Upload Multiple Images" : "Upload Image"}
       </h2>
 
       <div className="mb-4">
-        <label className="flex flex-col items-center px-4 py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer hover:bg-gray-100">
+        <label className="flex flex-col items-center px-4 py-6 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
           <svg
-            className="w-8 h-8 text-gray-500 mb-2"
+            className="w-8 h-8 text-gray-500 dark:text-gray-400 mb-2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -110,7 +110,7 @@ const ImageUploader = ({
               d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
             />
           </svg>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-gray-600 dark:text-gray-300">
             {files.length > 0
               ? `${files.length} file${files.length > 1 ? "s" : ""} selected`
               : "Choose file" + (multiple ? "s" : "")}
@@ -127,19 +127,21 @@ const ImageUploader = ({
 
       {files.length > 0 && (
         <div className="mb-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Selected files:
           </h3>
           <div className="flex flex-wrap gap-2">
             {files.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm"
+                className="flex items-center bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-sm"
               >
-                <span className="truncate max-w-xs">{file.name}</span>
+                <span className="truncate max-w-xs text-gray-800 dark:text-gray-200">
+                  {file.name}
+                </span>
                 <button
                   onClick={() => handleRemoveFile(index)}
-                  className="ml-2 text-gray-500 hover:text-gray-700"
+                  className="ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   &times;
                 </button>
@@ -152,10 +154,10 @@ const ImageUploader = ({
       <button
         onClick={handleUpload}
         disabled={isUploading || files.length === 0}
-        className={`w-full py-2 px-4 rounded-md text-white font-medium ${
+        className={`w-full py-2 px-4 rounded-md text-white font-medium transition-colors ${
           isUploading || files.length === 0
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
+            ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
         }`}
       >
         {isUploading ? (
@@ -187,7 +189,7 @@ const ImageUploader = ({
 
       {uploadedUrls.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Uploaded {multiple ? "Images" : "Image"}:
           </h3>
           <div className="grid grid-cols-3 gap-2">
@@ -196,7 +198,7 @@ const ImageUploader = ({
                 <img
                   src={`${BACKEND_BASE_URL}${url}`}
                   alt={`Uploaded ${index}`}
-                  className="w-full h-full object-cover rounded-md border border-gray-200"
+                  className="w-full h-full object-cover rounded-md border border-gray-200 dark:border-gray-600"
                 />
               </div>
             ))}

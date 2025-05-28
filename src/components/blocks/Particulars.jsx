@@ -56,7 +56,7 @@ const Particulars = () => {
   const imagePath = particulars.logo_path || "/images/defaults/logo.webp";
 
   return (
-    <div className="p-4 relative">
+    <div className="p-0 relative">
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm">
@@ -71,9 +71,9 @@ const Particulars = () => {
       <ReusableDiv
         tag="School Details"
         icon={TbListDetails}
-        className="bg-blue-50 mx-0 rounded-lg shadow-sm"
+        className="ml-0 mr-0 bg-blue-50 mx-0 rounded-lg shadow-sm"
       >
-        <div className="flex flex-col md:flex-row-reverse gap-6 p-4 w-full h-auto">
+        <div className="flex flex-col md:flex-row-reverse gap-6 px-0 py-2 w-full h-auto">
           <div className="w-full md:w-64 flex-shrink-0 h-auto">
             <div className="w-full h-64 border-2 border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center shadow-sm">
               <img
@@ -147,7 +147,7 @@ const Particulars = () => {
             setModalState((prev) => ({ ...prev, editParticulars: true }));
           }}
         >
-          Edit Particulars
+          Edit
         </Button>
         <Button
           variant="primary"

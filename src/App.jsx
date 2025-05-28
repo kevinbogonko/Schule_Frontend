@@ -35,6 +35,15 @@ import {
 } from "react-router-dom";
 import { AuthProvider } from "./components/context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import StudentInfo from "./components/blocks/StudentInfo";
+import StudentAttemptedExams from "./components/blocks/StudentAttemptedExams";
+import StaffInfo from "./components/blocks/StaffInfo";
+import GlobalStream from "./components/blocks/GlobalStream";
+import AddMark2 from "./components/blocks/AddMarkTeacher";
+import AddMarkTeacher from "./components/blocks/AddMarkTeacher";
+import Subject from "./components/blocks/Subject";
+import Promotion from "./components/blocks/Promotion";
+import Users from "./components/blocks/Users";
 
 
 function App() {
@@ -67,6 +76,14 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes> */}
         {/* <Dashboard /> */}
+        {/* <StudentInfo /> */}
+        {/* <StudentAttemptedExams /> */}
+        {/* <StaffInfo /> */}
+        {/* <GlobalStream /> */}
+        {/* <AddMarkTeacher /> */}
+        {/* <Subject /> */}
+        {/* <Promotion /> */}
+        {/* <Users /> */}
 
         <Router>
           <AuthProvider>
