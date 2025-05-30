@@ -186,7 +186,7 @@ return (
 
       <div className="w-full lg:w-1/4">
         <ReusableDiv
-          className="ml-0 mr-0 mb-2 ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-4"
+          className="ml-0 mr-0 mb-2 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
           tag="Subject Teachers"
           icon={FaUsersGear}
         >

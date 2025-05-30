@@ -47,6 +47,7 @@ import AddMarkTeacher from "./AddMarkTeacher";
 import Subject from "./Subject";
 import MarkAnalysis from "./MarkAnalysis";
 import Promotion from "./Promotion";
+import { TbReportAnalytics } from "react-icons/tb";
 
 const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
@@ -325,7 +326,7 @@ const Dashboard = () => {
         {
           id: "reports",
           label: "Reports",
-          icon: <FiMail className="text-lg" />,
+          icon: <TbReportAnalytics className="text-lg" />,
           subItems: [
             { id: "marksheet", label: "Marksheet", component: <Marksheet /> },
             {
