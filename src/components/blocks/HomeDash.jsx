@@ -98,7 +98,7 @@ const AdminDashboard = ({ data }) => {
               <LineChart data={enrollmentData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="year" />
-                <YAxis />
+                <YAxis/>
                 <Tooltip />
                 <Legend />
                 <Line
@@ -498,8 +498,8 @@ const HomeDash = ({ role, data }) => {
   if (!data) return <div>Loading dashboard data...</div>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
+    <div className="p-0">
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
         Dashboard Overview
       </h1>
 

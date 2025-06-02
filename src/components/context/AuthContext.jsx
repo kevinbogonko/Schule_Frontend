@@ -1,13 +1,27 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api, { attachAccessTokenSetter } from "../../hooks/apiRefreshToken";
+import { useNavigate, useLocation } from "react-router-dom";
+import api from "../../hooks/apiRefreshToken"; // Adjust the import path as needed
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Initialize auth state from sessionStorage
+  useEffect(() => {
+    const savedUser = sessionStorage.getItem("authUser");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        sessionStorage.removeItem("authUser");
+      }
+    }
+    checkAuth();
+  }, []);
 
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
@@ -26,80 +40,84 @@ export const AuthProvider = ({ children }) => {
         withCredentials: true,
       });
 
-      setUser({
-        ...response.data,
-        role: response.data.role || "student",
-      });
+      const userData = response.data;
+      const userObj = {
+        ...userData,
+        role: userData.role || "student",
+      };
+
+      setUser(userObj);
+      sessionStorage.setItem("authUser", JSON.stringify(userObj));
+
+      if (location.pathname === "/") {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (error) {
       if (error.response?.status === 401) {
-        setUser(null);
+        logout();
       }
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    attachAccessTokenSetter((userData) => {
-      setUser(userData || null);
-    });
-    checkAuth();
-  }, []);
-
   const login = async (email, password) => {
     try {
       const response = await api.post(
         "/auth/login",
-        { username: email, password },
+        {
+          username: email,
+          password: password,
+        },
         { withCredentials: true }
       );
+
+      const { user: userData } = response.data;
+      const userObj = {
+        ...userData,
+        role: userData.role || "student",
+      };
 
       const csrf = getCookie("XSRF-TOKEN");
       if (csrf) {
         api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
       }
 
-      setUser({
-        ...response.data.user,
-        role: response.data.user.role || "student",
-      });
-
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+      setUser(userObj);
+      sessionStorage.setItem("authUser", JSON.stringify(userObj));
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      console.error("Login error", err);
+      throw err;
     }
   };
 
   const logout = async () => {
     try {
       await api.post("/auth/logout", {}, { withCredentials: true });
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch (err) {
+      console.error("Logout error", err);
     } finally {
       setUser(null);
+      sessionStorage.removeItem("authUser");
       navigate("/", { replace: true });
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        logout,
-        checkAuth,
-      }}
-    >
-      {typeof children === "function" ? children({ loading }) : children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    checkAuth,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

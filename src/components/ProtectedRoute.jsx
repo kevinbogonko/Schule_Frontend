@@ -1,18 +1,17 @@
-import { useAuth } from "../components/context/AuthContext";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-// import LoadingSpinner from "./LoadingSpinner";
 import { FaSpinner } from "react-icons/fa";
+import { useAuth } from "../components/context/AuthContext";
+import { Navigate, Outlet } from "react-router-dom";
+// import LoadingSpinner from "./LoadingSpinner"; // Create this component
 
 const ProtectedRoute = ({ roles }) => {
   const { user, loading } = useAuth();
-  const location = useLocation();
 
   if (loading) {
-    return <FaSpinner className="animate" />;
+    return <FaSpinner />;
   }
 
   if (!user) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (roles && !roles.includes(user.role)) {

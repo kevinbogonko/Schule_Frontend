@@ -590,7 +590,7 @@ const Dashboard = () => {
       >
         {windowWidth < 768 && (
           <div className="p-4 flex items-center justify-between border-b border-indigo-700 dark:border-gray-700 h-16 transition-colors duration-500">
-            <div className="text-xl font-semibold">EduDash</div>
+            <div className="text-xl font-semibold">Schule</div>
             <button
               onClick={toggleMobileMenu}
               className="p-1 text-white hover:text-indigo-200 dark:hover:text-gray-300 transition-colors duration-300"
@@ -607,7 +607,7 @@ const Dashboard = () => {
             {isSidebarOpen ? (
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-indigo-600 dark:bg-gray-700 rounded-md transition-colors duration-500" />
-                <span className="text-xl font-semibold">EduDash</span>
+                <span className="text-xl font-semibold">Schule</span>
               </div>
             ) : (
               <button
@@ -827,10 +827,10 @@ const Dashboard = () => {
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                   <div className="flex flex-col md:flex-row justify-between items-center">
                     <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 md:mb-0 transition-colors duration-500">
-                      © 2023 EduDash. All rights reserved.
+                      © 2023 Schule Analytics. All rights reserved.
                     </div>
                     <div className="flex space-x-6">
-                      <a
+                      {/* <a
                         href="#"
                         className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-300"
                       >
@@ -841,7 +841,7 @@ const Dashboard = () => {
                         className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-300"
                       >
                         Terms of Service
-                      </a>
+                      </a> */}
                       <a
                         href="#"
                         className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-300"
