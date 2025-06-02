@@ -44,6 +44,7 @@ import AddMarkTeacher from "./components/blocks/AddMarkTeacher";
 import Subject from "./components/blocks/Subject";
 import Promotion from "./components/blocks/Promotion";
 import Users from "./components/blocks/Users";
+import HomeDash from "./components/blocks/HomeDash";
 
 
 function App() {
@@ -84,11 +85,12 @@ function App() {
         {/* <Subject /> */}
         {/* <Promotion /> */}
         {/* <Users /> */}
+        {/* <HomeDash /> */}
 
         <Router>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<Login />} />
+              <Route path="/login" element={<Login />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
               </Route>

@@ -17,6 +17,16 @@ import {
   FiMoon,
 } from "react-icons/fi";
 import { FaChalkboard, FaChalkboardTeacher } from "react-icons/fa";
+import {
+  PiChalkboardTeacherBold,
+  PiExamBold,
+  PiBookOpen,
+  PiBriefcase,
+  PiGraduationCap,
+  PiMedal,
+  PiTrophy,
+} from "react-icons/pi";
+import { TbReportAnalytics } from "react-icons/tb";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import api from "../../hooks/api";
@@ -35,7 +45,6 @@ import Marklist2 from "./Marklist2";
 import Particulars from "./Particulars";
 import ResultSMS from "./ResultSMS";
 import COSMS from "./COSMS";
-import { PiChalkboardTeacherBold, PiExamBold } from "react-icons/pi";
 import Marksheet from "./Marksheet";
 import MarklistPDFReport from "./MarklistPDFReport";
 import StudentReport from "./StudentReport";
@@ -47,7 +56,7 @@ import AddMarkTeacher from "./AddMarkTeacher";
 import Subject from "./Subject";
 import MarkAnalysis from "./MarkAnalysis";
 import Promotion from "./Promotion";
-import { TbReportAnalytics } from "react-icons/tb";
+import HomeDash from "./HomeDash";
 
 const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
@@ -70,6 +79,7 @@ const Dashboard = () => {
     );
   });
   const [imagePath, setImagePath] = useState("");
+  const [dashboardData, setDashboardData] = useState(null);
   const sidebarRef = useRef(null);
   const profileRef = useRef(null);
 
@@ -117,6 +127,25 @@ const Dashboard = () => {
     };
 
     fetchUserPhoto();
+  }, [user]);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!user) return;
+
+      try {
+        const response = await api.post("/dashboard/dashboarddata", {
+          role: user.role,
+          id: user.user_id,
+        });
+        setDashboardData(response.data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchDashboardData();
   }, [user]);
 
   // Redirect if not authenticated
@@ -243,7 +272,12 @@ const Dashboard = () => {
   // Role-based menu items
   const getMenuItems = () => {
     const baseItems = [
-      { id: "home", label: "Home", icon: <FiHome className="text-lg" /> },
+      {
+        id: "home",
+        label: "Home",
+        icon: <FiHome className="text-lg" />,
+        component: <HomeDash role={user?.role} data={dashboardData} />,
+      },
     ];
 
     if (user?.role === "admin") {
@@ -532,120 +566,8 @@ const Dashboard = () => {
       return activeComponent;
     }
 
-    // Default dashboard content when no component is selected
-    return (
-      <>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 transition-colors duration-500">
-          Dashboard Overview
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          {[
-            {
-              title: "Total Students",
-              value: "1,234",
-              change: "+12%",
-              color: "bg-blue-500",
-            },
-            {
-              title: "Active Courses",
-              value: "24",
-              change: "+3%",
-              color: "bg-green-500",
-            },
-            {
-              title: "Pending Tasks",
-              value: "5",
-              change: "-2%",
-              color: "bg-yellow-500",
-            },
-            {
-              title: "Messages",
-              value: "12",
-              change: "+4%",
-              color: "bg-purple-500",
-            },
-          ].map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-500"
-            >
-              <div className="flex items-center">
-                <div
-                  className={`p-3 rounded-full ${stat.color} bg-opacity-10 transition-colors duration-500`}
-                >
-                  <div
-                    className={`w-6 h-6 ${stat.color} rounded-full transition-colors duration-500`}
-                  />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 transition-colors duration-500">
-                    {stat.title}
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-800 dark:text-white transition-colors duration-500">
-                    {stat.value}
-                  </p>
-                  <p
-                    className={`text-sm ${
-                      stat.change.startsWith("+")
-                        ? "text-green-500"
-                        : "text-red-500"
-                    } transition-colors duration-500`}
-                  >
-                    {stat.change} from last month
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-500">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 transition-colors duration-500">
-            Recent Activity
-          </h2>
-          <div className="space-y-4">
-            {[
-              {
-                id: 1,
-                title: "New student registration",
-                time: "2 hours ago",
-                icon: "👤",
-              },
-              {
-                id: 2,
-                title: "Assignment submission",
-                time: "5 hours ago",
-                icon: "📝",
-              },
-              { id: 3, title: "Course updated", time: "1 day ago", icon: "📚" },
-              {
-                id: 4,
-                title: "Payment received",
-                time: "2 days ago",
-                icon: "💰",
-              },
-            ].map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start pb-4 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors duration-500"
-              >
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-100 dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 mr-4 transition-colors duration-500">
-                  {activity.icon}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800 dark:text-white transition-colors duration-500">
-                    {activity.title}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-500">
-                    {activity.time}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </>
-    );
+    // Default to HomeDash when no component is selected
+    return <HomeDash role={user?.role} data={dashboardData} />;
   };
 
   return (
