@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api, { attachAccessTokenSetter } from "../../hooks/apiRefreshToken";
 
 const AuthContext = createContext();
@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
@@ -36,11 +37,12 @@ export const AuthProvider = ({ children }) => {
         navigate("/dashboard");
       }
     } catch (error) {
-      console.error("Auth check failed", error);
       setUser(null);
-      if (error.response?.status === 401) {
-        logout();
+      if (error.response?.status === 401 && location.pathname !== "/login") {
+        navigate("/login", { state: { from: location }, replace: true });
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -53,12 +55,7 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
-    const initialize = async () => {
-      await checkAuth();
-      setLoading(false); // Only mark loading complete after auth check
-    };
-
-    initialize();
+    checkAuth();
   }, []);
 
   const login = async (email, password) => {
@@ -84,7 +81,8 @@ export const AuthProvider = ({ children }) => {
         role: userData.role || "student",
       });
 
-      navigate("/dashboard");
+      const redirectPath = location.state?.from?.pathname || "/dashboard";
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error("Login error", err);
       throw err;
@@ -112,7 +110,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-            {!loading && children}   {" "}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
