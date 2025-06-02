@@ -52,15 +52,13 @@ const MarklistPDFReport = () => {
         const response = await api.post(
           "/report/marklistpdf",
           {
-            form: selectedForm,
+            form: selectedForm.value,
             formula: "self",
-            yearValue: selectedYear,
+            yearValue: selectedYear.value,
             exams: {
               exam_1: {
                 alias: "TEST EXAM",
-                name: examOptions.find(
-                  (opt) => String(opt.value) === String(selectedExam)
-                )?.value,
+                name: selectedExam.value,
                 outof: "100",
               },
             },
@@ -91,9 +89,9 @@ const MarklistPDFReport = () => {
       if (selectedForm && selectedTerm && selectedYear) {
         try {
           const response = await api.post("exam/exams", {
-            form: selectedForm,
-            term: selectedTerm,
-            year: selectedYear,
+            form: selectedForm.value,
+            term: selectedTerm.value,
+            year: selectedYear.value,
           });
           setExamOptions(
             response.data.map((exam) => ({
@@ -117,7 +115,6 @@ const MarklistPDFReport = () => {
       </h1>
 
       <div className="flex flex-col lg:flex-row gap-4">
-        {/* Loading Overlay */}
         {loading && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-700 p-4 md:p-6 rounded-lg shadow-lg text-center max-w-xs md:max-w-sm">
@@ -129,7 +126,6 @@ const MarklistPDFReport = () => {
           </div>
         )}
 
-        {/* Form Controls */}
         <div className="w-full lg:w-1/4">
           <ReusableDiv
             className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
@@ -138,23 +134,16 @@ const MarklistPDFReport = () => {
           >
             <div className="flex flex-col space-y-3 pb-4">
               <div className="w-full">
-                <label
-                  htmlFor="year"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
+                <label htmlFor="year" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Year
                 </label>
                 <ReusableSelect
                   id="year"
                   placeholder="Select Year"
                   options={yearOptions}
-                  value={
-                    yearOptions.find(
-                      (option) => option.value === selectedYear
-                    ) || undefined
-                  }
-                  onChange={(e) => {
-                    setSelectedYear(e.target.value);
+                  value={selectedYear}
+                  onChange={(option) => {
+                    setSelectedYear(option);
                     resetBelow("year");
                   }}
                   className="w-full"
@@ -162,25 +151,16 @@ const MarklistPDFReport = () => {
               </div>
 
               <div className="w-full">
-                <label
-                  htmlFor="form"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
+                <label htmlFor="form" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Form
                 </label>
                 <ReusableSelect
                   id="form"
-                  placeholder={
-                    selectedYear ? "Select Form" : "Please select year first"
-                  }
+                  placeholder={selectedYear ? "Select Form" : "Please select year first"}
                   options={formOptions}
-                  value={
-                    formOptions.find(
-                      (option) => option.value === selectedForm
-                    ) || undefined
-                  }
-                  onChange={(e) => {
-                    setSelectedForm(e.target.value);
+                  value={selectedForm}
+                  onChange={(option) => {
+                    setSelectedForm(option);
                     resetBelow("form");
                   }}
                   disabled={!selectedYear}
@@ -189,25 +169,16 @@ const MarklistPDFReport = () => {
               </div>
 
               <div className="w-full">
-                <label
-                  htmlFor="term"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
+                <label htmlFor="term" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Term
                 </label>
                 <ReusableSelect
                   id="term"
-                  placeholder={
-                    selectedForm ? "Select Term" : "Please select form first"
-                  }
+                  placeholder={selectedForm ? "Select Term" : "Please select form first"}
                   options={termOptions}
-                  value={
-                    termOptions.find(
-                      (option) => option.value === selectedTerm
-                    ) || undefined
-                  }
-                  onChange={(e) => {
-                    setSelectedTerm(e.target.value);
+                  value={selectedTerm}
+                  onChange={(option) => {
+                    setSelectedTerm(option);
                     resetBelow("term");
                   }}
                   disabled={!selectedForm}
@@ -216,25 +187,16 @@ const MarklistPDFReport = () => {
               </div>
 
               <div className="w-full">
-                <label
-                  htmlFor="exam"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
+                <label htmlFor="exam" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Exam
                 </label>
                 <ReusableSelect
                   id="exam"
-                  placeholder={
-                    selectedTerm ? "Select Exam" : "Please select term first"
-                  }
+                  placeholder={selectedTerm ? "Select Exam" : "Please select term first"}
                   options={examOptions}
-                  value={
-                    examOptions.find(
-                      (option) => option.value === selectedExam
-                    ) || undefined
-                  }
-                  onChange={(e) => {
-                    setSelectedExam(e.target.value);
+                  value={selectedExam}
+                  onChange={(option) => {
+                    setSelectedExam(option);
                     resetBelow("exam");
                   }}
                   disabled={!selectedTerm}
@@ -245,7 +207,6 @@ const MarklistPDFReport = () => {
           </ReusableDiv>
         </div>
 
-        {/* Report Viewer */}
         <div className="w-full lg:w-3/4">
           <ReusableDiv
             icon={GrDocumentDownload}
@@ -266,10 +227,7 @@ const MarklistPDFReport = () => {
                   {error}
                 </div>
               ) : pdfUrl ? (
-                <div
-                  className="flex flex-col h-full"
-                  style={{ minHeight: "70vh" }}
-                >
+                <div className="flex flex-col h-full" style={{ minHeight: "70vh" }}>
                   <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
                     Marklist:
                   </h2>
