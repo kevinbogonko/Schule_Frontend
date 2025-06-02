@@ -9,16 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    attachAccessTokenSetter((userData) => {
-      if (userData) {
-        setUser(userData);
-      } else {
-        setUser(null);
-      }
-    });
-  }, []);
-
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -26,9 +16,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkAuth = async () => {
-
-    if(user) return
-
     try {
       const csrf = getCookie("XSRF-TOKEN");
       if (csrf) {
@@ -39,18 +26,13 @@ export const AuthProvider = ({ children }) => {
         withCredentials: true,
       });
 
-      const userData = response.data;
       setUser({
-        ...userData,
-        role: userData.role || "student",
+        ...response.data,
+        role: response.data.role || "student",
       });
-
-      if (window.location.pathname === "/login") {
-        navigate("/dashboard");
-      }
     } catch (error) {
       if (error.response?.status === 401) {
-        logout();
+        setUser(null);
       }
     } finally {
       setLoading(false);
@@ -58,21 +40,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    attachAccessTokenSetter((userData) => {
+      setUser(userData || null);
+    });
     checkAuth();
-  }, [navigate]);
+  }, []);
 
   const login = async (email, password) => {
     try {
       const response = await api.post(
         "/auth/login",
-        {
-          username: email,
-          password: password,
-        },
+        { username: email, password },
         { withCredentials: true }
       );
-
-      const { user: userData } = response.data;
 
       const csrf = getCookie("XSRF-TOKEN");
       if (csrf) {
@@ -80,37 +60,41 @@ export const AuthProvider = ({ children }) => {
       }
 
       setUser({
-        ...userData,
-        role: userData.role || "student",
+        ...response.data.user,
+        role: response.data.user.role || "student",
       });
 
       navigate("/dashboard");
-    } catch (err) {
-      console.error("Login error", err);
-      throw err;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
       await api.post("/auth/logout", {}, { withCredentials: true });
-    } catch (err) {
-      console.error("Logout error", err);
+    } catch (error) {
+      console.error("Logout error:", error);
     } finally {
       setUser(null);
-      navigate("/login", {replace : true});
+      navigate("/", { replace: true });
     }
   };
 
-  const value = {
-    user,
-    loading,
-    login,
-    logout,
-    checkAuth, // Export checkAuth to be used in Dashboard
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        checkAuth,
+      }}
+    >
+      {typeof children === "function" ? children({ loading }) : children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

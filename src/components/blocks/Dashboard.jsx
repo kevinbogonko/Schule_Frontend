@@ -156,11 +156,11 @@ const Dashboard = () => {
       try {
         await checkAuth();
         if (!user && isMounted) {
-          navigate("/login");
+          navigate("/");
         }
       } catch (error) {
         if (isMounted) {
-          navigate("/login");
+          navigate("/");
         }
       }
     };

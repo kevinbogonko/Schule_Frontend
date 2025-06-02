@@ -45,6 +45,7 @@ import Subject from "./components/blocks/Subject";
 import Promotion from "./components/blocks/Promotion";
 import Users from "./components/blocks/Users";
 import HomeDash from "./components/blocks/HomeDash";
+import { FaSpinner } from "react-icons/fa";
 
 
 function App() {
@@ -89,13 +90,21 @@ function App() {
 
         <Router>
           <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-              </Route>
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
+            {({ loading }) => (
+              <>
+                {loading ? (
+                  <FaSpinner className="animate" />
+                ) : (
+                  <Routes>
+                    <Route path="/" element={<Login />} />
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/dashboard" element={<Dashboard />} />
+                    </Route>
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                )}
+              </>
+            )}
           </AuthProvider>
         </Router>
       </>
