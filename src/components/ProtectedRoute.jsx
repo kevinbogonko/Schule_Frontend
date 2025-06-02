@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import { useAuth } from "./AuthContext";
-import LoadingOverlay from "./LoadingOverlay";
+import { useAuth } from "../components/context/AuthContext";
+// import LoadingOverlay from "./LoadingOverlay";
 
 const ProtectedRoute = ({ roles, redirectPath = "/login" }) => {
   const { user, loading, isAuthenticated } = useAuth();
@@ -18,7 +18,7 @@ const ProtectedRoute = ({ roles, redirectPath = "/login" }) => {
   }, [loading, isAuthenticated, navigate, location, redirectPath]);
 
   if (loading) {
-    return <LoadingOverlay />;
+    return <FaSpinner />;
   }
 
   if (!isAuthenticated) {
