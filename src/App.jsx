@@ -45,8 +45,6 @@ import Subject from "./components/blocks/Subject";
 import Promotion from "./components/blocks/Promotion";
 import Users from "./components/blocks/Users";
 import HomeDash from "./components/blocks/HomeDash";
-import { FaSpinner } from "react-icons/fa";
-import NotFound from "./components/NotFound";
 
 
 function App() {
@@ -92,13 +90,11 @@ function App() {
         <Router>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<Login />} />
+              <Route path="/login" element={<Login />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
-                {/* Add other protected routes here */}
               </Route>
-              <Route path="/404" element={<NotFound />} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </AuthProvider>
         </Router>

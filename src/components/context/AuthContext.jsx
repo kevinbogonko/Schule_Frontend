@@ -1,90 +1,104 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import api from "../../hooks/apiRefreshToken";
+import { useNavigate } from "react-router-dom";
+import api, { attachAccessTokenSetter } from "../../hooks/apiRefreshToken";
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Secure storage with fallback
-  const authStorage = {
-    get: () => {
-      try {
-        return JSON.parse(
-          sessionStorage.getItem("auth") || localStorage.getItem("auth")
-        );
-      } catch {
-        return null;
-      }
-    },
-    set: (data) => {
-      const storage = data?.rememberMe ? localStorage : sessionStorage;
-      storage.setItem("auth", JSON.stringify(data));
-      // Clear the other storage
-      (data?.rememberMe ? sessionStorage : localStorage).removeItem("auth");
-    },
-    clear: () => {
-      sessionStorage.removeItem("auth");
-      localStorage.removeItem("auth");
-    },
-  };
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const savedAuth = authStorage.get();
-      if (savedAuth) {
-        setUser(savedAuth.user);
-
-        // Verify the session is still valid
-        try {
-          await api.get("/auth/validate", { withCredentials: true });
-        } catch (error) {
-          authStorage.clear();
-          setUser(null);
-        }
+    attachAccessTokenSetter((userData) => {
+      if (userData) {
+        setUser(userData);
+      } else {
+        setUser(null);
       }
-      setLoading(false);
-    };
-
-    initializeAuth();
+    });
   }, []);
 
-  const login = async (credentials, rememberMe = false) => {
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  };
+
+  const checkAuth = async () => {
+
+    if(user) return
+
     try {
-      const response = await api.post("/auth/login", credentials, {
+      const csrf = getCookie("XSRF-TOKEN");
+      if (csrf) {
+        api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
+      }
+
+      const response = await api.get("/auth/getloggedinuser", {
         withCredentials: true,
       });
 
-      const userData = {
-        ...response.data.user,
-        role: response.data.user.role || "user",
-      };
+      const userData = response.data;
+      setUser({
+        ...userData,
+        role: userData.role || "student",
+      });
 
-      setUser(userData);
-      authStorage.set({ user: userData, rememberMe });
-
-      // Redirect to intended location or default
-      const from = location.state?.from?.pathname || "/dashboard";
-      navigate(from, { replace: true });
+      if (window.location.pathname === "/login") {
+        navigate("/dashboard");
+      }
     } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+      if (error.response?.status === 401) {
+        logout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAuth();
+  }, [navigate]);
+
+  const login = async (email, password) => {
+    try {
+      const response = await api.post(
+        "/auth/login",
+        {
+          username: email,
+          password: password,
+        },
+        { withCredentials: true }
+      );
+
+      const { user: userData } = response.data;
+
+      const csrf = getCookie("XSRF-TOKEN");
+      if (csrf) {
+        api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
+      }
+
+      setUser({
+        ...userData,
+        role: userData.role || "student",
+      });
+
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Login error", err);
+      throw err;
     }
   };
 
   const logout = async () => {
     try {
       await api.post("/auth/logout", {}, { withCredentials: true });
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch (err) {
+      console.error("Logout error", err);
     } finally {
       setUser(null);
-      authStorage.clear();
-      navigate("/login", { replace: true });
+      navigate("/login", {replace : true});
     }
   };
 
@@ -93,14 +107,10 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    isAuthenticated: !!user,
+    checkAuth, // Export checkAuth to be used in Dashboard
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
