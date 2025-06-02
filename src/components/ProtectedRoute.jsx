@@ -1,21 +1,32 @@
-import { FaSpinner } from "react-icons/fa";
-import { useAuth } from "../components/context/AuthContext";
-import { Navigate, Outlet } from "react-router-dom";
-// import LoadingSpinner from "./LoadingSpinner"; // Create this component
+import { useEffect } from "react";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useAuth } from "./AuthContext";
+import LoadingOverlay from "./LoadingOverlay";
 
-const ProtectedRoute = ({ roles }) => {
-  const { user, loading } = useAuth();
+const ProtectedRoute = ({ roles, redirectPath = "/login" }) => {
+  const { user, loading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate(redirectPath, {
+        state: { from: location },
+        replace: true,
+      });
+    }
+  }, [loading, isAuthenticated, navigate, location, redirectPath]);
 
   if (loading) {
-    return <FaSpinner />;
+    return <LoadingOverlay />;
   }
 
-  if (!user) {
-    return <Navigate to="/" replace />;
+  if (!isAuthenticated) {
+    return null; // Already handled by useEffect
   }
 
   if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+    return navigate("/unauthorized", { replace: true });
   }
 
   return <Outlet />;
