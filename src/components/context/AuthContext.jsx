@@ -9,16 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    attachAccessTokenSetter((userData) => {
-      if (userData) {
-        setUser(userData);
-      } else {
-        setUser(null);
-      }
-    });
-  }, []);
-
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -26,9 +16,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkAuth = async () => {
-
-    if(user) return
-
     try {
       const csrf = getCookie("XSRF-TOKEN");
       if (csrf) {
@@ -49,17 +36,30 @@ export const AuthProvider = ({ children }) => {
         navigate("/dashboard");
       }
     } catch (error) {
+      console.error("Auth check failed", error);
+      setUser(null);
       if (error.response?.status === 401) {
         logout();
       }
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    checkAuth();
-  }, [navigate]);
+    attachAccessTokenSetter((userData) => {
+      if (userData) {
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
+    });
+
+    const initialize = async () => {
+      await checkAuth();
+      setLoading(false); // Only mark loading complete after auth check
+    };
+
+    initialize();
+  }, []);
 
   const login = async (email, password) => {
     try {
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Logout error", err);
     } finally {
       setUser(null);
-      navigate("/login", {replace : true});
+      navigate("/login", { replace: true });
     }
   };
 
@@ -107,10 +107,14 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    checkAuth, // Export checkAuth to be used in Dashboard
+    checkAuth,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+            {!loading && children}   {" "}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
