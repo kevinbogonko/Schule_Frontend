@@ -156,11 +156,11 @@ const Dashboard = () => {
       try {
         await checkAuth();
         if (!user && isMounted) {
-          navigate("/");
+          navigate("/login");
         }
       } catch (error) {
         if (isMounted) {
-          navigate("/");
+          navigate("/login");
         }
       }
     };
@@ -405,12 +405,12 @@ const Dashboard = () => {
               label: "Promote Students",
               component: <Promotion />,
             },
-            {
-              id: "users",
-              label: "Users",
-              component: <Promotion />,
-            },
-            { id: "account", label: "Account" },
+            // {
+            //   id: "users",
+            //   label: "Users",
+            //   component: <Promotion />,
+            // },
+            // { id: "account", label: "Account" },
           ],
         }
       );
@@ -453,12 +453,12 @@ const Dashboard = () => {
             },
           ],
         },
-        {
-          id: "settings",
-          label: "Settings",
-          icon: <FiSettings className="text-lg" />,
-          subItems: [{ id: "account", label: "Account" }],
-        }
+        // {
+        //   id: "settings",
+        //   label: "Settings",
+        //   icon: <FiSettings className="text-lg" />,
+        //   subItems: [{ id: "account", label: "Account" }],
+        // }
       );
     } else if (user?.role === "student") {
       baseItems.push(
@@ -486,12 +486,12 @@ const Dashboard = () => {
             },
           ],
         },
-        {
-          id: "settings",
-          label: "Settings",
-          icon: <FiSettings className="text-lg" />,
-          subItems: [{ id: "account", label: "Account" }],
-        }
+        // {
+        //   id: "settings",
+        //   label: "Settings",
+        //   icon: <FiSettings className="text-lg" />,
+        //   subItems: [{ id: "account", label: "Account" }],
+        // }
       );
     }
 
@@ -756,12 +756,12 @@ const Dashboard = () => {
                 )}
               </button>
 
-              <button className="p-1 rounded-full text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 relative flex items-center justify-center h-8 w-8 transition-colors duration-300">
+              {/* <button className="p-1 rounded-full text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 relative flex items-center justify-center h-8 w-8 transition-colors duration-300">
                 <FiMessageSquare className="h-5 w-5" />
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full transition-transform duration-300">
                   3
                 </span>
-              </button>
+              </button> */}
 
               <div
                 className="relative flex items-center justify-center h-8 w-8"
@@ -789,7 +789,7 @@ const Dashboard = () => {
                       Logged in as{" "}
                       <span className="font-medium">{user?.role}</span>
                     </div>
-                    <a
+                    {/* <a
                       href="#"
                       className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
                     >
@@ -800,7 +800,7 @@ const Dashboard = () => {
                       className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
                     >
                       <FiSettings className="mr-2" /> Settings
-                    </a>
+                    </a> */}
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center transition-colors duration-300"
@@ -827,7 +827,7 @@ const Dashboard = () => {
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                   <div className="flex flex-col md:flex-row justify-between items-center">
                     <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 md:mb-0 transition-colors duration-500">
-                      © 2023 Schule Analytics. All rights reserved.
+                      © 2025 Schule Analytics. All rights reserved.
                     </div>
                     <div className="flex space-x-6">
                       {/* <a

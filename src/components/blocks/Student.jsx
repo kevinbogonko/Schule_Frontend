@@ -17,7 +17,7 @@ const Student = ({user}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedYear, setSelectedYear] = useState("");
-  const [selectedForm, setSelectedForm] = useState("");
+  const [selectedForm, setSelectedForm] = useState(1);
   const [rowData, setRowData] = useState("");
   const [streamOptions, setStreamOptions] = useState([]);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
@@ -75,6 +75,7 @@ const Student = ({user}) => {
             value: item.id,
             label: item.stream_name,
           }));
+          console.log(formattedStreams)
           setStreamOptions(formattedStreams);
 
           const payload = { year: selectedYear, form: selectedForm };
@@ -146,7 +147,7 @@ const Student = ({user}) => {
       }
     } catch (error) {
       console.error("Failed to delete student:", error);
-      showToast("Error deleting student", "error");
+      // showToast("Error deleting student", "error");
     } finally {
       setTimeout(() => {
         setLoading(false);

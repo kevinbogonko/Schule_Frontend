@@ -153,6 +153,7 @@ const AddStudent = ({
           ? formValues.phone.slice(1)
           : formValues.phone,
       };
+      console.log(payload)
       const response = await api.post("/student/addstudent", payload);
 
       if (response.status === 200 || response.status === 201) {
