@@ -830,7 +830,7 @@ const Dashboard = () => {
                       © 2025 Schule Analytics. All rights reserved.
                     </div>
                     <div className="flex space-x-6">
-                      {/* <a
+                      <a
                         href="#"
                         className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-300"
                       >
@@ -841,7 +841,7 @@ const Dashboard = () => {
                         className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-300"
                       >
                         Terms of Service
-                      </a> */}
+                      </a>
                       <a
                         href="#"
                         className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-300"
