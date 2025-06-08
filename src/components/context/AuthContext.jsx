@@ -15,26 +15,26 @@ export const AuthProvider = ({ children }) => {
     const parts = value.split(`; ${name}=`);
     const cookie =
       parts.length === 2 ? parts.pop().split(";").shift() : undefined;
-    console.debug(`[Auth] Retrieved cookie ${name}:`, cookie);
+    console.log(`[Auth] Retrieved cookie ${name}:`, cookie);
     return cookie;
   };
 
   const checkAuth = async () => {
-    console.debug("[Auth] Running checkAuth");
+    console.log("[Auth] Running checkAuth");
     try {
       const csrf = getCookie("XSRF-TOKEN");
       if (csrf) {
         api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
-        console.debug("[Auth] Set CSRF token header");
+        console.log("[Auth] Set CSRF token header");
       }
 
-      console.debug("[Auth] Sending request to /auth/getloggedinuser");
+      console.log("[Auth] Sending request to /auth/getloggedinuser");
       const response = await api.get("/auth/getloggedinuser", {
         withCredentials: true,
       });
 
       const userData = response.data;
-      console.debug("[Auth] Received user data:", userData);
+      console.log("[Auth] Received user data:", userData);
 
       setUser((prevUser) => {
         const isDifferent =
@@ -44,17 +44,17 @@ export const AuthProvider = ({ children }) => {
           prevUser.role !== userData.role;
 
         if (isDifferent) {
-          console.debug("[Auth] Updating user context");
+          console.log("[Auth] Updating user context");
           return { ...userData, role: userData.role || "student" };
         }
 
-        console.debug("[Auth] User context unchanged");
+        console.log("[Auth] User context unchanged");
         return prevUser;
       });
 
       if (location.pathname === "/login") {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
-        console.debug(`[Auth] On /login, redirecting to: ${redirectPath}`);
+        console.log(`[Auth] On /login, redirecting to: ${redirectPath}`);
         if (redirectPath !== "/login") {
           navigate(redirectPath, { replace: true });
         }
@@ -63,20 +63,20 @@ export const AuthProvider = ({ children }) => {
       console.error("[Auth] checkAuth error:", error);
       setUser(null);
       if (error.response?.status === 401 && location.pathname !== "/login") {
-        console.debug("[Auth] Unauthorized, redirecting to login");
+        console.log("[Auth] Unauthorized, redirecting to login");
         navigate("/login", { state: { from: location }, replace: true });
       }
     } finally {
       setLoading(false);
-      console.debug("[Auth] Finished checkAuth");
+      console.log("[Auth] Finished checkAuth");
     }
   };
 
   useEffect(() => {
-    console.debug("[Auth] Running useEffect for auth setup");
+    console.log("[Auth] Running useEffect for auth setup");
 
     attachAccessTokenSetter((userData) => {
-      console.debug("[Auth] Access token updated, updating user:", userData);
+      console.log("[Auth] Access token updated, updating user:", userData);
       setUser((prev) => {
         if (!userData || !prev || prev.id !== userData.id) {
           return userData;
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    console.debug("[Auth] Logging in with email:", email);
+    console.log("[Auth] Logging in with email:", email);
     try {
       const response = await api.post(
         "/auth/login",
@@ -103,12 +103,12 @@ export const AuthProvider = ({ children }) => {
       );
 
       const { user: userData } = response.data;
-      console.debug("[Auth] Login successful, user data:", userData);
+      console.log("[Auth] Login successful, user data:", userData);
 
       const csrf = getCookie("XSRF-TOKEN");
       if (csrf) {
         api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
-        console.debug("[Auth] Set CSRF token header after login");
+        console.log("[Auth] Set CSRF token header after login");
       }
 
       setUser({
@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       const redirectPath = location.state?.from?.pathname || "/dashboard";
-      console.debug("[Auth] Redirecting to:", redirectPath);
+      console.log("[Auth] Redirecting to:", redirectPath);
       navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error("[Auth] Login error:", err);
@@ -126,10 +126,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    console.debug("[Auth] Logging out");
+    console.log("[Auth] Logging out");
     try {
       await api.post("/auth/logout", {}, { withCredentials: true });
-      console.debug("[Auth] Logout successful");
+      console.log("[Auth] Logout successful");
     } catch (err) {
       console.error("[Auth] Logout error:", err);
     } finally {
