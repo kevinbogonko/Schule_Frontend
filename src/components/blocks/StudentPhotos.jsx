@@ -6,10 +6,12 @@ import ReusableSelect from "../ReusableSelect";
 import { FaSpinner } from "react-icons/fa";
 import { FaUsersGear } from "react-icons/fa6";
 import api from "../../hooks/api";
+import { useToast } from "../Toast";
 import { formOptions, yearOptions } from "../../utils/CommonData";
 import RUStudentPhoto from "../snippets/RUStudentPhoto";
 
 const StudentPhotos = () => {
+  const { showToast } = useToast();
   const [studentData, setStudentData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedYear, setSelectedYear] = useState("");
@@ -64,7 +66,7 @@ const StudentPhotos = () => {
           ]);
 
           const formattedStreams = streamRes.data.map((item) => ({
-            value: item.id,
+            value: item.stream_id,
             label: item.stream_name,
           }));
           setStreamOptions(formattedStreams);
@@ -76,7 +78,13 @@ const StudentPhotos = () => {
           }));
           setStudentData(transformedData);
         } catch (err) {
-          console.error("Error fetching data:", err);
+          setStreamOptions([]);
+          setStudentData([]);
+          showToast(
+            err?.response?.data.message || "Something went wrong",
+            "error",
+            { duration: 3000, position: "top-right" }
+          );
         } finally {
           setLoading(false);
           setShowLoadingOverlay(false);

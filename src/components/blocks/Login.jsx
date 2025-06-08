@@ -27,7 +27,7 @@ const Login = () => {
     setSubmitAttempted(true);
 
     // Validate inputs
-    if (!email || !validateEmail(email) || !password || password.length < 6) {
+    if (!email || !validateEmail(email) || !password || password.length < 8) {
       return;
     }
 
@@ -60,7 +60,7 @@ const Login = () => {
   const getPasswordError = () => {
     if (!submitAttempted) return null;
     if (!password) return "Password is required";
-    if (password.length < 6) return "Password must be at least 6 characters";
+    if (password.length < 8) return "Password must be at least 8 characters";
     return null;
   };
 

@@ -11,13 +11,13 @@ import { useToast } from "../Toast";
 import { formOptions, yearOptions } from "../../utils/CommonData";
 import AddStudent from "../snippets/AddStudent";
 
-const Student = ({user}) => {
+const Student = ({ user }) => {
   const { showToast } = useToast();
   const [studentData, setStudentData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedYear, setSelectedYear] = useState("");
-  const [selectedForm, setSelectedForm] = useState(1);
+  const [selectedForm, setSelectedForm] = useState("");
   const [rowData, setRowData] = useState("");
   const [streamOptions, setStreamOptions] = useState([]);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
@@ -72,10 +72,9 @@ const Student = ({user}) => {
             form: selectedForm,
           });
           const formattedStreams = streamRes.data.map((item) => ({
-            value: item.id,
+            value: item.stream_id,
             label: item.stream_name,
           }));
-          console.log(formattedStreams)
           setStreamOptions(formattedStreams);
 
           const payload = { year: selectedYear, form: selectedForm };
@@ -90,8 +89,14 @@ const Student = ({user}) => {
           }));
           setStudentData(transformedData);
         } catch (err) {
-          setError(err.message || "Something went wrong");
-          console.error("Error fetching data:", err);
+          setStreamOptions([]);
+          setStudentData([]);
+          showToast(
+            err?.response?.data.message || "Something went wrong",
+            "error",
+            { duration: 3000, position: "top-right" }
+          );
+          setError(err?.response?.data.message || "Something went wrong");
         } finally {
           // Minimum 300ms display time for smooth UX
           loadingTimeoutRef.current = setTimeout(() => {
@@ -133,7 +138,7 @@ const Student = ({user}) => {
           duration: 3000,
           position: "top-center",
         });
-        const payload = { form: selectedForm };
+        const payload = { form: selectedForm, year : selectedYear };
         const updatedResponse = await api.post("/student/getstudents", payload);
         const transformedData = updatedResponse.data.map((student) => ({
           ...student,
@@ -146,8 +151,12 @@ const Student = ({user}) => {
         setStudentData(transformedData);
       }
     } catch (error) {
-      console.error("Failed to delete student:", error);
-      // showToast("Error deleting student", "error");
+      console.log(error?.response?.data.message);
+      showToast(
+        error?.response?.data.message || "Error deleting student",
+        "error",
+        { duration: 3000, position: "top-right" }
+      );
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -243,7 +252,7 @@ const Student = ({user}) => {
               striped={true}
               buttons={{
                 addButton: {
-                  show: user === "admin",
+                  show: user === "admin" && selectedForm && selectedYear,
                   label: "Add Student",
                   icon: <FiPlus className="w-4 h-4" />,
                   onClick: () =>
@@ -269,7 +278,6 @@ const Student = ({user}) => {
                             label: "Edit",
                             icon: <BsPencil className="w-4 h-4" />,
                             onClick: (row) => {
-                              console.log(row);
                               setRowData(row);
                               setModalState((prev) => ({
                                 ...prev,
@@ -294,7 +302,7 @@ const Student = ({user}) => {
                                 viewStudent: true,
                               }));
                             },
-                          }
+                          },
                         ],
                 },
               }}

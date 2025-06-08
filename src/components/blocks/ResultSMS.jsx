@@ -405,13 +405,11 @@ const ResultSMS = () => {
 
   useEffect(() => {
     if (selectedStream && smsType && studentResults) {
-
       const streamLabel = streamOptions.find(
         (stream) => stream.value === selectedStream
       )?.label;
 
       if (streamLabel) {
-
         const filteredStudents = studentResults.filter(
           (student) => student.stream === streamLabel
         );
@@ -465,7 +463,6 @@ const ResultSMS = () => {
         };
       });
 
-
       const response = await api.post("/sms/sendresultsms", payload);
       showToast("SMS sent successfully!", "success", { duration: 3000 });
       fetchSmsLogs(uniVal);
@@ -481,7 +478,7 @@ const ResultSMS = () => {
 
   return (
     <div className="p-0">
-      <div className="my-2 w-full flex flex-col lg:flex-row">
+      <div className="my-2 w-full flex flex-col lg:flex-row gap-4">
         {(showLoadingOverlay || loading) && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-lg text-center max-w-sm w-full mx-4">
@@ -493,9 +490,9 @@ const ResultSMS = () => {
           </div>
         )}
 
-        <div className="w-full lg:w-1/3 lg:pr-4">
+        <div className="w-full lg:w-1/3 flex-1">
           <ReusableDiv
-            className="ml-0 mr-0 ring-1 h-fit mb-4 bg-blue-100 dark:bg-gray-800"
+            className="ml-0 mr-0 ring-1 h-full mb-4 bg-blue-100 dark:bg-gray-800"
             tag="Select Exam"
             icon={PiExam}
             collapsible={true}
@@ -564,251 +561,244 @@ const ResultSMS = () => {
             </div>
           </ReusableDiv>
         </div>
-        <div className="w-full lg:w-2/3">
-          <div className="flex flex-col lg:flex-row mb-2 gap-2">
-            <div className="w-full lg:w-1/2">
-              <ReusableDiv
-                className="ml-0 mr-0 ring-0 h-fit mb-2 bg-blue-100 dark:bg-gray-800"
-                tag="Process Report"
-                icon={TbReport}
-                collapsible={true}
-              >
-                {loading ? (
-                  <div className="flex justify-center items-center h-32">
-                    <FaSpinner className="animate-spin" size={24} />
-                  </div>
-                ) : (
-                  <div className="flex flex-col pb-1 space-y-2">
-                    <div className="flex flex-row items-center gap-2 font-medium dark:text-gray-300">
-                      <div className="w-2/5">Exam</div>
-                      <div className="w-2/5">Exam Alias</div>
-                      <div className="w-1/5">Out of %</div>
-                    </div>
 
-                    {examRows.map((row, index) => {
-                      const isDisabled = examOptions.length === 0;
-                      return (
-                        <div
-                          key={index}
-                          className="flex flex-row items-center gap-2"
-                        >
-                          <div className="w-2/5">
-                            <Dropdown
-                              options={getAvailableOptions(index)}
-                              value={row.exam}
-                              onChange={(value) =>
-                                handleExamChange(index, value)
-                              }
-                              placeholder={
-                                examRows.length === 1
-                                  ? "Select Exam"
-                                  : `Select Exam ${index + 1}`
-                              }
-                              menuPlacement="auto"
-                              searchable
-                              clearable
-                              className="z-50"
-                              disabled={isDisabled}
-                            />
-                          </div>
-                          <div className="w-2/5">
-                            <ReusableInput
-                              type="text"
-                              placeholder="Exam Alias"
-                              value={row.examAlias}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  index,
-                                  "examAlias",
-                                  e.target.value
-                                )
-                              }
-                              disabled={isDisabled}
-                            />
-                          </div>
-                          <div className="w-1/5">
-                            <ReusableInput
-                              type="number"
-                              placeholder="Out of %"
-                              value={row.outOf}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  index,
-                                  "outOf",
-                                  e.target.value
-                                )
-                              }
-                              disabled={isDisabled}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
+        <div className="w-full lg:w-1/3 flex-1">
+          <ReusableDiv
+            className="ml-0 mr-0 ring-1 h-full mb-4 bg-blue-100 dark:bg-gray-800"
+            tag="Process Report"
+            icon={TbReport}
+            collapsible={true}
+          >
+            {loading ? (
+              <div className="flex justify-center items-center h-32">
+                <FaSpinner className="animate-spin" size={24} />
+              </div>
+            ) : (
+              <div className="flex flex-col pb-1 space-y-2">
+                <div className="flex flex-row items-center gap-2 font-medium dark:text-gray-300">
+                  <div className="w-2/5">Exam</div>
+                  <div className="w-2/5">Exam Alias</div>
+                  <div className="w-1/5">Out of %</div>
+                </div>
 
-                    <div className="flex flex-row gap-2">
-                      {examRows.length < 3 && (
-                        <Button
-                          onClick={addExamRow}
-                          variant="success"
-                          className="my-0.5"
-                          disabled={isAddDisabled}
-                        >
-                          <FaPlus size={12} /> Add Exam
-                        </Button>
-                      )}
-                      {examRows.length > 1 && (
-                        <Button
-                          onClick={removeExamRow}
-                          variant="danger"
-                          className="my-0.5"
-                        >
-                          <FaMinus size={12} /> Remove Exam
-                        </Button>
-                      )}
-                    </div>
-
+                {examRows.map((row, index) => {
+                  const isDisabled = examOptions.length === 0;
+                  return (
                     <div
-                      className={`mt-2 flex ${
-                        examRows.length > 1
-                          ? "flex-row items-center gap-4 justify-between"
-                          : "justify-start"
-                      }`}
+                      key={index}
+                      className="flex flex-row items-center gap-2"
                     >
-                      {examRows.length > 1 && (
-                        <div className="w-2/5">
-                          <ReusableSelect
-                            id="formula"
-                            placeholder="Select Formula"
-                            className="my-0.5"
-                            options={getFormulaOptions()}
-                            value={
-                              getFormulaOptions().find(
-                                (opt) => opt.value === selectedFormula
-                              ) || undefined
-                            }
-                            onChange={(e) => setSelectedFormula(e.target.value)}
-                            disabled={examOptions.length === 0}
-                          />
-                        </div>
-                      )}
-                      <Button
-                        variant="primary"
-                        icon={MdDone}
-                        onClick={handleApplyFormula}
-                        className="my-0.5"
-                        loading={buttonLoading}
-                        disabled={
-                          isAddDisabled ||
-                          examOptions.length === 0 ||
-                          (examRows.length > 1 && !selectedFormula)
-                        }
-                      >
-                        Apply Formula
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </ReusableDiv>
-            </div>
-            <div className="w-full lg:w-1/2">
-              <ReusableDiv
-                className="ml-0 mr-0 h-fit bg-blue-100 dark:bg-gray-800"
-                tag="SMS Parameters"
-                icon={TbMessage2Cog}
-                collapsible={true}
-              >
-                {streamLoading ? (
-                  <div className="flex justify-center items-center h-32">
-                    <FaSpinner className="animate-spin" size={24} />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-start mb-2 gap-4">
-                      <div className="w-full lg:w-1/2">
+                      <div className="w-2/5">
                         <Dropdown
-                          placeholder="Select Stream"
-                          options={streamOptions}
-                          value={selectedStream}
-                          onChange={(value) => {
-                            setSelectedStream(value);
-                            setSmsType(null);
-                            setSelectedStudents([]);
-                            setIsDropdownCleared(!value);
-                          }}
-                          disabled={isSmsParamsDisabled}
+                          options={getAvailableOptions(index)}
+                          value={row.exam}
+                          onChange={(value) => handleExamChange(index, value)}
+                          placeholder={
+                            examRows.length === 1
+                              ? "Select Exam"
+                              : `Select Exam ${index + 1}`
+                          }
+                          menuPlacement="auto"
+                          searchable
                           clearable
-                          onClear={() => {
-                            setSelectedStream(null);
-                            setSmsType(null);
-                            setSelectedStudents([]);
-                            setIsDropdownCleared(true);
-                          }}
+                          className="z-50"
+                          disabled={isDisabled}
                         />
                       </div>
-                      <div className="w-full lg:w-1/2">
-                        <ReusableSelect
-                          options={smsTypeOptions}
-                          className="ring-1"
-                          value={smsType || ""}
-                          disabled={!selectedStream}
-                          onChange={(e) => {
-                            setSmsType(e.target.value);
-                            setSelectedStudents([]);
-                          }}
+                      <div className="w-2/5">
+                        <ReusableInput
+                          type="text"
+                          placeholder="Exam Alias"
+                          value={row.examAlias}
+                          onChange={(e) =>
+                            handleInputChange(
+                              index,
+                              "examAlias",
+                              e.target.value
+                            )
+                          }
+                          disabled={isDisabled}
+                        />
+                      </div>
+                      <div className="w-1/5">
+                        <ReusableInput
+                          type="number"
+                          placeholder="Out of %"
+                          value={row.outOf}
+                          onChange={(e) =>
+                            handleInputChange(index, "outOf", e.target.value)
+                          }
+                          disabled={isDisabled}
                         />
                       </div>
                     </div>
+                  );
+                })}
 
-                    {selectedStream && smsType && (
-                      <>
-                        {showCheckboxGroup && (
-                          <div className="ml-0 mr-0 px-0 flex-1 h-fit mt-4 bg-blue-100 dark:bg-gray-700">
-                            <CheckboxGroup
-                              label="Phone Numbers"
-                              className="mt-1 mr-0 ring-1"
-                              options={phoneNumbers}
-                              selectedValues={selectedStudents}
-                              onChange={(values) => {
-                                setSelectedStudents(values);
-                              }}
-                              name="phone_numbers"
-                            />
-                          </div>
-                        )}
+                <div className="flex flex-row gap-2">
+                  {examRows.length < 3 && (
+                    <Button
+                      onClick={addExamRow}
+                      variant="success"
+                      className="my-0.5"
+                      disabled={isAddDisabled}
+                    >
+                      <FaPlus size={12} /> Add Exam
+                    </Button>
+                  )}
+                  {examRows.length > 1 && (
+                    <Button
+                      onClick={removeExamRow}
+                      variant="danger"
+                      className="my-0.5"
+                    >
+                      <FaMinus size={12} /> Remove Exam
+                    </Button>
+                  )}
+                </div>
 
-                        {showButtons && (
-                          <div className="mt-1 flex items-center justify-start gap-2">
-                            {showClearButton && (
-                              <Button
-                                className="ring-1"
-                                variant="secondary"
-                                icon={AiOutlineClear}
-                                onClick={handleClear}
-                                disabled={selectedStudents.length === 0}
-                              >
-                                Clear
-                              </Button>
-                            )}
-                            <Button
-                              variant="primary"
-                              icon={TbSend}
-                              disabled={isSendDisabled || smsLoading}
-                              loading={smsLoading}
-                              onClick={handleSend}
-                            >
-                              Send
-                            </Button>
-                          </div>
+                <div
+                  className={`mt-2 flex ${
+                    examRows.length > 1
+                      ? "flex-row items-center gap-4 justify-between"
+                      : "justify-start"
+                  }`}
+                >
+                  {examRows.length > 1 && (
+                    <div className="w-2/5">
+                      <ReusableSelect
+                        id="formula"
+                        placeholder="Select Formula"
+                        className="my-0.5"
+                        options={getFormulaOptions()}
+                        value={
+                          getFormulaOptions().find(
+                            (opt) => opt.value === selectedFormula
+                          ) || undefined
+                        }
+                        onChange={(e) => setSelectedFormula(e.target.value)}
+                        disabled={examOptions.length === 0}
+                      />
+                    </div>
+                  )}
+                  <Button
+                    variant="primary"
+                    icon={MdDone}
+                    onClick={handleApplyFormula}
+                    className="my-0.5"
+                    loading={buttonLoading}
+                    disabled={
+                      isAddDisabled ||
+                      examOptions.length === 0 ||
+                      (examRows.length > 1 && !selectedFormula)
+                    }
+                  >
+                    Apply Formula
+                  </Button>
+                </div>
+              </div>
+            )}
+          </ReusableDiv>
+        </div>
+
+        <div className="w-full lg:w-1/3 flex-1">
+          <ReusableDiv
+            className="ml-0 mr-0 h-full bg-blue-100 dark:bg-gray-800"
+            tag="SMS Parameters"
+            icon={TbMessage2Cog}
+            collapsible={true}
+          >
+            {streamLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <FaSpinner className="animate-spin" size={24} />
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-start mb-2 gap-4">
+                  <div className="w-full lg:w-1/2">
+                    <Dropdown
+                      placeholder="Select Stream"
+                      options={streamOptions}
+                      value={selectedStream}
+                      onChange={(value) => {
+                        setSelectedStream(value);
+                        setSmsType(null);
+                        setSelectedStudents([]);
+                        setIsDropdownCleared(!value);
+                      }}
+                      disabled={isSmsParamsDisabled}
+                      clearable
+                      onClear={() => {
+                        setSelectedStream(null);
+                        setSmsType(null);
+                        setSelectedStudents([]);
+                        setIsDropdownCleared(true);
+                      }}
+                    />
+                  </div>
+                  <div className="w-full lg:w-1/2">
+                    <ReusableSelect
+                      options={smsTypeOptions}
+                      className="ring-1"
+                      value={smsType || ""}
+                      disabled={!selectedStream}
+                      onChange={(e) => {
+                        setSmsType(e.target.value);
+                        setSelectedStudents([]);
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {selectedStream && smsType && (
+                  <>
+                    {showCheckboxGroup && (
+                      <div className="ml-0 mr-0 px-0 flex-1 h-fit mt-4 dark:bg-gray-700">
+                        <CheckboxGroup
+                          label="Phone Numbers"
+                          className="mt-1 mr-0"
+                          options={phoneNumbers}
+                          selectedValues={selectedStudents}
+                          onChange={(values) => {
+                            setSelectedStudents(values);
+                          }}
+                          name="phone_numbers"
+                        />
+                      </div>
+                    )}
+
+                    {showButtons && (
+                      <div className="mt-1 flex items-center justify-start gap-2">
+                        {showClearButton && (
+                          <Button
+                            className="ring-1"
+                            variant="secondary"
+                            icon={AiOutlineClear}
+                            onClick={handleClear}
+                            disabled={selectedStudents.length === 0}
+                          >
+                            Clear
+                          </Button>
                         )}
-                      </>
+                        <Button
+                          variant="primary"
+                          icon={TbSend}
+                          disabled={isSendDisabled || smsLoading}
+                          loading={smsLoading}
+                          onClick={handleSend}
+                        >
+                          Send
+                        </Button>
+                      </div>
                     )}
                   </>
                 )}
-              </ReusableDiv>
-            </div>
-          </div>
+              </>
+            )}
+          </ReusableDiv>
         </div>
       </div>
+
       <ReusableDiv className="ml-0 mr-0 dark:bg-gray-800">
         <TableComponent
           columns={columns}

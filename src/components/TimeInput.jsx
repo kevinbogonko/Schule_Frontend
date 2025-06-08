@@ -92,14 +92,20 @@ const TimeInput = ({
         onChange={handleChange}
         disabled={disabled}
         placeholder={is12Hour ? "HH:MM AM/PM" : "HH:MM"}
-        className="px-2 py-1.5 text-sm border border-gray-300 rounded-md ring-1 focus:outline-none"
+        className={`px-2 py-1.5 text-sm border rounded-md ring-0 focus:outline-none
+          border-gray-300 dark:border-gray-600
+          bg-white dark:bg-gray-800
+          text-gray-900 dark:text-gray-200
+          placeholder-gray-400 dark:placeholder-gray-500
+          focus:ring-blue-500 dark:focus:ring-blue-400
+          ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       />
       <div className="absolute right-2 flex flex-col">
         <button
           type="button"
           onClick={incrementHour}
           disabled={disabled}
-          className="text-gray-500 hover:text-gray-700 focus:outline-none"
+          className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none disabled:opacity-50"
         >
           <svg
             className="w-4 h-4"
@@ -119,7 +125,7 @@ const TimeInput = ({
           type="button"
           onClick={decrementHour}
           disabled={disabled}
-          className="text-gray-500 hover:text-gray-700 focus:outline-none"
+          className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none disabled:opacity-50"
         >
           <svg
             className="w-4 h-4"

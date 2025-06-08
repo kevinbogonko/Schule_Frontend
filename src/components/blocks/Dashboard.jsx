@@ -57,6 +57,9 @@ import Subject from "./Subject";
 import MarkAnalysis from "./MarkAnalysis";
 import Promotion from "./Promotion";
 import HomeDash from "./HomeDash";
+import StudentSMS from "./StudentSMS";
+import StaffSMS from "./StaffSMS";
+import SelectiveStudents from "./SelectiveStudents";
 
 const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
@@ -355,6 +358,16 @@ const Dashboard = () => {
               label: "Opening/Closing SMS",
               component: <COSMS />,
             },
+            {
+              id: "studgen-sms",
+              label: "Compose SMS (Student)",
+              component: <StudentSMS />,
+            },
+            {
+              id: "staffgen-sms",
+              label: "Compose SMS (Staff)",
+              component: <StaffSMS />,
+            },
           ],
         },
         {
@@ -399,6 +412,11 @@ const Dashboard = () => {
               id: "subjects",
               label: "Manage Subjects",
               component: <Subject />,
+            },
+            {
+              id: "selective-subjects",
+              label: "Selective Subjects",
+              component: <SelectiveStudents />,
             },
             {
               id: "promotion",

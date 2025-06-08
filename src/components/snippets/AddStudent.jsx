@@ -137,7 +137,8 @@ const AddStudent = ({
       !formValues.lname ||
       !formValues.sex ||
       !formValues.dob ||
-      !formValues.stream_id
+      !formValues.stream_id ||
+      !formValues.year
     ) {
       setError("Please fill in all required fields!");
       return;
@@ -149,11 +150,11 @@ const AddStudent = ({
     try {
       const payload = {
         ...formValues,
+        form : selectedForm,
         phone: formValues.phone.startsWith("+")
           ? formValues.phone.slice(1)
           : formValues.phone,
       };
-      console.log(payload)
       const response = await api.post("/student/addstudent", payload);
 
       if (response.status === 200 || response.status === 201) {
@@ -432,29 +433,6 @@ const AddStudent = ({
 
                 <div className="mb-2">
                   <label
-                    htmlFor="form"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Form *
-                  </label>
-                  <ReusableSelect
-                    name="form"
-                    id="form"
-                    options={formOptions}
-                    placeholder="Select Form"
-                    className="w-full"
-                    value={values.form || selectedForm}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        handleChange(e);
-                      }
-                    }}
-                    required
-                  />
-                </div>
-
-                <div className="mb-2">
-                  <label
                     htmlFor="stream_id"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
@@ -500,7 +478,7 @@ const AddStudent = ({
                     htmlFor="year"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Year
+                    Year *
                   </label>
                   <ReusableSelect
                     name="year"
@@ -508,12 +486,13 @@ const AddStudent = ({
                     options={yearOptions}
                     placeholder="Select Year"
                     className="w-full"
-                    value={values.year || selectedYear}
+                    value={values.year || ""}
                     onChange={(e) => {
                       if (e.target.value) {
                         handleChange(e);
                       }
                     }}
+                    required
                   />
                 </div>
 
@@ -886,29 +865,6 @@ const AddStudent = ({
                     className="w-full mt-1"
                     value={values.dob}
                     onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="mb-2">
-                  <label
-                    htmlFor="form"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Form *
-                  </label>
-                  <ReusableSelect
-                    name="form"
-                    id="form"
-                    options={formOptions}
-                    placeholder="Select Form"
-                    className="w-full"
-                    value={values.form || selectedForm}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        handleChange(e);
-                      }
-                    }}
                     required
                   />
                 </div>

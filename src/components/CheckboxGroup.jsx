@@ -34,16 +34,20 @@ const CheckboxGroup = ({
   );
 
   return (
-    <div className={`border border-gray-200 rounded-lg p-4 ${className}`}>
+    <div
+      className={`border border-gray-200 dark:border-gray-600 rounded-lg p-4 ${className} bg-white dark:bg-gray-800`}
+    >
       <div className="flex items-center justify-between mb-2">
         {label && (
-          <legend className="text-sm font-medium text-gray-700">{label}</legend>
+          <legend className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {label}
+          </legend>
         )}
         <button
           type="button"
           onClick={toggleAll}
           disabled={disabled}
-          className="text-xs font-medium text-blue-600 hover:text-blue-500 disabled:text-gray-400"
+          className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 disabled:text-gray-400 dark:disabled:text-gray-500"
         >
           {someSelected
             ? "Toggle all"
@@ -59,7 +63,7 @@ const CheckboxGroup = ({
           placeholder="Search options..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          className="w-full p-2 text-sm border border-gray-300 dark:border-gray-500 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-400"
           disabled={disabled}
         />
       </div>
@@ -80,7 +84,7 @@ const CheckboxGroup = ({
                     checked={selectedValues.includes(option.value)}
                     onChange={() => handleChange(option.value)}
                     disabled={disabled || option.disabled}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                    className="h-4 w-4 rounded border-gray-300 dark:border-gray-500 text-blue-600 dark:text-blue-400 focus:ring-blue-600 dark:focus:ring-blue-400 bg-white dark:bg-gray-700"
                   />
                 </div>
                 <div className="ml-2 text-sm leading-5 min-w-0">
@@ -88,14 +92,14 @@ const CheckboxGroup = ({
                     htmlFor={`${name}-${option.value}`}
                     className={`font-medium ${
                       disabled || option.disabled
-                        ? "text-gray-400"
-                        : "text-gray-700"
+                        ? "text-gray-400 dark:text-gray-500"
+                        : "text-gray-700 dark:text-gray-200"
                     }`}
                   >
                     {option.label}
                   </label>
                   {showDescriptions && option.description && (
-                    <p className="text-gray-500 truncate">
+                    <p className="text-gray-500 dark:text-gray-400 truncate">
                       {option.description}
                     </p>
                   )}
@@ -103,7 +107,7 @@ const CheckboxGroup = ({
               </div>
             ))
           ) : (
-            <p className="text-sm text-gray-500 py-2 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400 py-2 text-center">
               No options found
             </p>
           )}

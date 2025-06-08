@@ -10,11 +10,9 @@ import {
   FaSave,
   FaCheckSquare,
   FaSquare,
+  FaSearch,
 } from "react-icons/fa";
-import {
-  FaUsersGear,
-  FaSpinner
-} from "react-icons/fa6";
+import { FaUsersGear, FaSpinner } from "react-icons/fa6";
 import ReusableSelect from "../ReusableSelect";
 
 const Subject = () => {
@@ -22,40 +20,56 @@ const Subject = () => {
   const [loading, setLoading] = useState(false);
   const [selectedForm, setSelectedForm] = useState("");
   const [subjects, setSubjects] = useState([]);
+  const [filteredSubjects, setFilteredSubjects] = useState([]);
   const [initialCheckedState, setInitialCheckedState] = useState({});
+  const [initialSelectiveState, setInitialSelectiveState] = useState({});
   const [checkedState, setCheckedState] = useState({});
+  const [selectiveState, setSelectiveState] = useState({});
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [allChecked, setAllChecked] = useState(false);
+  const [allSelectiveChecked, setAllSelectiveChecked] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleFormChange = async (e) => {
     const form = e.target.value;
     setSelectedForm(form);
     setShowLoadingOverlay(true);
+    setSearchTerm("");
 
     try {
       const response = await api.post("/subject/getallsubjects", { form });
       const subjectsData = response.data;
 
       setSubjects(subjectsData);
+      setFilteredSubjects(subjectsData);
 
-      // Initialize checked state
       const initialChecks = {};
+      const initialSelectiveChecks = {};
       const currentChecks = {};
+      const currentSelectiveChecks = {};
       let allSelected = true;
+      let allSelectiveSelected = true;
 
       subjectsData.forEach((subject) => {
         initialChecks[subject.id] = subject.status === 1;
+        initialSelectiveChecks[subject.id] = subject.isselective === 1;
         currentChecks[subject.id] = subject.status === 1;
+        currentSelectiveChecks[subject.id] = subject.isselective === 1;
         if (subject.status !== 1) allSelected = false;
+        if (subject.isselective !== 1) allSelectiveSelected = false;
       });
 
       setInitialCheckedState(initialChecks);
+      setInitialSelectiveState(initialSelectiveChecks);
       setCheckedState(currentChecks);
+      setSelectiveState(currentSelectiveChecks);
       setAllChecked(allSelected);
+      setAllSelectiveChecked(allSelectiveSelected);
     } catch (error) {
       showToast(
         error.response?.data?.message || "Failed to fetch subjects",
-        "error", {duration : 3000, position : 'top-right'}
+        "error",
+        { duration: 3000, position: "top-right" }
       );
     } finally {
       setShowLoadingOverlay(false);
@@ -68,17 +82,25 @@ const Subject = () => {
       [subjectId]: !checkedState[subjectId],
     };
     setCheckedState(newState);
-
-    // Update allChecked state
     const allCheckedNow = Object.values(newState).every((val) => val);
     setAllChecked(allCheckedNow);
+  };
+
+  const handleSelectiveCheckboxChange = (subjectId) => {
+    const newState = {
+      ...selectiveState,
+      [subjectId]: !selectiveState[subjectId],
+    };
+    setSelectiveState(newState);
+    const allSelectiveCheckedNow = Object.values(newState).every((val) => val);
+    setAllSelectiveChecked(allSelectiveCheckedNow);
   };
 
   const handleToggleAll = () => {
     const newChecked = !allChecked;
     const newState = {};
 
-    subjects.forEach((subject) => {
+    filteredSubjects.forEach((subject) => {
       newState[subject.id] = newChecked;
     });
 
@@ -86,9 +108,25 @@ const Subject = () => {
     setAllChecked(newChecked);
   };
 
+  const handleToggleAllSelective = () => {
+    const newChecked = !allSelectiveChecked;
+    const newState = {};
+
+    filteredSubjects.forEach((subject) => {
+      newState[subject.id] = newChecked;
+    });
+
+    setSelectiveState(newState);
+    setAllSelectiveChecked(newChecked);
+  };
+
   const handleReset = () => {
     setCheckedState({ ...initialCheckedState });
+    setSelectiveState({ ...initialSelectiveState });
     setAllChecked(Object.values(initialCheckedState).every((val) => val));
+    setAllSelectiveChecked(
+      Object.values(initialSelectiveState).every((val) => val)
+    );
   };
 
   const handleUpdate = async () => {
@@ -103,20 +141,23 @@ const Subject = () => {
     setLoading(true);
 
     try {
-      // Prepare update payload
-      const updates = subjects.map((subject) => ({
+      const updates = filteredSubjects.map((subject) => ({
         id: parseInt(subject.id),
         status: checkedState[subject.id] ? 1 : 0,
+        isSelective: selectiveState[subject.id] ? 1 : 0,
       }));
 
-      // Send batch update to backend
       await api.post("/subject/updatesubjects", {
         form: selectedForm,
         updates,
       });
 
-      // Update initial state to current state since update was successful
-      setInitialCheckedState({ ...checkedState });
+      // Update initial states with current states
+      const newInitialCheckedState = { ...checkedState };
+      const newInitialSelectiveState = { ...selectiveState };
+
+      setInitialCheckedState(newInitialCheckedState);
+      setInitialSelectiveState(newInitialSelectiveState);
 
       showToast("Subjects updated successfully", "success", {
         duration: 3000,
@@ -130,8 +171,25 @@ const Subject = () => {
       );
       // Revert to last known good state
       setCheckedState({ ...initialCheckedState });
+      setSelectiveState({ ...initialSelectiveState });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+
+    if (term === "") {
+      setFilteredSubjects(subjects);
+    } else {
+      const filtered = subjects.filter(
+        (subject) =>
+          subject.name.toLowerCase().includes(term) ||
+          subject.id.toString().includes(term)
+      );
+      setFilteredSubjects(filtered);
     }
   };
 
@@ -188,43 +246,95 @@ const Subject = () => {
               collapsible={true}
             >
               <div className="space-y-4">
-                <div className="flex justify-between items-center pl-0 pr-2 border-b border-gray-200 dark:border-gray-700">
-                  <Button
-                    variant="ghost"
-                    onClick={handleToggleAll}
-                    className="flex items-center space-x-0 text-sm"
-                  >
-                    {allChecked ? (
-                      <FaCheckSquare className="text-blue-500 h-5 w-5" />
-                    ) : (
-                      <FaSquare className="text-gray-400 h-5 w-5" />
-                    )}
-                    <span className="dark:text-gray-300">
-                      {allChecked ? "Uncheck All" : "Check All"}
-                    </span>
-                  </Button>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="relative w-full pl-0 pr-2">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaSearch className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search subjects by name or ID..."
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white dark:bg-gray-700 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white sm:text-sm transition duration-150 ease-in-out"
+                    value={searchTerm}
+                    onChange={handleSearch}
+                  />
+                </div>
+
+                <div className="flex flex-col pl-0 pr-2 border-b border-gray-200 dark:border-gray-700 pb-3">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                     {Object.values(checkedState).filter(Boolean).length} of{" "}
-                    {subjects.length} selected
+                    {filteredSubjects.length} selected
+                  </div>
+
+                  <div className="grid grid-cols-12 gap-2">
+                    <div className="col-span-8 flex items-center">
+                      <Button
+                        variant="ghost"
+                        onClick={handleToggleAll}
+                        className="flex items-center space-x-2 text-sm px-0"
+                      >
+                        {allChecked ? (
+                          <FaCheckSquare className="text-blue-500 h-5 w-5" />
+                        ) : (
+                          <FaSquare className="text-gray-400 h-5 w-5" />
+                        )}
+                        <span className="dark:text-gray-300 text-sm">
+                          Toggle All Subjects
+                        </span>
+                      </Button>
+                    </div>
+                    <div className="col-span-4 flex justify-end items-center">
+                      <Button
+                        variant="ghost"
+                        onClick={handleToggleAllSelective}
+                        className="flex items-center space-x-2 text-sm px-0"
+                      >
+                        {allSelectiveChecked ? (
+                          <FaCheckSquare className="text-blue-500 h-5 w-5" />
+                        ) : (
+                          <FaSquare className="text-gray-400 h-5 w-5" />
+                        )}
+                        <span className="dark:text-gray-300 text-sm">
+                          Selective
+                        </span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="max-h-96 overflow-y-auto p-2 space-y-2 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800">
-                  {subjects.length > 0 ? (
-                    subjects.map((subject) => (
-                      <Checkbox
+                <div className="max-h-80 overflow-y-auto p-2 space-y-2 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800">
+                  {filteredSubjects.length > 0 ? (
+                    filteredSubjects.map((subject) => (
+                      <div
                         key={subject.id}
-                        id={`subject-${subject.id}`}
-                        label={`${subject.id} - ${subject.name}`}
-                        checked={checkedState[subject.id] || false}
-                        onChange={() => handleCheckboxChange(subject.id)}
-                        className="p-2 hover:bg-blue-50 dark:hover:bg-gray-700 rounded transition-colors"
-                        labelClassName="dark:text-gray-300"
-                      />
+                        className="grid grid-cols-12 gap-2 items-center p-2 hover:bg-blue-50 dark:hover:bg-gray-700 rounded transition-colors"
+                      >
+                        <div className="col-span-8">
+                          <Checkbox
+                            id={`subject-${subject.id}`}
+                            label={`${subject.id} - ${subject.name}`}
+                            checked={checkedState[subject.id] || false}
+                            onChange={() => handleCheckboxChange(subject.id)}
+                            labelClassName="dark:text-gray-300"
+                          />
+                        </div>
+                        <div className="col-span-4 flex justify-end">
+                          <Checkbox
+                            id={`selective-${subject.id}`}
+                            label="Selective"
+                            checked={selectiveState[subject.id] || false}
+                            onChange={() =>
+                              handleSelectiveCheckboxChange(subject.id)
+                            }
+                            labelClassName="dark:text-gray-300 text-sm"
+                          />
+                        </div>
+                      </div>
                     ))
                   ) : (
                     <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                      No subjects found for this form
+                      {searchTerm
+                        ? "No matching subjects found"
+                        : "No subjects found for this form"}
                     </p>
                   )}
                 </div>
@@ -234,7 +344,7 @@ const Subject = () => {
                     variant="secondary"
                     icon={FaUndo}
                     onClick={handleReset}
-                    disabled={!selectedForm || subjects.length === 0}
+                    disabled={!selectedForm || filteredSubjects.length === 0}
                   >
                     Reset
                   </Button>
@@ -242,7 +352,7 @@ const Subject = () => {
                     variant="primary"
                     icon={FaSave}
                     onClick={handleUpdate}
-                    disabled={!selectedForm || subjects.length === 0}
+                    disabled={!selectedForm || filteredSubjects.length === 0}
                     loading={loading}
                   >
                     Update

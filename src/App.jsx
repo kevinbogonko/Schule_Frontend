@@ -45,6 +45,9 @@ import Subject from "./components/blocks/Subject";
 import Promotion from "./components/blocks/Promotion";
 import Users from "./components/blocks/Users";
 import HomeDash from "./components/blocks/HomeDash";
+import StudentSMS from "./components/blocks/StudentSMS";
+import StaffSMS from "./components/blocks/StaffSMS";
+import SelectiveStudents from "./components/blocks/SelectiveStudents";
 
 
 function App() {
@@ -86,6 +89,9 @@ function App() {
         {/* <Promotion /> */}
         {/* <Users /> */}
         {/* <HomeDash /> */}
+        {/* <StudentSMS /> */}
+        {/* <StaffSMS /> */}
+        {/* <SelectiveStudents /> */}
 
         <Router>
           <AuthProvider>

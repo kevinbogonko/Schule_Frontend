@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ReusableDiv from "../ReusableDiv";
-import { PiExam } from "react-icons/pi";
-import { TbReport } from "react-icons/tb";
+import { TbCalendarCog, TbReport } from "react-icons/tb";
 import { FaSpinner } from "react-icons/fa";
-import { MdDone, MdOutlinePreview } from "react-icons/md";
+import { MdOutlinePreview } from "react-icons/md";
 import { AiOutlineClear } from "react-icons/ai";
 import { TbSend } from "react-icons/tb";
 import { formOptions, yearOptions, termOptions } from "../../utils/CommonData";
@@ -32,6 +31,19 @@ const COSMS = () => {
   const [reportByTime, setReportByTime] = useState("15:00");
   const [extraInfo, setExtraInfo] = useState("");
   const [previewMessage, setPreviewMessage] = useState("");
+  const [schoolName, setSchoolName] = useState("");
+
+  useEffect(() => {
+    const fetchSchoolName = async () => {
+      try {
+        const response = await api.get("particular/getparticulars");
+        setSchoolName(response.data.schoolname || "");
+      } catch (error) {
+        console.error("Error fetching school name:", error);
+      }
+    };
+    fetchSchoolName();
+  }, []);
 
   const eventOptions = [
     { value: "opening", label: "Opening" },
@@ -78,7 +90,6 @@ const COSMS = () => {
       handleClearForm();
     }
     if (field === "form") {
-      setSelectedTerm("");
       setSmsLogs([]);
       setSelectedEvent("");
       setSelectedEventType("");
@@ -107,7 +118,6 @@ const COSMS = () => {
       if (error.response?.status === 404) {
         setSmsLogs([]);
       } else {
-        console.error("Error fetching SMS logs:", error);
         showToast("Failed to fetch SMS logs", "error", { duration: 2000 });
       }
     } finally {
@@ -145,9 +155,9 @@ const COSMS = () => {
     const details = extraInfo || "";
 
     if (selectedEvent === "closing") {
-      return `KIMARU SCHOOLS\n\nDear Parent/Guardian, we wish to inform you we will officially close for the ${event_type} of term ${selectedTerm} on ${closingDate} and your child ${fname} ${lname} signs out at ${signoutTime}. We will resume on ${openingDate}. ${details} We appreciate your continued support and wish you a restful break. For any inquiries, please contact the school administration.`;
+      return `${schoolName}\n\nDear Parent/Guardian, we wish to inform you we will officially close for the ${event_type} of term ${selectedTerm} on ${closingDate} and your child ${fname} ${lname} signs out at ${signoutTime}. We will resume on ${openingDate}. ${details} We appreciate your continued support and wish you a restful break. For any inquiries, please contact the school administration.`;
     } else if (selectedEvent === "opening") {
-      return `KIMARU SCHOOLS\n\nDear Parent/Guardian, we wish to inform you we will officially open for the ${event_type} of term ${selectedTerm} on ${openingDate} and your child ${fname} ${lname} is required to sign-in before ${reportByTime}. ${details} For any inquiries, please contact the school administration.`;
+      return `${schoolName}\n\nDear Parent/Guardian, we wish to inform you we will officially open for the ${event_type} of term ${selectedTerm} on ${openingDate} and your child ${fname} ${lname} is required to sign-in before ${reportByTime}. ${details} For any inquiries, please contact the school administration.`;
     }
     return "";
   };
@@ -163,6 +173,7 @@ const COSMS = () => {
     reportByTime,
     extraInfo,
     selectedTerm,
+    schoolName,
   ]);
 
   const handleSendSMS = async () => {
@@ -194,7 +205,6 @@ const COSMS = () => {
       showToast("SMS sent successfully!", "success", { duration: 3000 });
       fetchSmsLogs();
     } catch (error) {
-      console.error("Error sending SMS:", error);
       showToast(
         error.response?.data?.message || "Failed to send SMS",
         "error",
@@ -229,8 +239,8 @@ const COSMS = () => {
         <div className="w-full lg:w-1/4">
           <ReusableDiv
             className="ml-0 mr-0 ring-1 h-fit mb-2 bg-blue-100 dark:bg-gray-800"
-            tag="Select Exam"
-            icon={PiExam}
+            tag="Term Configuration"
+            icon={TbCalendarCog}
             collapsible={true}
           >
             <div className="flex flex-col space-y-4 pb-4">
@@ -295,8 +305,8 @@ const COSMS = () => {
           </ReusableDiv>
         </div>
 
-        <div className="w-full lg:w-3/4 flex flex-col gap-2">
-          <div className="flex flex-col lg:flex-row gap-2">
+        <div className="w-full lg:w-3/4 flex flex-1 flex-col gap-2">
+          <div className="flex flex-1 flex-col lg:flex-row gap-2">
             <ReusableDiv
               className="ml-0 mr-0 flex-1 ring-1 mb-2 bg-blue-100 dark:bg-gray-800"
               tag="Term Events"
@@ -452,7 +462,8 @@ const COSMS = () => {
             }}
             buttons={{
               addButton: {
-                show: false}
+                show: false,
+              },
             }}
           />
         )}
