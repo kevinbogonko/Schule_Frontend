@@ -13,25 +13,34 @@ export const AuthProvider = ({ children }) => {
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
-    console.log(value)
-    const cookie =
-      parts.length === 2 ? parts.pop().split(";").shift() : undefined;
-    console.log(`[Auth] Retrieved cookie ${name}:`, cookie);
-    return cookie;
+    if (parts.length === 2) {
+      let cookie = parts.pop().split(";").shift();
+      // Handle URL encoded cookies
+      try {
+        cookie = decodeURIComponent(cookie);
+      } catch (e) {
+        console.error("Error decoding cookie:", e);
+      }
+      console.log(`[Auth] Retrieved cookie ${name}:`, cookie);
+      return cookie;
+    }
+    return undefined;
   };
 
   const checkAuth = async () => {
     console.log("[Auth] Running checkAuth");
     try {
       const csrf = getCookie("XSRF-TOKEN");
-      if (csrf) {
-        api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
-        console.log("[Auth] Set CSRF token header");
+      if (!csrf) {
+        console.error("[Auth] No XSRF token found in cookies");
+        throw new Error("Missing XSRF token");
       }
 
-      console.log("[Auth] Sending request to /auth/getloggedinuser");
+      api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
+      console.log("[Auth] Set CSRF token header");
+
       const response = await api.get("/auth/getloggedinuser", {
-        withCredentials: true,
+        withCredentials: true, // Ensure credentials are sent
       });
 
       const userData = response.data;
@@ -62,14 +71,18 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("[Auth] checkAuth error:", error);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+      }
       setUser(null);
-      if (error.response?.status === 401 && location.pathname !== "/login") {
-        console.log("[Auth] Unauthorized, redirecting to login");
+      if (location.pathname !== "/login") {
+        console.log("[Auth] Redirecting to login");
         navigate("/login", { state: { from: location }, replace: true });
       }
     } finally {
       setLoading(false);
-      console.log("[Auth] Finished checkAuth");
     }
   };
 
