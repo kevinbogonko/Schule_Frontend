@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }) => {
   const getCookie = (name) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
+    console.log(value)
     const cookie =
       parts.length === 2 ? parts.pop().split(";").shift() : undefined;
     console.log(`[Auth] Retrieved cookie ${name}:`, cookie);
