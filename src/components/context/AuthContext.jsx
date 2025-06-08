@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       const userData = response.data;
-      console.log(userData)
+      // console.log(userData)
 
       // Only update if data has changed
       setUser((prevUser) => {
