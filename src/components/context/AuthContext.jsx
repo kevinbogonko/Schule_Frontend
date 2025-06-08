@@ -27,17 +27,30 @@ export const AuthProvider = ({ children }) => {
         withCredentials: true,
       });
 
-      console.log(response.data);
       const userData = response.data;
-      setUser({
-        ...userData,
-        role: userData.role || "student",
+      console.log(userData)
+
+      // Only update if data has changed
+      setUser((prevUser) => {
+        const isDifferent =
+          !prevUser ||
+          prevUser.id !== userData.id ||
+          prevUser.username !== userData.username ||
+          prevUser.role !== userData.role;
+        return isDifferent
+          ? { ...userData, role: userData.role || "student" }
+          : prevUser;
       });
 
-      if (window.location.pathname === "/login") {
-        navigate("/dashboard");
+      // ✅ Only redirect if you're on /login, and NOT already on dashboard
+      if (location.pathname === "/login") {
+        const redirectPath = location.state?.from?.pathname || "/dashboard";
+        if (redirectPath !== "/login") {
+          navigate(redirectPath, { replace: true });
+        }
       }
     } catch (error) {
+      console.log(error)
       setUser(null);
       if (error.response?.status === 401 && location.pathname !== "/login") {
         navigate("/login", { state: { from: location }, replace: true });
@@ -49,15 +62,17 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     attachAccessTokenSetter((userData) => {
-      if (userData) {
-        setUser(userData);
-      } else {
-        setUser(null);
-      }
+      setUser((prev) => {
+        if (!userData || !prev || prev.id !== userData.id) {
+          return userData;
+        }
+        return prev;
+      });
     });
 
-    checkAuth();
-  }, []);
+    checkAuth(); // ✅ Only runs once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 👈 Empty dependency array prevents repeated runs
 
   const login = async (email, password) => {
     try {
