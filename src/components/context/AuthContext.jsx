@@ -30,7 +30,8 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     console.log("[Auth] Running checkAuth");
     try {
-      const csrf = getCookie("XSRF-TOKEN");
+      
+      let csrf = localStorage.getItem('xsrf-token') || getCookie("XSRF-TOKEN");
       if (!csrf) {
         console.error("[Auth] No XSRF token found in cookies");
         throw new Error("Missing XSRF token");
@@ -116,8 +117,10 @@ export const AuthProvider = ({ children }) => {
         { withCredentials: true }
       );
 
-      const { user: userData } = response.data;
+      const { user: userData, csrf_token } = response.data;
       console.log("[Auth] Login successful, user data:", userData);
+
+      localStorage.setItem('xsrf-token', csrf_token)
 
       const csrf = getCookie("XSRF-TOKEN");
       if (csrf) {
