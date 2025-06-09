@@ -72,7 +72,7 @@ function App() {
         {/* <Marksheet /> */}
         {/* <Report /> */}
         {/* <Remark /> */}
-        {/* <GenerateTT /> */}
+        <GenerateTT />
         {/* <COSMS /> */}
         {/* <Particulars /> */}
         {/* <Routes>
@@ -93,7 +93,7 @@ function App() {
         {/* <StaffSMS /> */}
         {/* <SelectiveStudents /> */}
 
-        <Router>
+        {/* <Router>
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -103,7 +103,7 @@ function App() {
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </AuthProvider>
-        </Router>
+        </Router> */}
       </>
     </ToastProvider>
   );
