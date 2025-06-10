@@ -21,11 +21,28 @@ function App() {
       <Router>
         <AuthProvider>
           <Routes>
+            {/* Public routes */}
             <Route path="/login" element={<Login />} />
+
+            {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
-              {/* Add more protected routes here */}
+              {/* Add more protected routes as needed */}
             </Route>
+
+            {/* Smart redirects */}
+            <Route
+              path="/"
+              element={
+                localStorage.getItem("authToken") ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+
+            {/* Catch-all route */}
             <Route
               path="*"
               element={
