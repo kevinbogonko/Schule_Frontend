@@ -6,13 +6,6 @@ const ProtectedRoute = ({ roles }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // Persist auth state
-  useEffect(() => {
-    if (user?.token) {
-      localStorage.setItem("authToken", user.token);
-    }
-  }, [user]);
-
   if (loading) return <div className="full-page-loader">Loading...</div>;
 
   if (!user) {
