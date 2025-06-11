@@ -6,8 +6,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    // Set the base URL correctly for production
-    base: "/",
+    base: env.VITE_BASE_PATH || "/",
     server: {
       proxy: {
         "/api": {
@@ -17,12 +16,10 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    // Add build-specific configurations
     build: {
       outDir: "dist",
       assetsDir: "assets",
       emptyOutDir: true,
-      // Ensure the build includes hashed filenames for cache busting
       rollupOptions: {
         output: {
           assetFileNames: "assets/[name]-[hash][extname]",

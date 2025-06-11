@@ -12,25 +12,23 @@ import {
 } from "react-router-dom";
 import { AuthProvider } from "./components/context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import GenerateTT from './components/blocks/GenerateTT'
 
 
 function App() {
 
   return (
     <ToastProvider>
+      {/* <GenerateTT /> */}
       <Router>
         <AuthProvider>
           <Routes>
-            {/* Public routes */}
             <Route path="/login" element={<Login />} />
 
-            {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
-              {/* Add more protected routes as needed */}
             </Route>
 
-            {/* Smart redirects */}
             <Route
               path="/"
               element={
@@ -42,7 +40,6 @@ function App() {
               }
             />
 
-            {/* Catch-all route */}
             <Route
               path="*"
               element={
