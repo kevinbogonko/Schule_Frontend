@@ -19,7 +19,6 @@ import LoadingSpinner from "./components/blocks/LoadingSpinner"; // Create this 
 function AuthChecker({ children }) {
   const { loading } = useAuth();
   // Assuming your AuthContext has a loading state
-  // console.log(user)
   if (loading) {
     return <LoadingSpinner />; // Show spinner while checking auth
   }

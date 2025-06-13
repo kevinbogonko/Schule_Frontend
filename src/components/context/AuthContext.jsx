@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api, { attachAccessTokenSetter } from "../../hooks/apiRefreshToken";
-import LoadingSpinner from "../blocks/LoadingSpinner";
 
 const AuthContext = createContext();
 
@@ -29,31 +28,32 @@ export const AuthProvider = ({ children }) => {
       });
 
       const userData = response.data;
+      // console.log(userData)
 
-      setUser((prev) => {
-        if (!prev || prev.id !== userData.id) {
-          return { ...userData, role: userData.role || "student" };
-        }
-        return prev;
+      // Only update if data has changed
+      setUser((prevUser) => {
+        const isDifferent =
+          !prevUser ||
+          prevUser.id !== userData.id ||
+          prevUser.username !== userData.username ||
+          prevUser.role !== userData.role;
+        return isDifferent
+          ? { ...userData, role: userData.role || "student" }
+          : prevUser;
       });
 
-      // Only redirect if not already on the target page
+      // ✅ Only redirect if you're on /login, and NOT already on dashboard
       if (location.pathname === "/login") {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
-        if (redirectPath !== location.pathname) {
-          navigate(redirectPath, {
-            replace: true,
-            state: { from: location },
-          });
+        if (redirectPath !== "/login") {
+          navigate(redirectPath, { replace: true });
         }
       }
     } catch (error) {
+      console.log(error)
       setUser(null);
       if (error.response?.status === 401 && location.pathname !== "/login") {
-        navigate("/login", {
-          state: { from: location },
-          replace: true,
-        });
+        navigate("/login", { state: { from: location }, replace: true });
       }
     } finally {
       setLoading(false);
@@ -61,40 +61,47 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    attachAccessTokenSetter(setUser);
-    checkAuth();
-  }, [location.pathname]);
+    attachAccessTokenSetter((userData) => {
+      setUser((prev) => {
+        if (!userData || !prev || prev.id !== userData.id) {
+          return userData;
+        }
+        return prev;
+      });
+    });
+
+    checkAuth(); // ✅ Only runs once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 👈 Empty dependency array prevents repeated runs
 
   const login = async (email, password) => {
-    setLoading(true);
     try {
       const response = await api.post(
         "/auth/login",
-        { username: email, password },
+        {
+          username: email,
+          password: password,
+        },
         { withCredentials: true }
       );
 
       const { user: userData } = response.data;
 
-      // Update user state immediately
+      const csrf = getCookie("XSRF-TOKEN");
+      if (csrf) {
+        api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
+      }
+
       setUser({
         ...userData,
         role: userData.role || "student",
       });
 
-      // Get redirect path before navigation
       const redirectPath = location.state?.from?.pathname || "/dashboard";
-
-      // Skip checkAuth and navigate directly
-      navigate(redirectPath, {
-        replace: true,
-        state: { from: location }, // Preserve location state
-      });
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error("Login error", err);
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -119,12 +126,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading? (
-        <LoadingSpinner />
-      ) : (
-        children
-      )}
-      {/* {!loading && children} */}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
