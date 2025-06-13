@@ -339,7 +339,7 @@ const Marksheet = () => {
                       title="Marksheet PDF"
                       width="100%"
                       height="100%"
-                      className="w-full min-h-[70vh] border-none"
+                      className="min-h-[70vh]"
                     />
                   </div>
                 </div>
