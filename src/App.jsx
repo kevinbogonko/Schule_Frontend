@@ -3,62 +3,41 @@ import "./App.css";
 import { ToastProvider } from "./components/Toast";
 import Dashboard from "./components/blocks/Dashboard";
 import Login from "./components/blocks/Login";
-import ForgotPasswordOTP from "./components/blocks/ForgotPasswordOTP";
-import VerifyResetOTP from "./components/blocks/VerifyResetOTP";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "./components/context/AuthContext";
+import { AuthProvider } from "./components/context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import LoadingSpinner from "./components/blocks/LoadingSpinner";
-
-function AuthChecker({ children }) {
-  const { loading } = useAuth();
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  return children;
-}
 
 function App() {
   return (
     <ToastProvider>
       <Router>
         <AuthProvider>
-          <AuthChecker>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/forgot-password" element={<ForgotPasswordOTP />} />
-              <Route path="/verify-reset-otp" element={<VerifyResetOTP />} />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
 
-              <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-              </Route>
+            <Route
+              path="/"
+              element={
+                <Navigate to="/dashboard" replace />
+              }
+            />
 
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Navigate to="/dashboard" replace />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="*"
-                element={
-                  <ProtectedRoute>
-                    <Navigate to="/dashboard" replace />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </AuthChecker>
+            <Route
+              path="*"
+              element={
+                <Navigate to="/dashboard" replace />
+              }
+            />
+          </Routes>
         </AuthProvider>
       </Router>
     </ToastProvider>
