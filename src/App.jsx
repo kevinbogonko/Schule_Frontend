@@ -13,7 +13,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import LoadingSpinner from "./components/LoadingSpinner";
+import LoadingSpinner from "./components/blocks/LoadingSpinner";
 
 function AuthChecker({ children }) {
   const { loading } = useAuth();
