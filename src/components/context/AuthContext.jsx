@@ -7,6 +7,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,9 +29,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       const userData = response.data;
-      // console.log(userData)
 
-      // Only update if data has changed
       setUser((prevUser) => {
         const isDifferent =
           !prevUser ||
@@ -42,21 +41,23 @@ export const AuthProvider = ({ children }) => {
           : prevUser;
       });
 
-      // ✅ Only redirect if you're on /login, and NOT already on dashboard
-      if (location.pathname === "/login") {
+      if (location.pathname === "/login" && userData) {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
-        if (redirectPath !== "/login") {
-          navigate(redirectPath, { replace: true });
-        }
+        navigate(redirectPath, { replace: true });
       }
     } catch (error) {
-      console.log(error)
       setUser(null);
-      if (error.response?.status === 401 && location.pathname !== "/login") {
+      if (
+        error.response?.status === 401 &&
+        !["/login", "/forgot-password", "/verify-reset-otp"].includes(
+          location.pathname
+        )
+      ) {
         navigate("/login", { state: { from: location }, replace: true });
       }
     } finally {
       setLoading(false);
+      if (!initialCheckDone) setInitialCheckDone(true);
     }
   };
 
@@ -70,9 +71,25 @@ export const AuthProvider = ({ children }) => {
       });
     });
 
-    checkAuth(); // ✅ Only runs once on mount
+    checkAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 👈 Empty dependency array prevents repeated runs
+  }, []);
+
+  useEffect(() => {
+    if (initialCheckDone && !loading) {
+      if (user && location.pathname === "/login") {
+        navigate("/dashboard", { replace: true });
+      } else if (
+        !user &&
+        !["/login", "/forgot-password", "/verify-reset-otp"].includes(
+          location.pathname
+        )
+      ) {
+        navigate("/login", { replace: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCheckDone, loading, user]);
 
   const login = async (email, password) => {
     try {
@@ -124,11 +141,7 @@ export const AuthProvider = ({ children }) => {
     checkAuth,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
