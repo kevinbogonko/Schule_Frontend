@@ -29,32 +29,31 @@ export const AuthProvider = ({ children }) => {
       });
 
       const userData = response.data;
-      // console.log(userData)
 
-      // Only update if data has changed
-      setUser((prevUser) => {
-        const isDifferent =
-          !prevUser ||
-          prevUser.id !== userData.id ||
-          prevUser.username !== userData.username ||
-          prevUser.role !== userData.role;
-        return isDifferent
-          ? { ...userData, role: userData.role || "student" }
-          : prevUser;
+      setUser((prev) => {
+        if (!prev || prev.id !== userData.id) {
+          return { ...userData, role: userData.role || "student" };
+        }
+        return prev;
       });
 
-      // ✅ Only redirect if you're on /login, and NOT already on dashboard
+      // Only redirect if not already on the target page
       if (location.pathname === "/login") {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
-        if (redirectPath !== "/login") {
-          navigate(redirectPath, { replace: true });
+        if (redirectPath !== location.pathname) {
+          navigate(redirectPath, {
+            replace: true,
+            state: { from: location },
+          });
         }
       }
     } catch (error) {
-      console.log(error)
       setUser(null);
       if (error.response?.status === 401 && location.pathname !== "/login") {
-        navigate("/login", { state: { from: location }, replace: true });
+        navigate("/login", {
+          state: { from: location },
+          replace: true,
+        });
       }
     } finally {
       setLoading(false);
@@ -62,52 +61,40 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    attachAccessTokenSetter((userData) => {
-      setUser((prev) => {
-        if (!userData || !prev || prev.id !== userData.id) {
-          return userData;
-        }
-        return prev;
-      });
-    });
-
-    checkAuth(); // ✅ Only runs once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 👈 Empty dependency array prevents repeated runs
+    attachAccessTokenSetter(setUser);
+    checkAuth();
+  }, [location.pathname]);
 
   const login = async (email, password) => {
-
-    setLoading(true)
-
+    setLoading(true);
     try {
       const response = await api.post(
         "/auth/login",
-        {
-          username: email,
-          password: password,
-        },
+        { username: email, password },
         { withCredentials: true }
       );
 
       const { user: userData } = response.data;
 
-      const csrf = getCookie("XSRF-TOKEN");
-      if (csrf) {
-        api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
-      }
-
+      // Update user state immediately
       setUser({
         ...userData,
         role: userData.role || "student",
       });
 
+      // Get redirect path before navigation
       const redirectPath = location.state?.from?.pathname || "/dashboard";
-      navigate(redirectPath, { replace: true });
+
+      // Skip checkAuth and navigate directly
+      navigate(redirectPath, {
+        replace: true,
+        state: { from: location }, // Preserve location state
+      });
     } catch (err) {
       console.error("Login error", err);
       throw err;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
