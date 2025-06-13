@@ -60,6 +60,7 @@ import HomeDash from "./HomeDash";
 import StudentSMS from "./StudentSMS";
 import StaffSMS from "./StaffSMS";
 import SelectiveStudents from "./SelectiveStudents";
+import LoadingSpinner from "./LoadingSpinner";
 
 const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
@@ -834,9 +835,7 @@ const Dashboard = () => {
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 transition-colors duration-500">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 dark:border-indigo-400 transition-colors duration-500" />
-            </div>
+            <LoadingSpinner />
           ) : (
             <div className="flex flex-col min-h-[calc(100vh-8rem)]">
               <div className="flex-1">{renderActiveComponent()}</div>
