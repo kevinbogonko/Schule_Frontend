@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api, { attachAccessTokenSetter } from "../../hooks/apiRefreshToken";
+import LoadingSpinner from "../blocks/LoadingSpinner";
 
 const AuthContext = createContext();
 
@@ -28,9 +29,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       const userData = response.data;
-      // console.log(userData)
 
-      // Only update if data has changed
       setUser((prevUser) => {
         const isDifferent =
           !prevUser ||
@@ -40,19 +39,26 @@ export const AuthProvider = ({ children }) => {
         return isDifferent
           ? { ...userData, role: userData.role || "student" }
           : prevUser;
-      });
+      }); // Avoid redirecting on reset routes
 
-      // ✅ Only redirect if you're on /login, and NOT already on dashboard
-      if (location.pathname === "/login") {
+      const nonRedirectPaths = ["/forgot-password", "/verify-reset-otp"];
+      if (
+        location.pathname === "/login" &&
+        !nonRedirectPaths.includes(location.pathname)
+      ) {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
         if (redirectPath !== "/login") {
           navigate(redirectPath, { replace: true });
         }
       }
     } catch (error) {
-      console.log(error)
       setUser(null);
-      if (error.response?.status === 401 && location.pathname !== "/login") {
+      if (
+        error.response?.status === 401 &&
+        !["/login", "/forgot-password", "/verify-reset-otp"].includes(
+          location.pathname
+        )
+      ) {
         navigate("/login", { state: { from: location }, replace: true });
       }
     } finally {
@@ -70,18 +76,16 @@ export const AuthProvider = ({ children }) => {
       });
     });
 
-    checkAuth(); // ✅ Only runs once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 👈 Empty dependency array prevents repeated runs
+    checkAuth(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const login = async (email, password) => {
+    setLoading(true); // 👉 show spinner
+
     try {
       const response = await api.post(
         "/auth/login",
-        {
-          username: email,
-          password: password,
-        },
+        { username: email, password },
         { withCredentials: true }
       );
 
@@ -102,6 +106,8 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error("Login error", err);
       throw err;
+    } finally {
+      setLoading(false); // 👉 remove spinner
     }
   };
 
@@ -126,7 +132,13 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? (
+        <div className="h-screen flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };
