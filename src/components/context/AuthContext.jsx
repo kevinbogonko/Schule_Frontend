@@ -11,10 +11,16 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const getCookie = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
+  // Clear all frontend auth state
+  const clearAuthState = () => {
+    setUser(null);
+    delete api.defaults.headers.common["Authorization"];
+    delete api.defaults.headers.common["X-XSRF-TOKEN"];
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+    });
   };
 
   const checkAuth = async () => {
@@ -36,25 +42,28 @@ export const AuthProvider = ({ children }) => {
           prevUser.id !== userData.id ||
           prevUser.username !== userData.username ||
           prevUser.role !== userData.role;
-
         return isDifferent
           ? { ...userData, role: userData.role || "student" }
           : prevUser;
       });
 
-      // ✅ Only redirect if on a public route
-      const publicRoutes = ["/login", "/forgot-password", "/verify-reset-otp"];
-      if (publicRoutes.includes(location.pathname)) {
+      // Only redirect if not already on a protected page
+      const publicPaths = ["/login", "/forgot-password", "/verify-reset-otp"];
+      if (
+        !publicPaths.includes(location.pathname) &&
+        location.pathname !== "/"
+      ) {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
         navigate(redirectPath, { replace: true });
       }
     } catch (error) {
-      setUser(null);
-
-      const publicRoutes = ["/login", "/forgot-password", "/verify-reset-otp"];
-      const isPublic = publicRoutes.includes(location.pathname);
-
-      if (error.response?.status === 401 && !isPublic) {
+      clearAuthState();
+      if (
+        error.response?.status === 401 &&
+        !["/login", "/forgot-password", "/verify-reset-otp"].includes(
+          location.pathname
+        )
+      ) {
         navigate("/login", { state: { from: location }, replace: true });
       }
     } finally {
@@ -72,7 +81,7 @@ export const AuthProvider = ({ children }) => {
       });
     });
 
-    checkAuth(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    checkAuth();
   }, []);
 
   const login = async (email, password) => {
@@ -85,12 +94,6 @@ export const AuthProvider = ({ children }) => {
       );
 
       const { user: userData } = response.data;
-
-      const csrf = getCookie("XSRF-TOKEN");
-      if (csrf) {
-        api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
-      }
-
       setUser({
         ...userData,
         role: userData.role || "student",
@@ -107,19 +110,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    setLoading(true);
     try {
       await api.post("/auth/logout", {}, { withCredentials: true });
-
-      localStorage.clear();
-      sessionStorage.clear();
-
-      setUser(null);
-
-      // ✅ Force reload to fully clear state and cookies
-      window.location.href = "/login";
     } catch (err) {
       console.error("Logout error", err);
-      window.location.href = "/login";
+    } finally {
+      clearAuthState();
+      // Add timeout to ensure cookies are cleared before redirect
+      setTimeout(() => {
+        navigate("/login", { replace: true, state: { from: location } });
+        setLoading(false);
+      }, 100);
     }
   };
 
