@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
         !nonRedirectPaths.includes(location.pathname)
       ) {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
-        if (redirectPath !== "/login") {
+        if (redirectPath !== "/login" && userData) {
           navigate(redirectPath, { replace: true });
         }
       }
@@ -113,12 +113,26 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      // 1. Call server to revoke tokens and clear cookies
       await api.post("/auth/logout", {}, { withCredentials: true });
+
+      // 2. Clear CSRF token header
+      delete api.defaults.headers.common["X-XSRF-TOKEN"];
+
+      // 3. Optionally clear localStorage/sessionStorage if used for anything
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // 4. Clear frontend auth state
+      setUser(null);
+
+      // 5. Force a reload to reset cookie context across app
+      window.location.href = "/login";
     } catch (err) {
       console.error("Logout error", err);
-    } finally {
+      // Still force logout even if error occurred
       setUser(null);
-      navigate("/login", { replace: true });
+      window.location.href = "/login";
     }
   };
 
