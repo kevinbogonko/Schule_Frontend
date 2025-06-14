@@ -36,29 +36,25 @@ export const AuthProvider = ({ children }) => {
           prevUser.id !== userData.id ||
           prevUser.username !== userData.username ||
           prevUser.role !== userData.role;
+
         return isDifferent
           ? { ...userData, role: userData.role || "student" }
           : prevUser;
-      }); // Avoid redirecting on reset routes
+      });
 
-      const nonRedirectPaths = ["/forgot-password", "/verify-reset-otp"];
-      if (
-        location.pathname === "/login" &&
-        !nonRedirectPaths.includes(location.pathname)
-      ) {
+      // ✅ Only redirect if on a public route
+      const publicRoutes = ["/login", "/forgot-password", "/verify-reset-otp"];
+      if (publicRoutes.includes(location.pathname)) {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
-        if (redirectPath !== "/login") {
-          navigate(redirectPath, { replace: true });
-        }
+        navigate(redirectPath, { replace: true });
       }
     } catch (error) {
       setUser(null);
-      if (
-        error.response?.status === 401 &&
-        !["/login", "/forgot-password", "/verify-reset-otp"].includes(
-          location.pathname
-        )
-      ) {
+
+      const publicRoutes = ["/login", "/forgot-password", "/verify-reset-otp"];
+      const isPublic = publicRoutes.includes(location.pathname);
+
+      if (error.response?.status === 401 && !isPublic) {
         navigate("/login", { state: { from: location }, replace: true });
       }
     } finally {
@@ -80,8 +76,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    setLoading(true); // 👉 show spinner
-
+    setLoading(true);
     try {
       const response = await api.post(
         "/auth/login",
@@ -107,18 +102,24 @@ export const AuthProvider = ({ children }) => {
       console.error("Login error", err);
       throw err;
     } finally {
-      setLoading(false); // 👉 remove spinner
+      setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
       await api.post("/auth/logout", {}, { withCredentials: true });
+
+      localStorage.clear();
+      sessionStorage.clear();
+
+      setUser(null);
+
+      // ✅ Force reload to fully clear state and cookies
+      window.location.href = "/login";
     } catch (err) {
       console.error("Logout error", err);
-    } finally {
-      setUser(null);
-      navigate("/login", { replace: true });
+      window.location.href = "/login";
     }
   };
 
