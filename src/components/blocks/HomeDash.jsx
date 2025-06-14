@@ -15,6 +15,7 @@ import {
   Line,
   ResponsiveContainer,
 } from "recharts";
+import LoadingSpinner from "./LoadingSpinner";
 
 const Card = ({ title, value, icon, color }) => {
   return (
@@ -495,7 +496,7 @@ const StudentDashboard = ({ data }) => {
 };
 
 const HomeDash = ({ role, data }) => {
-  if (!data) return <div>Loading dashboard data...</div>;
+  if (!data) return <LoadingSpinner />;
 
   return (
     <div className="p-0">
