@@ -12,7 +12,7 @@ const Particulars = () => {
   const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
   const { showToast } = useToast();
 
-  const [darkMode, setDarkMode] = useState(false); // Added dark mode state
+  const [darkMode, setDarkMode] = useState(false);
   const [particulars, setParticulars] = useState({
     schoolname: "",
     motto: "",
@@ -30,7 +30,6 @@ const Particulars = () => {
   });
 
   useEffect(() => {
-    // Check for user's preferred color scheme
     const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -76,16 +75,8 @@ const Particulars = () => {
   return (
     <div className={`p-0 relative ${darkMode ? "dark" : ""}`}>
       {loading && (
-        <div
-          className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
-            darkMode ? "dark:bg-opacity-70" : ""
-          }`}
-        >
-          <div
-            className={`bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg text-center max-w-sm ${
-              darkMode ? "dark:shadow-gray-700" : ""
-            }`}
-          >
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg dark:shadow-gray-700 text-center max-w-sm">
             <FaSpinner className="animate-spin text-3xl text-blue-500 dark:text-blue-400 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">
               Loading School Details...
@@ -97,17 +88,11 @@ const Particulars = () => {
       <ReusableDiv
         tag="School Details"
         icon={TbListDetails}
-        className={`ml-0 mr-0 bg-blue-50 dark:bg-gray-700 mx-0 rounded-lg shadow-sm ${
-          darkMode ? "dark:shadow-gray-600" : ""
-        }`}
+        className="ml-0 mr-0 bg-blue-50 dark:bg-gray-700 mx-0 rounded-lg shadow-sm dark:shadow-gray-600"
       >
         <div className="flex flex-col md:flex-row-reverse gap-6 px-0 py-2 w-full h-auto">
           <div className="w-full md:w-64 flex-shrink-0 h-auto">
-            <div
-              className={`w-full h-64 border-2 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm ${
-                darkMode ? "dark:shadow-gray-600" : ""
-              }`}
-            >
+            <div className="w-full h-64 border-2 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm dark:shadow-gray-600">
               <img
                 src={`${BACKEND_BASE_URL}${imagePath}`}
                 alt="School logo"
@@ -131,9 +116,7 @@ const Particulars = () => {
               ].map(([label, value], i) => (
                 <div
                   key={i}
-                  className={`bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow h-full ${
-                    darkMode ? "dark:hover:shadow-gray-600" : ""
-                  }`}
+                  className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md dark:hover:shadow-gray-600 transition-shadow h-full"
                 >
                   <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     {label}
@@ -144,11 +127,7 @@ const Particulars = () => {
                 </div>
               ))}
 
-              <div
-                className={`bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow h-full ${
-                  darkMode ? "dark:hover:shadow-gray-600" : ""
-                }`}
-              >
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md dark:hover:shadow-gray-600 transition-shadow h-full">
                 <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Website
                 </p>
