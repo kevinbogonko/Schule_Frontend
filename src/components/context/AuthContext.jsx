@@ -11,16 +11,10 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Clear all frontend auth state
-  const clearAuthState = () => {
-    setUser(null);
-    delete api.defaults.headers.common["Authorization"];
-    delete api.defaults.headers.common["X-XSRF-TOKEN"];
-    document.cookie.split(";").forEach((c) => {
-      document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
-    });
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
   };
 
   const checkAuth = async () => {
@@ -45,19 +39,20 @@ export const AuthProvider = ({ children }) => {
         return isDifferent
           ? { ...userData, role: userData.role || "student" }
           : prevUser;
-      });
+      }); // Avoid redirecting on reset routes
 
-      // Only redirect if not already on a protected page
-      const publicPaths = ["/login", "/forgot-password", "/verify-reset-otp"];
+      const nonRedirectPaths = ["/forgot-password", "/verify-reset-otp"];
       if (
-        !publicPaths.includes(location.pathname) &&
-        location.pathname !== "/"
+        location.pathname === "/login" &&
+        !nonRedirectPaths.includes(location.pathname)
       ) {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
-        navigate(redirectPath, { replace: true });
+        if (redirectPath !== "/login") {
+          navigate(redirectPath, { replace: true });
+        }
       }
     } catch (error) {
-      clearAuthState();
+      setUser(null);
       if (
         error.response?.status === 401 &&
         !["/login", "/forgot-password", "/verify-reset-otp"].includes(
@@ -81,11 +76,12 @@ export const AuthProvider = ({ children }) => {
       });
     });
 
-    checkAuth();
+    checkAuth(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email, password) => {
-    setLoading(true);
+    setLoading(true); // 👉 show spinner
+
     try {
       const response = await api.post(
         "/auth/login",
@@ -94,6 +90,12 @@ export const AuthProvider = ({ children }) => {
       );
 
       const { user: userData } = response.data;
+
+      const csrf = getCookie("XSRF-TOKEN");
+      if (csrf) {
+        api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
+      }
+
       setUser({
         ...userData,
         role: userData.role || "student",
@@ -105,23 +107,18 @@ export const AuthProvider = ({ children }) => {
       console.error("Login error", err);
       throw err;
     } finally {
-      setLoading(false);
+      setLoading(false); // 👉 remove spinner
     }
   };
 
   const logout = async () => {
-    setLoading(true);
     try {
       await api.post("/auth/logout", {}, { withCredentials: true });
     } catch (err) {
       console.error("Logout error", err);
     } finally {
-      clearAuthState();
-      // Add timeout to ensure cookies are cleared before redirect
-      setTimeout(() => {
-        navigate("/login", { replace: true, state: { from: location } });
-        setLoading(false);
-      }, 100);
+      setUser(null);
+      navigate("/login", { replace: true });
     }
   };
 
