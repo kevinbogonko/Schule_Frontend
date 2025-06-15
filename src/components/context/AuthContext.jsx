@@ -17,6 +17,18 @@ export const AuthProvider = ({ children }) => {
     if (parts.length === 2) return parts.pop().split(";").shift();
   };
 
+  const clearCookies = () => {
+    // Clear all relevant cookies
+    document.cookie =
+      "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    document.cookie =
+      "refresh_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    document.cookie =
+      "XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    // Clear the XSRF header
+    delete api.defaults.headers.common["X-XSRF-TOKEN"];
+  };
+
   const checkAuth = async () => {
     try {
       const csrf = getCookie("XSRF-TOKEN");
@@ -39,7 +51,7 @@ export const AuthProvider = ({ children }) => {
         return isDifferent
           ? { ...userData, role: userData.role || "student" }
           : prevUser;
-      }); // Avoid redirecting on reset routes
+      });
 
       const nonRedirectPaths = ["/forgot-password", "/verify-reset-otp"];
       if (
@@ -47,12 +59,13 @@ export const AuthProvider = ({ children }) => {
         !nonRedirectPaths.includes(location.pathname)
       ) {
         const redirectPath = location.state?.from?.pathname || "/dashboard";
-        if (redirectPath !== "/login" && userData) {
+        if (redirectPath !== "/login") {
           navigate(redirectPath, { replace: true });
         }
       }
     } catch (error) {
       setUser(null);
+      clearCookies(); // Clear cookies on auth failure
       if (
         error.response?.status === 401 &&
         !["/login", "/forgot-password", "/verify-reset-otp"].includes(
@@ -80,7 +93,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    setLoading(true); // 👉 show spinner
+    setLoading(true);
 
     try {
       const response = await api.post(
@@ -107,32 +120,19 @@ export const AuthProvider = ({ children }) => {
       console.error("Login error", err);
       throw err;
     } finally {
-      setLoading(false); // 👉 remove spinner
+      setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
-      // 1. Call server to revoke tokens and clear cookies
       await api.post("/auth/logout", {}, { withCredentials: true });
-
-      // 2. Clear CSRF token header
-      delete api.defaults.headers.common["X-XSRF-TOKEN"];
-
-      // 3. Optionally clear localStorage/sessionStorage if used for anything
-      localStorage.clear();
-      sessionStorage.clear();
-
-      // 4. Clear frontend auth state
-      setUser(null);
-
-      // 5. Force a reload to reset cookie context across app
-      window.location.href = "/login";
     } catch (err) {
       console.error("Logout error", err);
-      // Still force logout even if error occurred
+    } finally {
       setUser(null);
-      window.location.href = "/login";
+      clearCookies(); // Clear all cookies and headers
+      navigate("/login", { replace: true });
     }
   };
 
