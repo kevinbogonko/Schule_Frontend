@@ -17,16 +17,20 @@ export const AuthProvider = ({ children }) => {
     if (parts.length === 2) return parts.pop().split(";").shift();
   };
 
-  const clearCookies = () => {
-    // Clear all relevant cookies
+  const clearAuthData = () => {
+    // Clear cookies
     document.cookie =
       "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
     document.cookie =
       "refresh_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
     document.cookie =
       "XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-    // Clear the XSRF header
+
+    // Clear headers
     delete api.defaults.headers.common["X-XSRF-TOKEN"];
+
+    // Clear React state
+    setUser(null);
   };
 
   const checkAuth = async () => {
@@ -64,8 +68,7 @@ export const AuthProvider = ({ children }) => {
         }
       }
     } catch (error) {
-      setUser(null);
-      clearCookies(); // Clear cookies on auth failure
+      clearAuthData();
       if (
         error.response?.status === 401 &&
         !["/login", "/forgot-password", "/verify-reset-otp"].includes(
@@ -89,7 +92,8 @@ export const AuthProvider = ({ children }) => {
       });
     });
 
-    checkAuth(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email, password) => {
@@ -128,10 +132,9 @@ export const AuthProvider = ({ children }) => {
     try {
       await api.post("/auth/logout", {}, { withCredentials: true });
     } catch (err) {
-      console.error("Logout error", err);
+      console.error("Logout API error", err);
     } finally {
-      setUser(null);
-      clearCookies(); // Clear all cookies and headers
+      clearAuthData();
       navigate("/login", { replace: true });
     }
   };
