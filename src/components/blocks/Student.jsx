@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import TableComponent from "../TableComponent";
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiUpload } from "react-icons/fi";
 import { BsEye, BsPencil, BsTrash } from "react-icons/bs";
 import ReusableDiv from "../ReusableDiv";
 import ReusableSelect from "../ReusableSelect";
@@ -21,6 +21,8 @@ const Student = ({ user }) => {
   const [rowData, setRowData] = useState("");
   const [streamOptions, setStreamOptions] = useState([]);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
+  const [fileUploadLoading, setFileUploadLoading] = useState(false);
+  const fileInputRef = useRef(null);
   const loadingTimeoutRef = useRef(null);
 
   const [modalState, setModalState] = useState({
@@ -60,7 +62,6 @@ const Student = ({ user }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (selectedForm && selectedYear) {
-        // Show overlay after 50ms to prevent flash on quick loads
         loadingTimeoutRef.current = setTimeout(() => {
           setShowLoadingOverlay(true);
         }, 50);
@@ -75,6 +76,7 @@ const Student = ({ user }) => {
             value: item.stream_id,
             label: item.stream_name,
           }));
+
           setStreamOptions(formattedStreams);
 
           const payload = { year: selectedYear, form: selectedForm };
@@ -87,6 +89,7 @@ const Student = ({ user }) => {
               formattedStreams.find((opt) => opt.value === student.stream_id)
                 ?.label || "N/A",
           }));
+          // console.log(transformedData);
           setStudentData(transformedData);
         } catch (err) {
           setStreamOptions([]);
@@ -98,7 +101,6 @@ const Student = ({ user }) => {
           );
           setError(err?.response?.data.message || "Something went wrong");
         } finally {
-          // Minimum 300ms display time for smooth UX
           loadingTimeoutRef.current = setTimeout(() => {
             setLoading(false);
             setShowLoadingOverlay(false);
@@ -116,6 +118,7 @@ const Student = ({ user }) => {
     };
   }, [
     selectedForm,
+    selectedYear,
     modalState.addStudent,
     modalState.editStudent,
     modalState.viewStudent,
@@ -138,7 +141,7 @@ const Student = ({ user }) => {
           duration: 3000,
           position: "top-center",
         });
-        const payload = { form: selectedForm, year : selectedYear };
+        const payload = { form: selectedForm, year: selectedYear };
         const updatedResponse = await api.post("/student/getstudents", payload);
         const transformedData = updatedResponse.data.map((student) => ({
           ...student,
@@ -151,7 +154,6 @@ const Student = ({ user }) => {
         setStudentData(transformedData);
       }
     } catch (error) {
-      console.log(error?.response?.data.message);
       showToast(
         error?.response?.data.message || "Error deleting student",
         "error",
@@ -165,6 +167,53 @@ const Student = ({ user }) => {
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!selectedYear || !selectedForm) {
+      showToast("Please select year and form first", "error", {
+        duration: 3000,
+        position: "top-right",
+      });
+      return;
+    }
+
+    setFileUploadLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("excelFile", file); // Must match middleware field name
+      formData.append("year", selectedYear);
+      formData.append("form", selectedForm);
+
+      const response = await api.post("/student/excelstudents", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      showToast(response.data.message, "success", {
+        duration: 3000,
+        position: "top-right",
+      });
+      // Refresh your student data
+    } catch (error) {
+      console.error("Upload error:", error);
+      showToast(error.response?.data?.message || "Upload failed", "error", {
+        duration: 3000,
+        position: "top-right",
+      });
+    } finally {
+      setFileUploadLoading(false);
+      e.target.value = ""; // Reset input
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
   return (
     <div className="p-0">
       <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
@@ -172,19 +221,19 @@ const Student = ({ user }) => {
       </h1>
 
       <div className="flex flex-col lg:flex-row gap-2">
-        {/* Loading Overlay */}
-        {(showLoadingOverlay || loading) && (
+        {(showLoadingOverlay || loading || fileUploadLoading) && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-700 p-4 md:p-6 rounded-lg shadow-lg text-center max-w-xs md:max-w-sm">
               <FaSpinner className="animate-spin text-2xl md:text-3xl text-blue-500 mx-auto mb-3 md:mb-4" />
               <p className="text-base md:text-lg font-medium text-gray-700 dark:text-gray-300">
-                Loading Students...
+                {fileUploadLoading
+                  ? "Uploading Students..."
+                  : "Loading Students..."}
               </p>
             </div>
           </div>
         )}
 
-        {/* Form Controls */}
         <div className="w-full lg:w-1/4">
           <ReusableDiv
             className="ml-0 mr-0 mb-2 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
@@ -239,7 +288,6 @@ const Student = ({ user }) => {
           </ReusableDiv>
         </div>
 
-        {/* Table Content */}
         <div className="w-full lg:w-3/4">
           <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md p-2 md:p-4">
             <TableComponent
@@ -257,6 +305,12 @@ const Student = ({ user }) => {
                   icon: <FiPlus className="w-4 h-4" />,
                   onClick: () =>
                     setModalState((prev) => ({ ...prev, addStudent: true })),
+                },
+                uploadButton: {
+                  show: user === "admin" && selectedForm && selectedYear,
+                  label: "Upload Excel",
+                  icon: <FiUpload className="w-4 h-4" />,
+                  onClick: triggerFileInput,
                 },
                 actionButtons: {
                   show: true,
@@ -314,6 +368,13 @@ const Student = ({ user }) => {
               defaultVisibleColumns={["name", "stream", "status", "actions"]}
               mobileBreakpoint="sm"
             />
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+            />
           </div>
         </div>
       </div>
@@ -341,7 +402,7 @@ const Student = ({ user }) => {
           });
         }}
         onDelete={() => {
-          const payload = { form: selectedForm };
+          const payload = { form: selectedForm, year: selectedYear };
           api.post("/student/getstudents", payload).then((response) => {
             const transformedData = response.data.map((student) => ({
               ...student,

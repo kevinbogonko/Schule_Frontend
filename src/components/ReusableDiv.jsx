@@ -9,15 +9,16 @@ const ReusableDiv = ({
   iconPosition = "left",
   tag = "",
   collapsible = false,
+  defaultCollapsed = false, // New prop added here
   ...props
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(!defaultCollapsed);
   const [maxHeight, setMaxHeight] = useState("0px");
   const contentRef = useRef(null);
 
   const baseClasses =
     "mx-2 px-4 py-2 ring-1 rounded-md font-small transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed " +
-    "bg-white dark:bg-gray-800 ring-gray-200 dark:ring-gray-700 text-gray-800 dark:text-gray-200 relative"; // Added 'relative' here
+    "bg-white dark:bg-gray-800 ring-gray-200 dark:ring-gray-700 text-gray-800 dark:text-gray-200 relative";
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
 
   const toggleExpand = () => {
@@ -36,11 +37,18 @@ const ReusableDiv = ({
     }
   }, [isExpanded, collapsible, children]);
 
+  // Initialize maxHeight based on defaultCollapsed
+  useEffect(() => {
+    if (collapsible && contentRef.current && !defaultCollapsed) {
+      setMaxHeight(`${contentRef.current.scrollHeight}px`);
+    }
+  }, [collapsible, defaultCollapsed]);
+
   return (
     <div
       className={`${baseClasses} ${disabledClasses} ${className}`}
       {...props}
-      style={{ overflow: "visible" }} // Added to prevent clipping
+      style={{ overflow: "visible" }}
     >
       <div className="flex justify-between items-center mb-2 p-1 rounded-sm font-medium">
         <div className="flex items-center gap-4">
@@ -72,7 +80,7 @@ const ReusableDiv = ({
           maxHeight: !collapsible ? "none" : maxHeight,
           opacity: !collapsible || isExpanded ? 1 : 0,
           pointerEvents: !collapsible || isExpanded ? "auto" : "none",
-          overflow: "visible", // Changed from "hidden" to "visible"
+          overflow: "visible",
         }}
       >
         {children}

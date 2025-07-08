@@ -64,13 +64,12 @@ const Marksheet = () => {
         });
 
         const formattedStreams = response.data.map((stream) => ({
-          value: stream.id,
+          value: stream.stream_id,
           label: stream.stream_name,
         }));
 
         setStreamOptions(formattedStreams);
       } catch (error) {
-        console.log(error)
         showToast("Error fetching streams", "error", {
           duration: 3000,
           position: "top-right",
@@ -139,10 +138,14 @@ const Marksheet = () => {
           position: "top-right",
         });
       } catch (error) {
-        showToast("Error fetching PDF", "error", {
-          duration: 3000,
-          position: "top-right",
-        });
+        showToast(
+          error?.response?.data.message || "Error fetching PDF",
+          "error",
+          {
+            duration: 3000,
+            position: "top-right",
+          }
+        );
       } finally {
         setLoading(false);
       }

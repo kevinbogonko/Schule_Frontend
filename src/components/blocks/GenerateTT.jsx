@@ -517,6 +517,7 @@ const GenerateTT = () => {
     });
 
     setTimeSlots(schedule);
+    console.log(schedule)
     return schedule;
   }, [duration, startTime, endTime, includeBreaks, breaks, showToast]);
 

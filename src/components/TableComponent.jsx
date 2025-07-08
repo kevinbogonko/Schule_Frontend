@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { BsThreeDotsVertical, BsEye, BsPencil, BsTrash } from "react-icons/bs";
 import { GoSearch } from "react-icons/go";
-import { FiPlus, FiSun, FiMoon } from "react-icons/fi";
+import { FiPlus, FiSun, FiMoon, FiUpload } from "react-icons/fi";
 
 const TableComponent = ({
   columns,
@@ -13,6 +13,11 @@ const TableComponent = ({
       show: true,
       label: "Add New",
       icon: <FiPlus className="w-4 h-4" />,
+    },
+    uploadButton: {
+      show: true,
+      label: "Upload",
+      icon: <FiUpload className="w-4 h-4" />,
     },
     actionButtons: {
       show: true,
@@ -298,6 +303,15 @@ const TableComponent = ({
                   {buttons.addButton.icon}
                 </button>
               )}
+              {buttons.uploadButton?.show && (
+                <button
+                  className={`bg-black dark:bg-indigo-600 text-white rounded-md px-3 py-2 text-sm font-medium flex items-center gap-1 transition-colors duration-300`}
+                  onClick={() => buttons.uploadButton.onClick?.()}
+                >
+                  {buttons.uploadButton.label}
+                  {buttons.uploadButton.icon}
+                </button>
+              )}
             </div>
           </div>
           <div className="flex justify-between items-center">
@@ -327,6 +341,7 @@ const TableComponent = ({
       onRowsPerPageChange,
       rowsPerPage,
       buttons.addButton,
+      buttons.uploadButton,
       formattedData.length,
       darkMode,
       toggleDarkMode,

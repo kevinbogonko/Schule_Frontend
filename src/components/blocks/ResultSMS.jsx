@@ -289,7 +289,6 @@ const ResultSMS = () => {
       });
 
       const response = await api.post("/sms/smsres", payload);
-
       setSchoolDetails(response.data.schoolDetails);
       setStudentResults(response.data.studentResults);
     } catch (err) {

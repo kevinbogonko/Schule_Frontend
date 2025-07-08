@@ -658,7 +658,7 @@ const AddStudent = ({
                 </label>
                 <p className="text-gray-800 dark:text-gray-200 font-medium">
                   {streamOptions.find(
-                    (s) => s.value === String(studentData.stream_id)
+                    (s) => s.value === studentData.stream_id
                   )?.label || "-"}
                 </p>
               </div>

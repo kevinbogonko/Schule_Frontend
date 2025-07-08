@@ -106,6 +106,7 @@ const ModalForm = ({
     lg: "max-w-lg",
     xl: "max-w-xl",
     "2xl": "max-w-2xl",
+    "4xl": "max-w-4xl",
     full: "w-full max-w-[95vw]",
   };
 
