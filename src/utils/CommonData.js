@@ -19,12 +19,74 @@ export const sexOptions = [
   { value: 'M', label: 'Male' },
 ]
 
-export const formOptions=[
-    { value: '1', label: 'Form 1' },
-    { value: '2', label: 'Form 2' },
-    { value: '3', label: 'Form 3' },
-    { value: '4', label: 'Form 4' },
-]
+export const eventOptions = [
+    { value: "opening", label: "Opening" },
+    { value: "closing", label: "Closing" },
+  ];
+
+export const eventTypeOptions = {
+    opening: [
+      { value: "term_begin", label: "Term Begin" },
+      { value: "term_continue", label: "Term Continuation" },
+    ],
+    closing: [
+      { value: "term_end", label: "Term End" },
+      { value: "term_break", label: "Term Break" },
+    ],
+  };
+
+// export const formOptions=[
+//     { value: '1', label: 'Form 1' },
+//     { value: '2', label: 'Form 2' },
+//     { value: '3', label: 'Form 3' },
+//     { value: '4', label: 'Form 4' },
+// ]
+
+export const formOptions = [
+  {
+    label: "Pre-Primary (CBC)",
+    options: [
+      { value: 0, label: "PP1", system: "CBC" },
+      { value: 0, label: "PP2", system: "CBC" }, // same numeric level, different stage
+    ],
+  },
+  {
+    label: "Primary (CBC)",
+    options: [
+      { value: 1, label: "Grade 1", system: "CBC" },
+      { value: 2, label: "Grade 2", system: "CBC" },
+      { value: 3, label: "Grade 3", system: "CBC" },
+      { value: 4, label: "Grade 4", system: "CBC" },
+      { value: 5, label: "Grade 5", system: "CBC" },
+      { value: 6, label: "Grade 6", system: "CBC" },
+    ],
+  },
+  {
+    label: "Junior Secondary (CBC)",
+    options: [
+      { value: 7, label: "Grade 7", system: "CBC" },
+      { value: 8, label: "Grade 8", system: "CBC" },
+      { value: 9, label: "Grade 9", system: "CBC" },
+    ],
+  },
+  {
+    label: "Senior Secondary (CBC)",
+    options: [
+      { value: 10, label: "Grade 10", system: "CBC" },
+      { value: 11, label: "Grade 11", system: "CBC" },
+      { value: 12, label: "Grade 12", system: "CBC" },
+    ],
+  },
+  {
+    label: "Secondary (8-4-4)",
+    options: [
+      { value: 19, label: "Form 1", system: "8-4-4" },
+      { value: 20, label: "Form 2", system: "8-4-4" },
+      { value: 21, label: "Form 3", system: "8-4-4" },
+      { value: 22, label: "Form 4", system: "8-4-4" },
+    ],
+  },
+];
 
 export const termOptions=[
     { value: '1', label: 'Term 1' },
@@ -37,6 +99,124 @@ export const remarkItemOptions=[
     { value: 'principal_remark', label: 'Principal Remarks' },
     { value: 'classteacher_remark', label: 'Class Teacher Remarks' },
 ]
+
+// Grading Scheme Table Columns
+export const getColumns = (syst_level) => {
+  const commonColumns = [
+    { name: "code", uid: "id", sortable: true },
+    { name: `${syst_level == "Secondary (8-4-4)" ? "SUBJECT" : "LEARNING AREA"}`, uid: "subject", sortable: true },
+  ];
+
+  const secondary844Columns = [
+    {
+      name: "E",
+      uid: "E",
+      sortable: true,
+      render: (item) => `${item.E.min}-${item.E.max}`,
+    },
+    {
+      name: "D-",
+      uid: "D-",
+      sortable: true,
+      render: (item) => `${item["D-"].min}-${item["D-"].max}`,
+    },
+    {
+      name: "D",
+      uid: "D",
+      sortable: true,
+      render: (item) => `${item.D.min}-${item.D.max}`,
+    },
+    {
+      name: "D+",
+      uid: "D+",
+      sortable: true,
+      render: (item) => `${item["D+"].min}-${item["D+"].max}`,
+    },
+    {
+      name: "C-",
+      uid: "C-",
+      sortable: true,
+      render: (item) => `${item["C-"].min}-${item["C-"].max}`,
+    },
+    {
+      name: "C",
+      uid: "C",
+      sortable: true,
+      render: (item) => `${item.C.min}-${item.C.max}`,
+    },
+    {
+      name: "C+",
+      uid: "C+",
+      sortable: true,
+      render: (item) => `${item["C+"].min}-${item["C+"].max}`,
+    },
+    {
+      name: "B-",
+      uid: "B-",
+      sortable: true,
+      render: (item) => `${item["B-"].min}-${item["B-"].max}`,
+    },
+    {
+      name: "B",
+      uid: "B",
+      sortable: true,
+      render: (item) => `${item.B.min}-${item.B.max}`,
+    },
+    {
+      name: "B+",
+      uid: "B+",
+      sortable: true,
+      render: (item) => `${item["B+"].min}-${item["B+"].max}`,
+    },
+    {
+      name: "A-",
+      uid: "A-",
+      sortable: true,
+      render: (item) => `${item["A-"].min}-${item["A-"].max}`,
+    },
+    {
+      name: "A",
+      uid: "A",
+      sortable: true,
+      render: (item) => `${item.A.min}-${item.A.max}`,
+    },
+  ];
+
+  const non844CBCColumns = [
+    {
+      name: "BE",
+      uid: "BE",
+      sortable: true,
+      render: (item) => `${item.BE.min}-${item.BE.max}`,
+    },
+    {
+      name: "AE",
+      uid: "AE",
+      sortable: true,
+      render: (item) => `${item.AE.min}-${item.AE.max}`,
+    },
+    {
+      name: "ME",
+      uid: "ME",
+      sortable: true,
+      render: (item) => `${item.ME.min}-${item.ME.max}`,
+    },
+    {
+      name: "EE",
+      uid: "EE",
+      sortable: true,
+      render: (item) => `${item.EE.min}-${item.EE.max}`,
+    },
+  ];
+
+  const actionColumn = { name: "ACTIONS", uid: "actions" };
+
+  // Final dynamic return
+  return syst_level === "Secondary (8-4-4)"
+    ? [...commonColumns, ...secondary844Columns, actionColumn]
+    : [...commonColumns, ...non844CBCColumns, actionColumn];
+};
+
 
 // Year Utility
 const currentYear = new Date().getFullYear();
@@ -85,7 +265,7 @@ export const subjectsPerStream = [
     {
       id: 5,
       isCustom: false,
-      singles: 5,
+      singles: 3,
       doubles: 0,
       isMerged: false,
       mergedWith: [],

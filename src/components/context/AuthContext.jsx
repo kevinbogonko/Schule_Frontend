@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
         api.defaults.headers.common["X-XSRF-TOKEN"] = csrf;
       }
 
-      const response = await api.get("/auth/getloggedinuser", {
+      const response = await api.get("auth/getloggedinuser", {
         withCredentials: true,
       });
 

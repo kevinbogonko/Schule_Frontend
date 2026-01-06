@@ -590,8 +590,8 @@ const TimeSlotRU = ({
         icon={FiEye}
         closeOnOutsideClick={false}
         size="4xl"
-        isForm={false}
-        // submitText="Close"
+        // isForm={false}
+        submitText="Close"
       >
         {() => (
           <>

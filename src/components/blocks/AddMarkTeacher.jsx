@@ -18,7 +18,7 @@ import ReusableInput from "../ui/ReusableInput";
 import Button from "../ui/raw/Button";
 import { motion, AnimatePresence } from "framer-motion";
 
-const AddMarkTeacher = () => {
+const AddMarkTeacher = ({staffId}) => {
   const { showToast } = useToast();
   const [studentData, setStudentData] = useState([]);
   const [optimisticData, setOptimisticData] = useState(null);
@@ -55,7 +55,7 @@ const AddMarkTeacher = () => {
     useState("threePaperAvgAdd");
   const [isUpdatingPaperSetup, setIsUpdatingPaperSetup] = useState(false);
   const showPapers = true;
-  const staffId = 56881; // Hardcoded staff ID as requested
+  // const staffId = 56881; // Hardcoded staff ID as requested
 
   const resetBelow = (level) => {
     if (level === "year") {
@@ -160,6 +160,12 @@ const AddMarkTeacher = () => {
     const fetchSubjects = async () => {
       if (selectedForm && selectedYear && selectedStream) {
         try {
+          console.log({
+            form: selectedForm,
+            year: selectedYear,
+            teacher_id: staffId,
+            stream_id: selectedStream,
+          });
           const response = await api.post("/teacher/getteachersubjects", {
             form: selectedForm,
             year: selectedYear,

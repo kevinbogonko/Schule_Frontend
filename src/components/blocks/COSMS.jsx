@@ -5,7 +5,13 @@ import { FaSpinner } from "react-icons/fa";
 import { MdOutlinePreview } from "react-icons/md";
 import { AiOutlineClear } from "react-icons/ai";
 import { TbSend } from "react-icons/tb";
-import { formOptions, yearOptions, termOptions } from "../../utils/CommonData";
+import {
+  formOptions,
+  yearOptions,
+  termOptions,
+  eventOptions,
+  eventTypeOptions
+} from "../../utils/CommonData";
 import { useToast } from "../Toast";
 import ReusableInput from "../ui/ReusableInput";
 import Dropdown from "../Dropdown";
@@ -15,7 +21,7 @@ import ReusableTextarea from "../ReusableTextarea";
 import TimeInput from "../TimeInput";
 import TableComponent from "../TableComponent";
 
-const COSMS = () => {
+const COSMS = ({ syst_level }) => {
   const { showToast } = useToast();
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
@@ -33,6 +39,9 @@ const COSMS = () => {
   const [previewMessage, setPreviewMessage] = useState("");
   const [schoolName, setSchoolName] = useState("");
 
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
+
   useEffect(() => {
     const fetchSchoolName = async () => {
       try {
@@ -44,22 +53,6 @@ const COSMS = () => {
     };
     fetchSchoolName();
   }, []);
-
-  const eventOptions = [
-    { value: "opening", label: "Opening" },
-    { value: "closing", label: "Closing" },
-  ];
-
-  const eventTypeOptions = {
-    opening: [
-      { value: "term_begin", label: "Term Begin" },
-      { value: "term_continue", label: "Term Continuation" },
-    ],
-    closing: [
-      { value: "term_end", label: "Term End" },
-      { value: "term_break", label: "Term Break" },
-    ],
-  };
 
   const columns = [
     { name: "REG NO.", uid: "student_id", sortable: true },
@@ -291,7 +284,7 @@ const COSMS = () => {
                 <Dropdown
                   id="form"
                   placeholder="Select Form"
-                  options={formOptions}
+                  options={setFormOptions}
                   value={selectedForm}
                   onChange={(value) => {
                     resetBelow("form");

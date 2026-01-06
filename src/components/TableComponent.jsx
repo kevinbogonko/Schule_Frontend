@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { BsThreeDotsVertical, BsEye, BsPencil, BsTrash } from "react-icons/bs";
+import { BsEye, BsPencil, BsTrash } from "react-icons/bs";
 import { GoSearch } from "react-icons/go";
 import { FiPlus, FiSun, FiMoon, FiUpload } from "react-icons/fi";
 
@@ -48,7 +48,6 @@ const TableComponent = ({
     direction: "ascending",
   });
   const [page, setPage] = useState(1);
-  const [openActionMenu, setOpenActionMenu] = useState(null);
   const [darkMode, setDarkMode] = useState(() => {
     return (
       localStorage.getItem("darkMode") === "true" ||
@@ -176,37 +175,20 @@ const TableComponent = ({
         case "actions":
           if (!buttons.actionButtons?.show) return null;
           return (
-            <div className="relative flex justify-end items-center">
-              <button
-                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenActionMenu(
-                    openActionMenu === item.id ? null : item.id
-                  );
-                }}
-              >
-                <BsThreeDotsVertical className="text-gray-400 dark:text-gray-500 w-5 h-5" />
-              </button>
-              {openActionMenu === item.id && (
-                <div className="absolute right-0 top-full z-20 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 mt-1">
-                  <div className="py-1">
-                    {buttons.actionButtons.options.map((button, idx) => (
-                      <button
-                        key={`${item.id}-${button.label}-${idx}`}
-                        className="flex items-center w-full text-left px-4 py-2 gap-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          button.onClick?.(item.id);
-                          setOpenActionMenu(null);
-                        }}
-                      >
-                        {button.icon} {button.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div className="flex justify-center items-center gap-2">
+              {buttons.actionButtons.options.map((button, idx) => (
+                <button
+                  key={`${item.id}-${button.label}-${idx}`}
+                  className="flex items-center justify-center p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    button.onClick?.(item.id);
+                  }}
+                  title={button.label}
+                >
+                  {button.icon}
+                </button>
+              ))}
             </div>
           );
         case "checkbox":
@@ -230,7 +212,6 @@ const TableComponent = ({
     },
     [
       selectedKeys,
-      openActionMenu,
       buttons.actionButtons,
       page,
       rowsPerPage,
@@ -446,7 +427,7 @@ const TableComponent = ({
                       <div
                         className={`flex items-center ${
                           column.sortable ? "cursor-pointer" : ""
-                        }`}
+                        } ${column.uid === "actions" ? "justify-center" : ""}`}
                       >
                         {column.name}
                         {column.sortable && (
@@ -500,7 +481,7 @@ const TableComponent = ({
                                     colIndex
                                   )} ${staticColumnBg} ${staticColumnShadow} z-1 ${rowColorClass} ${stripeClass}`
                                 : ""
-                            }`}
+                            } ${column.uid === "actions" ? "text-center" : ""}`}
                           >
                             {renderCell(item, column.uid, index)}
                           </td>

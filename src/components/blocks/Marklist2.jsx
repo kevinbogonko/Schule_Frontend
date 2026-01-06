@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useToast } from "../Toast";
 import TableComponent from "../TableComponent";
 import ReusableDiv from "../ReusableDiv";
 import ReusableSelect from "../ReusableSelect";
@@ -6,7 +7,8 @@ import { FaUsersGear } from "react-icons/fa6";
 import api from "../../hooks/api";
 import { formOptions, yearOptions, termOptions } from "../../utils/CommonData";
 
-const Marklist2 = () => {
+const Marklist2 = ({syst_level}) => {
+  const { showToast } = useToast();
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedForm, setSelectedForm] = useState(null);
   const [selectedTerm, setSelectedTerm] = useState(null);
@@ -22,6 +24,11 @@ const Marklist2 = () => {
     { name: "ID", uid: "id", sortable: true },
     { name: "Name", uid: "name", sortable: true },
   ]);
+
+  const setFormOptions = formOptions.find((option) => option.label === syst_level)?.options || [];
+
+    let isCBC;
+    syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
 
   const staticColumns = ["id", "name"];
 
@@ -83,10 +90,14 @@ const Marklist2 = () => {
             exam_1: {
               alias: "EXAM",
               name: examOptions.find((exam) => exam.value === selectedExam)
-                ?.value,
+                ?.key,
               outof: 100,
             },
           },
+          year: selectedYear,
+          term: selectedTerm,
+          examname: examOptions.find((exam) => exam.value === selectedExam)
+            ?.value,
         });
 
         if (response.data.length > 0) {
@@ -99,17 +110,25 @@ const Marklist2 = () => {
             })
           );
 
-          const newColumns = [
-            { name: "ID", uid: "id", sortable: true },
-            { name: "Name", uid: "name", sortable: true },
-            { name: "Stream", uid: "stream", sortable: true },
-            ...subjectColumns,
-            { name: "Marks", uid: "marks", sortable: true },
-            { name: "Points", uid: "points", sortable: true },
-            { name: "Grade", uid: "grade", sortable: true },
-            { name: "S.Rank", uid: "stream_rank", sortable: true },
-            { name: "O.Rank", uid: "overal_rank", sortable: true },
-          ];
+          const newColumns = isCBC
+            ? [
+                { name: "ID", uid: "id", sortable: true },
+                { name: "Name", uid: "name", sortable: true },
+                { name: "Stream", uid: "stream", sortable: true },
+                ...subjectColumns,
+                { name: "Gen. PL", uid: "grade", sortable: true },
+              ]
+            : [
+                { name: "ID", uid: "id", sortable: true },
+                { name: "Name", uid: "name", sortable: true },
+                { name: "Stream", uid: "stream", sortable: true },
+                ...subjectColumns,
+                { name: "Marks", uid: "marks", sortable: true },
+                { name: "Points", uid: "points", sortable: true },
+                { name: "Grade", uid: "grade", sortable: true },
+                { name: "S.Rank", uid: "stream_rank", sortable: true },
+                { name: "O.Rank", uid: "overal_rank", sortable: true },
+              ];
 
           setColumns(newColumns);
           setStudentData(response.data);
@@ -119,6 +138,14 @@ const Marklist2 = () => {
         }
       } catch (error) {
         console.error("Error fetching student data:", error);
+        showToast(
+          error.response?.data?.message || "Error fetching student data.",
+          "error",
+          {
+            duration: 3000,
+            position: "top-right",
+          }
+        );
       } finally {
         setLoading(false);
       }
@@ -139,6 +166,14 @@ const Marklist2 = () => {
         setStreamOptions(formattedStreams);
       } catch (error) {
         console.error("Error fetching stream options:", error);
+        showToast(
+          error.response?.data?.message || "Error fetching stream options.",
+          "error",
+          {
+            duration: 3000,
+            position: "top-right",
+          }
+        );
       }
     }
   };
@@ -172,6 +207,14 @@ const Marklist2 = () => {
           );
         } catch (error) {
           console.error("Error fetching exam options:", error);
+          showToast(
+            error.response?.data?.message || "Error fetching exam options.",
+            "error",
+            {
+              duration: 3000,
+              position: "top-right",
+            }
+          );
         }
       }
     };
@@ -239,13 +282,13 @@ return (
                 htmlFor="form"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Form
+                {isCBC ? "Grade" : "Form"}
               </label>
               <ReusableSelect
                 id="form"
-                placeholder="Select Form"
-                options={formOptions}
-                value={formOptions.find((opt) => opt.value === selectedForm)}
+                placeholder={`Select ${isCBC ? "grade" : "form"}`}
+                options={setFormOptions}
+                value={setFormOptions.find((opt) => opt.value === selectedForm)}
                 onChange={(e) => {
                   resetBelow("form");
                   setSelectedForm(e.target.value);

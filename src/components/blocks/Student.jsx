@@ -11,7 +11,7 @@ import { useToast } from "../Toast";
 import { formOptions, yearOptions } from "../../utils/CommonData";
 import AddStudent from "../snippets/AddStudent";
 
-const Student = ({ user }) => {
+const Student = ({ user, syst_level }) => {
   const { showToast } = useToast();
   const [studentData, setStudentData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +30,9 @@ const Student = ({ user }) => {
     viewStudent: false,
     editStudent: false,
   });
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
 
   const columns = [
     { name: "REG NO.", uid: "id", sortable: true },
@@ -89,10 +92,10 @@ const Student = ({ user }) => {
               formattedStreams.find((opt) => opt.value === student.stream_id)
                 ?.label || "N/A",
           }));
-          // console.log(transformedData);
+          
           setStudentData(transformedData);
         } catch (err) {
-          setStreamOptions([]);
+          // setStreamOptions([]);
           setStudentData([]);
           showToast(
             err?.response?.data.message || "Something went wrong",
@@ -266,16 +269,16 @@ const Student = ({ user }) => {
                   htmlFor="form"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Form
+                  Level
                 </label>
                 <ReusableSelect
                   id="form"
                   placeholder={
                     selectedYear ? "Select Form" : "Please select year first"
                   }
-                  options={formOptions}
+                  options={setFormOptions}
                   value={
-                    formOptions.find(
+                    setFormOptions.find(
                       (option) => option.value === selectedForm
                     ) || undefined
                   }
@@ -385,6 +388,7 @@ const Student = ({ user }) => {
         selectedForm={selectedForm}
         selectedYear={selectedYear}
         streamOptions={streamOptions}
+        syst_level={syst_level}
         rowData={rowData}
         loading={loading}
         refreshTable={() => {

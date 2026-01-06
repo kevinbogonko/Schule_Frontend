@@ -6,7 +6,7 @@ import { GrDocumentDownload } from "react-icons/gr";
 import api from "../../hooks/api";
 import { formOptions, yearOptions, termOptions } from "../../utils/CommonData";
 
-const MarklistPDFReport = () => {
+const MarklistPDFReport = ({ syst_level }) => {
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedForm, setSelectedForm] = useState(null);
   const [selectedTerm, setSelectedTerm] = useState(null);
@@ -15,6 +15,12 @@ const MarklistPDFReport = () => {
   const [loading, setLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [error, setError] = useState(null);
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  let isCBC;
+  syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
 
   const resetBelow = (field) => {
     switch (field) {
@@ -58,12 +64,15 @@ const MarklistPDFReport = () => {
             exams: {
               exam_1: {
                 alias: "TEST EXAM",
-                name: examOptions.find(
-                  (opt) => String(opt.value) === String(selectedExam)
-                )?.value,
+                name: examOptions.find((exam) => exam.value === selectedExam)
+                  ?.key,
                 outof: "100",
               },
             },
+            year: selectedYear,
+            term: selectedTerm,
+            examname: examOptions.find((exam) => exam.value === selectedExam)
+              ?.key,
           },
           {
             responseType: "blob",
@@ -113,7 +122,7 @@ const MarklistPDFReport = () => {
   return (
     <div className="p-0">
       <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
-        Marklist
+        {isCBC ? "Scoresheet" : "Marklist"}
       </h1>
 
       <div className="flex flex-col lg:flex-row gap-4">
@@ -123,7 +132,7 @@ const MarklistPDFReport = () => {
             <div className="bg-white dark:bg-gray-700 p-4 md:p-6 rounded-lg shadow-lg text-center max-w-xs md:max-w-sm">
               <FaSpinner className="animate-spin text-2xl md:text-3xl text-blue-500 mx-auto mb-3 md:mb-4" />
               <p className="text-base md:text-lg font-medium text-gray-700 dark:text-gray-300">
-                Loading Marklist Report...
+                Loading {isCBC ? "Scoresheet" : "Marklist"} Report...
               </p>
             </div>
           </div>
@@ -166,16 +175,16 @@ const MarklistPDFReport = () => {
                   htmlFor="form"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Form
+                  {isCBC ? "Grade" : "Form"}
                 </label>
                 <ReusableSelect
                   id="form"
                   placeholder={
-                    selectedYear ? "Select Form" : "Please select year first"
+                    selectedYear ? "Select Level" : "Please select year first"
                   }
-                  options={formOptions}
+                  options={setFormOptions}
                   value={
-                    formOptions.find(
+                    setFormOptions.find(
                       (option) => option.value === selectedForm
                     ) || undefined
                   }
@@ -249,7 +258,7 @@ const MarklistPDFReport = () => {
         <div className="w-full lg:w-3/4">
           <ReusableDiv
             icon={GrDocumentDownload}
-            tag="Marklist Report"
+            tag={isCBC ? "Soresheet Report" : "Marklist Report"}
             className="ml-0 mr-0 ring-1 bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md h-full"
             collapsible={true}
           >
@@ -271,7 +280,7 @@ const MarklistPDFReport = () => {
                   style={{ minHeight: "70vh" }}
                 >
                   <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
-                    Marklist:
+                    {isCBC ? "Soresheet" : "Marklist"}
                   </h2>
                   <div className="flex-1 overflow-hidden rounded-md border border-gray-200 dark:border-gray-600">
                     <iframe

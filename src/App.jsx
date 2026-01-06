@@ -19,6 +19,7 @@ import TimeTableSubjects from "./components/blocks/TT/TimeTableSubjects";
 import DayClusters from "./components/blocks/TT/DayClusters";
 import TimeSlots from "./components/blocks/TT/TimeSlots";
 import OptimizeTT from "./components/blocks/TT/OptimizeTT";
+import TTPDFReport from "./components/blocks/TT/TTPDFReport";
 
 function AppRoutes() {
   const { loading } = useAuth();
@@ -32,6 +33,7 @@ function AppRoutes() {
   }
 
   return (
+    // <TTPDFReport />
     // <TimeSlots />
     // <GenerateTT />
     // <OptimizeTT />

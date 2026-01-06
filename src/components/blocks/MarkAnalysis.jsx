@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import ReusableDiv from '../ReusableDiv';
-import ReusableSelect from '../ReusableSelect';
+import React, { useState, useEffect } from "react";
+import ReusableDiv from "../ReusableDiv";
+import ReusableSelect from "../ReusableSelect";
 // import { FaUsersGear } from 'react-icons/fa6';
-import { PiExam } from 'react-icons/pi';
-import { TbReport } from 'react-icons/tb';
-import { FaPlus, FaMinus, FaSpinner } from 'react-icons/fa';
-import { MdDone } from 'react-icons/md';
-import { formOptions, yearOptions, termOptions } from '../../utils/CommonData';
-import { useToast } from '../Toast';
-import ReusableInput from '../ui/ReusableInput';
-import Dropdown from '../Dropdown';
-import Button from '../ui/raw/Button';
-import api from '../../hooks/api'
-import { GrDocumentDownload } from 'react-icons/gr';
+import { PiExam } from "react-icons/pi";
+import { TbReport } from "react-icons/tb";
+import { FaPlus, FaMinus, FaSpinner } from "react-icons/fa";
+import { MdDone } from "react-icons/md";
+import { formOptions, yearOptions, termOptions } from "../../utils/CommonData";
+import { useToast } from "../Toast";
+import ReusableInput from "../ui/ReusableInput";
+import Dropdown from "../Dropdown";
+import Button from "../ui/raw/Button";
+import api from "../../hooks/api";
+import { GrDocumentDownload } from "react-icons/gr";
 
-const MarkAnalysis = () => {
+const MarkAnalysis = ({ syst_level }) => {
   const { showToast } = useToast();
+
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
   const [selectedTerm, setSelectedTerm] = useState("");
@@ -23,73 +24,104 @@ const MarkAnalysis = () => {
   const [loading, setLoading] = useState(false);
   const [buttonLoading, setButtonLoading] = useState(false);
   const [error, setError] = useState("");
-  const [examRows, setExamRows] = useState([
-    { exam: null, examAlias: "", outOf: "" },
-  ]);
+  const [examRows, setExamRows] = useState([{ exam: null, outOf: "" }]);
+  const [examAliasSingle, setExamAliasSingle] = useState("");
   const [selectedFormula, setSelectedFormula] = useState("");
-  const [isAddDisabled, setIsAddDisabled] = useState(true);
+  const [isFormValid, setIsFormValid] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  const isCBC = syst_level !== "Secondary (8-4-4)";
 
   const getAvailableOptions = (currentIndex) => {
     const selectedExams = examRows
-      .map((row, index) => (index !== currentIndex ? row.exam : null))
+      .map((row, idx) => (idx !== currentIndex ? row.exam : null))
       .filter(Boolean);
-
     return examOptions.filter(
       (option) => !selectedExams.includes(option.value)
     );
   };
 
-  const validateRow = (row) => {
-    const isAliasValid = row.examAlias.trim().length >= 3;
-    const isOutOfValid = /^([1-9][0-9]?|100)$/.test(row.outOf);
-    return row.exam && isAliasValid && isOutOfValid;
-  };
+  const validateOutOf = (value) => /^([1-9][0-9]?|100)$/.test(String(value));
 
+  // Overall validation: different rules for single vs multiple exam rows
   useEffect(() => {
-    const valid = examRows.every(validateRow);
-    setIsAddDisabled(!valid);
-
-    // Set average as default formula when there are multiple rows
-    if (examRows.length > 1 && !selectedFormula) {
-      setSelectedFormula("average");
+    if (!examRows || examRows.length === 0) {
+      setIsFormValid(false);
+      return;
     }
-  }, [examRows, selectedFormula]);
+
+    // Every row must have an exam selected and a valid outOf
+    const rowsValid = examRows.every(
+      (r) => r.exam && validateOutOf(r.outOf || "100")
+    );
+
+    if (examRows.length === 1) {
+      // single exam: alias is the selected exam (no separate alias input required)
+      setIsFormValid(Boolean(rowsValid));
+      // ensure examAliasSingle is synced to the single exam value for clarity (optional)
+      setExamAliasSingle(examRows[0].exam || "");
+      // clear formula for single exam
+      if (selectedFormula) setSelectedFormula("");
+    } else {
+      // multiple exams: need global alias min 3 chars and rows valid
+      const aliasValid = examAliasSingle.trim().length >= 3;
+      setIsFormValid(rowsValid && aliasValid);
+      // set default formula to average if not set
+      if (!selectedFormula) setSelectedFormula("average");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examRows, examAliasSingle, selectedFormula]);
 
   const addExamRow = () => {
-    if (examRows.length < 3) {
-      setExamRows([...examRows, { exam: null, examAlias: "", outOf: "" }]);
-    }
+    if (examRows.length >= 3) return;
+    setExamRows((prev) => [...prev, { exam: null, outOf: "" }]);
   };
 
   const removeExamRow = () => {
-    if (examRows.length > 1) {
-      const newRows = examRows.slice(0, -1);
-      setExamRows(newRows);
-      if (newRows.length < 2) setSelectedFormula("");
-    }
+    setExamRows((prev) => {
+      if (prev.length <= 1) return prev;
+      const newRows = prev.slice(0, -1);
+      // if now single row, sync alias to that exam (if any)
+      if (newRows.length === 1) {
+        setExamAliasSingle(newRows[0].exam || "");
+        setSelectedFormula("");
+      }
+      return newRows;
+    });
   };
 
   const handleExamChange = (index, value) => {
-    const newRows = [...examRows];
-    newRows[index].exam = value;
-    setExamRows(newRows);
+    setExamRows((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], exam: value };
+      // If there's only one row, sync examAliasSingle for single exam behavior
+      if (next.length === 1) setExamAliasSingle(value || "");
+      return next;
+    });
   };
 
   const handleInputChange = (index, field, value) => {
-    const newRows = [...examRows];
+    // sanitize outOf input (only allow empty or 1-100)
     if (field === "outOf") {
       if (!/^(100|[1-9][0-9]?)?$/.test(value)) {
         showToast(
           "Out of value must be 1-100 and cannot start with 0",
           "error",
-          { duration: 2000 }
+          {
+            duration: 2000,
+          }
         );
         return;
       }
     }
-    newRows[index][field] = value;
-    setExamRows(newRows);
+    setExamRows((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
   };
 
   const getFormulaOptions = () => {
@@ -98,7 +130,8 @@ const MarkAnalysis = () => {
         { value: "average", label: "Average" },
         { value: "weighted1", label: "Weighted : E1 + E2 = 100%" },
       ];
-    } else if (examRows.length === 3) {
+    }
+    if (examRows.length === 3) {
       return [
         { value: "average", label: "Average" },
         { value: "weighted2", label: "Weighted : E1 + E2 + E3 = 100%" },
@@ -114,18 +147,19 @@ const MarkAnalysis = () => {
       setSelectedTerm("");
       setExamOptions([]);
       setSelectedFormula("");
-      setExamRows([{ exam: null, examAlias: "", outOf: "" }]);
-    }
-    if (field === "form") {
+      setExamRows([{ exam: null, outOf: "" }]);
+      setExamAliasSingle("");
+    } else if (field === "form") {
       setSelectedTerm("");
       setExamOptions([]);
       setSelectedFormula("");
-      setExamRows([{ exam: null, examAlias: "", outOf: "" }]);
-    }
-    if (field === "term") {
+      setExamRows([{ exam: null, outOf: "" }]);
+      setExamAliasSingle("");
+    } else if (field === "term") {
       setExamOptions([]);
       setSelectedFormula("");
-      setExamRows([{ exam: null, examAlias: "", outOf: "" }]);
+      setExamRows([{ exam: null, outOf: "" }]);
+      setExamAliasSingle("");
     }
   };
 
@@ -139,13 +173,26 @@ const MarkAnalysis = () => {
         exams: {},
         formula: selectedFormula || "self",
         yearValue: selectedYear,
+        year: selectedYear,
+        term: selectedTerm,
+        examname: "",
       };
 
+      // examname: single exam -> that exam value; multiple -> global alias
+      if (examRows.length > 1) {
+        payload.examname = examAliasSingle.trim();
+      } else {
+        payload.examname = examRows[0]?.exam || "";
+      }
+
       examRows.forEach((row, index) => {
+        const aliasVal = row.exam; // per your choice C: keep alias as exam value
+        const nameKey =
+          examOptions.find((opt) => opt.value === row.exam)?.key || row.exam;
         payload.exams[`exam_${index + 1}`] = {
-          alias: row.examAlias,
-          name: row.exam,
-          outof: row.outOf,
+          alias: aliasVal,
+          name: nameKey,
+          outof: row.outOf || "100",
         };
       });
 
@@ -154,8 +201,8 @@ const MarkAnalysis = () => {
       });
 
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setPdfUrl(pdfUrl);
+      const url = URL.createObjectURL(pdfBlob);
+      setPdfUrl(url);
     } catch (err) {
       console.error("Error fetching PDF:", err);
       setError("Failed to load PDF. Please try again.");
@@ -174,12 +221,14 @@ const MarkAnalysis = () => {
       showToast("Report generated successfully!", "success", {
         duration: 3000,
       });
-    } catch (error) {
-      console.error("API Error:", error);
+    } catch (err) {
+      console.error("API Error:", err);
       showToast(
-        error?.response?.data?.message || "Failed to generate report",
+        err?.response?.data?.message || "Failed to generate report",
         "error",
-        { duration: 2000 }
+        {
+          duration: 2000,
+        }
       );
     } finally {
       setButtonLoading(false);
@@ -197,7 +246,7 @@ const MarkAnalysis = () => {
             year: selectedYear,
           });
 
-          if (response.data.length === 0) {
+          if (!response?.data || response.data.length === 0) {
             setExamOptions([]);
             showToast("No exams found for selected combination", "error", {
               duration: 3000,
@@ -284,10 +333,10 @@ const MarkAnalysis = () => {
                   placeholder={
                     selectedYear ? "Select Form" : "Please select year first"
                   }
-                  options={formOptions}
+                  options={setFormOptions}
                   value={
                     selectedForm
-                      ? formOptions.find((opt) => opt.value === selectedForm)
+                      ? setFormOptions.find((opt) => opt.value === selectedForm)
                       : undefined
                   }
                   onChange={(e) => {
@@ -334,21 +383,20 @@ const MarkAnalysis = () => {
         {/* Process Report Section */}
         <div className="w-full lg:w-1/2">
           <ReusableDiv
-            className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
+            className="ml-0 mr-0 ring-1 h-full mb-4 bg-blue-100 dark:bg-gray-800"
             tag="Process Report"
             icon={TbReport}
             collapsible={true}
           >
             {loading ? (
               <div className="flex justify-center items-center h-32">
-                <FaSpinner className="animate-spin text-2xl text-blue-600 dark:text-blue-400" />
+                <FaSpinner className="animate-spin" size={24} />
               </div>
             ) : (
-              <div className="flex flex-col space-y-3 pb-4">
-                <div className="flex flex-row items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
-                  <div className="w-2/5">Exam</div>
-                  <div className="w-2/5">Exam Alias</div>
-                  <div className="w-1/5">Out of %</div>
+              <div className="flex flex-col pb-1 space-y-2">
+                <div className="flex flex-row items-center gap-2 font-medium dark:text-gray-300">
+                  <div className="w-3/5">Exam</div>
+                  <div className="w-2/5">Out of %</div>
                 </div>
 
                 {examRows.map((row, index) => {
@@ -358,7 +406,7 @@ const MarkAnalysis = () => {
                       key={index}
                       className="flex flex-row items-center gap-2"
                     >
-                      <div className="w-2/5">
+                      <div className="w-3/5">
                         <Dropdown
                           options={getAvailableOptions(index)}
                           value={row.exam}
@@ -377,30 +425,13 @@ const MarkAnalysis = () => {
                       </div>
                       <div className="w-2/5">
                         <ReusableInput
-                          type="text"
-                          placeholder="Exam Alias"
-                          value={row.examAlias}
-                          onChange={(e) =>
-                            handleInputChange(
-                              index,
-                              "examAlias",
-                              e.target.value
-                            )
-                          }
-                          disabled={isDisabled}
-                          className="w-full"
-                        />
-                      </div>
-                      <div className="w-1/5">
-                        <ReusableInput
                           type="number"
                           placeholder="Out of %"
-                          value={row.outOf}
+                          value={row.outOf || "100"}
                           onChange={(e) =>
                             handleInputChange(index, "outOf", e.target.value)
                           }
                           disabled={isDisabled}
-                          className="w-full"
                         />
                       </div>
                     </div>
@@ -413,7 +444,7 @@ const MarkAnalysis = () => {
                       onClick={addExamRow}
                       variant="success"
                       className="my-0.5"
-                      disabled={isAddDisabled}
+                      disabled={!isFormValid && examRows.length > 1}
                     >
                       <FaPlus size={12} /> Add Exam
                     </Button>
@@ -429,6 +460,26 @@ const MarkAnalysis = () => {
                   )}
                 </div>
 
+                {/* Global alias input: appears only for 2+ exams */}
+                {examRows.length > 1 && (
+                  <div className="mt-2 w-full">
+                    <label className="dark:text-gray-300">
+                      Exam Alias (global)
+                    </label>
+                    <ReusableInput
+                      type="text"
+                      placeholder="Enter alias (min 3 chars)"
+                      value={examAliasSingle}
+                      onChange={(e) => setExamAliasSingle(e.target.value)}
+                      className="my-1"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Global alias will be used as <code>examname</code> when
+                      submitting.
+                    </div>
+                  </div>
+                )}
+
                 <div
                   className={`mt-2 flex ${
                     examRows.length > 1
@@ -437,11 +488,11 @@ const MarkAnalysis = () => {
                   }`}
                 >
                   {examRows.length > 1 && (
-                    <div className="w-2/5">
+                    <div className="w-3/5 mr-2">
                       <ReusableSelect
                         id="formula"
                         placeholder="Select Formula"
-                        className="my-0.5 w-full"
+                        className="my-0.5"
                         options={getFormulaOptions()}
                         value={
                           getFormulaOptions().find(
@@ -460,7 +511,7 @@ const MarkAnalysis = () => {
                     className="my-0.5"
                     loading={buttonLoading}
                     disabled={
-                      isAddDisabled ||
+                      !isFormValid ||
                       examOptions.length === 0 ||
                       (examRows.length > 1 && !selectedFormula)
                     }
@@ -488,7 +539,7 @@ const MarkAnalysis = () => {
               style={{ minHeight: "70vh" }}
             >
               <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
-                Subject Anlysis Report:
+                Subject Analysis Report:
               </h2>
               <div className="flex-1 overflow-hidden rounded-md border border-gray-200 dark:border-gray-600">
                 <iframe

@@ -15,7 +15,7 @@ import {
 import { FaUsersGear, FaSpinner } from "react-icons/fa6";
 import ReusableSelect from "../ReusableSelect";
 
-const SelectiveStudents = () => {
+const SelectiveStudents = ({ syst_level }) => {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [selectedForm, setSelectedForm] = useState("");
@@ -31,6 +31,11 @@ const SelectiveStudents = () => {
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
   const [allChecked, setAllChecked] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  const isCBC = syst_level !== "Secondary (8-4-4)";
 
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
@@ -118,7 +123,7 @@ const SelectiveStudents = () => {
       setCheckedState(currentChecks);
       setAllChecked(allSelected);
     } catch (error) {
-      setRefinedStudents([])
+      setRefinedStudents([]);
       showToast(
         error.response?.data?.message || "Failed to fetch students",
         "error",
@@ -172,7 +177,7 @@ const SelectiveStudents = () => {
         setCheckedState(currentChecks);
         setAllChecked(allSelected);
       } catch (error) {
-        setRefinedStudents([])
+        setRefinedStudents([]);
         showToast(
           error.response?.data?.message || "Failed to fetch students",
           "error",
@@ -212,7 +217,6 @@ const SelectiveStudents = () => {
   };
 
   const handleUpdate = async () => {
-
     if (!selectedForm || !selectedYear || !selectedSubject) {
       showToast("Please select form, year and subject first", "error", {
         duration: 3000,
@@ -308,7 +312,7 @@ const SelectiveStudents = () => {
               </label>
               <ReusableSelect
                 placeholder="Select Form"
-                options={formOptions}
+                options={setFormOptions}
                 value={selectedForm}
                 onChange={handleFormChange}
                 className="w-full"
@@ -356,7 +360,11 @@ const SelectiveStudents = () => {
           <div className="w-full md:w-3/4">
             <ReusableDiv
               className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
-              tag={`${subjectOptions.find((subject) => String(subject.value) === selectedSubject)?.label} - Form ${selectedForm}`}
+              tag={`${
+                subjectOptions.find(
+                  (subject) => String(subject.value) === selectedSubject
+                )?.label
+              } - Form ${selectedForm}`}
               collapsible={true}
             >
               <div className="space-y-4">

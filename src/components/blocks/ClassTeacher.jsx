@@ -9,7 +9,7 @@ import { useToast } from "../Toast";
 import api from "../../hooks/api";
 import ClassTeacherRU from "../snippets/ClassTeacherRU";
 
-const ClassTeacher = () => {
+const ClassTeacher = ({ syst_level }) => {
   const { showToast } = useToast();
 
   const [subTeacherData, setSubTeacherData] = useState([]);
@@ -25,6 +25,9 @@ const ClassTeacher = () => {
   const [modalState, setModalState] = useState({
     editClassTeacher: false,
   });
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
 
   const columns = [
     { name: "STREAM", uid: "stream_name", sortable: true },
@@ -171,7 +174,7 @@ const ClassTeacher = () => {
                 <ReusableSelect
                   id="form"
                   placeholder="Select Form"
-                  options={formOptions}
+                  options={setFormOptions}
                   value={selectedForm}
                   onChange={async (e) => {
                     const form = e.target.value;

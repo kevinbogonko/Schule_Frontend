@@ -15,7 +15,7 @@ import {
 import { FaUsersGear, FaSpinner } from "react-icons/fa6";
 import ReusableSelect from "../ReusableSelect";
 
-const Subject = () => {
+const Subject = ({ syst_level }) => {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [selectedForm, setSelectedForm] = useState("");
@@ -29,6 +29,10 @@ const Subject = () => {
   const [allChecked, setAllChecked] = useState(false);
   const [allSelectiveChecked, setAllSelectiveChecked] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isGrouped, setIsGrouped] = useState(false);
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
 
   const handleFormChange = async (e) => {
     const form = e.target.value;
@@ -150,6 +154,7 @@ const Subject = () => {
       await api.post("/subject/updatesubjects", {
         form: selectedForm,
         updates,
+        isgrouped: isGrouped,
       });
 
       // Update initial states with current states
@@ -164,6 +169,7 @@ const Subject = () => {
         position: "top-right",
       });
     } catch (error) {
+      // console.log(error)
       showToast(
         error.response?.data?.message || "Failed to update subjects",
         "error",
@@ -229,7 +235,7 @@ const Subject = () => {
               <ReusableSelect
                 id="form"
                 placeholder="Select Form"
-                options={formOptions}
+                options={setFormOptions}
                 value={selectedForm}
                 onChange={handleFormChange}
                 className="w-full"
@@ -339,24 +345,35 @@ const Subject = () => {
                   )}
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <Button
-                    variant="secondary"
-                    icon={FaUndo}
-                    onClick={handleReset}
-                    disabled={!selectedForm || filteredSubjects.length === 0}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    variant="primary"
-                    icon={FaSave}
-                    onClick={handleUpdate}
-                    disabled={!selectedForm || filteredSubjects.length === 0}
-                    loading={loading}
-                  >
-                    Update
-                  </Button>
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center">
+                    <Checkbox
+                      id="all-group-levels"
+                      label="All group levels"
+                      checked={isGrouped}
+                      onChange={() => setIsGrouped(!isGrouped)}
+                      labelClassName="dark:text-gray-300"
+                    />
+                  </div>
+                  <div className="flex space-x-3">
+                    <Button
+                      variant="secondary"
+                      icon={FaUndo}
+                      onClick={handleReset}
+                      disabled={!selectedForm || filteredSubjects.length === 0}
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      variant="primary"
+                      icon={FaSave}
+                      onClick={handleUpdate}
+                      disabled={!selectedForm || filteredSubjects.length === 0}
+                      loading={loading}
+                    >
+                      Update
+                    </Button>
+                  </div>
                 </div>
               </div>
             </ReusableDiv>

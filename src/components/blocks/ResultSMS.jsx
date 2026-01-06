@@ -15,7 +15,7 @@ import { AiOutlineClear } from "react-icons/ai";
 import CheckboxGroup from "../CheckboxGroup";
 import TableComponent from "../TableComponent";
 
-const ResultSMS = () => {
+const ResultSMS = ({ syst_level }) => {
   const { showToast } = useToast();
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
@@ -26,9 +26,8 @@ const ResultSMS = () => {
   const [buttonLoading, setButtonLoading] = useState(false);
   const [error, setError] = useState("");
   const [smsError, setSMSError] = useState("");
-  const [examRows, setExamRows] = useState([
-    { exam: null, examAlias: "", outOf: "" },
-  ]);
+  const [examRows, setExamRows] = useState([{ exam: null, outOf: "100" }]);
+  const [examAliasSingle, setExamAliasSingle] = useState("");
   const [selectedFormula, setSelectedFormula] = useState("");
   const [isAddDisabled, setIsAddDisabled] = useState(true);
   const [studentResults, setStudentResults] = useState(null);
@@ -43,6 +42,12 @@ const ResultSMS = () => {
   const [uniVal, setUniVal] = useState("");
   const [smsLogs, setSmsLogs] = useState([]);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  let isCBC;
+  syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
 
   const smsTypeOptions = [
     { value: "single", label: "Student Select - (Single)" },
@@ -99,23 +104,24 @@ const ResultSMS = () => {
   };
 
   const validateRow = (row) => {
-    const isAliasValid = row.examAlias.trim().length >= 3;
     const isOutOfValid = /^([1-9][0-9]?|100)$/.test(row.outOf);
-    return row.exam && isAliasValid && isOutOfValid;
+    return row.exam && isOutOfValid;
   };
 
   useEffect(() => {
-    const valid = examRows.every(validateRow);
-    setIsAddDisabled(!valid);
+    const rowsValid = examRows.every(validateRow);
+    const aliasValid =
+      examRows.length > 1 ? examAliasSingle.trim().length >= 3 : true;
+    setIsAddDisabled(!(rowsValid && aliasValid));
 
     if (examRows.length > 1 && !selectedFormula) {
       setSelectedFormula("average");
     }
-  }, [examRows, selectedFormula]);
+  }, [examRows, selectedFormula, examAliasSingle]);
 
   const addExamRow = () => {
     if (examRows.length < 3) {
-      setExamRows([...examRows, { exam: null, examAlias: "", outOf: "" }]);
+      setExamRows([...examRows, { exam: null, outOf: "100" }]);
     }
   };
 
@@ -123,7 +129,10 @@ const ResultSMS = () => {
     if (examRows.length > 1) {
       const newRows = examRows.slice(0, -1);
       setExamRows(newRows);
-      if (newRows.length < 2) setSelectedFormula("");
+      if (newRows.length < 2) {
+        setSelectedFormula("");
+        setExamAliasSingle("");
+      }
 
       let newUniVal = "";
       for (let i = 0; i < newRows.length; i++) {
@@ -228,7 +237,7 @@ const ResultSMS = () => {
       setSelectedTerm("");
       setExamOptions([]);
       setSelectedFormula("");
-      setExamRows([{ exam: null, examAlias: "", outOf: "" }]);
+      setExamRows([{ exam: null, outOf: "100" }]);
       setStreamOptions([]);
       setSelectedStream(null);
       setStudentResults(null);
@@ -238,12 +247,13 @@ const ResultSMS = () => {
       setSmsType(null);
       setUniVal("");
       setSmsLogs([]);
+      setExamAliasSingle("");
     }
     if (field === "form") {
       setSelectedTerm("");
       setExamOptions([]);
       setSelectedFormula("");
-      setExamRows([{ exam: null, examAlias: "", outOf: "" }]);
+      setExamRows([{ exam: null, outOf: "100" }]);
       setStreamOptions([]);
       setSelectedStream(null);
       setStudentResults(null);
@@ -253,11 +263,12 @@ const ResultSMS = () => {
       setSmsType(null);
       setUniVal("");
       setSmsLogs([]);
+      setExamAliasSingle("");
     }
     if (field === "term") {
       setExamOptions([]);
       setSelectedFormula("");
-      setExamRows([{ exam: null, examAlias: "", outOf: "" }]);
+      setExamRows([{ exam: null, outOf: "100" }]);
       setStudentResults(null);
       setSchoolDetails(null);
       setIsDropdownCleared(false);
@@ -265,6 +276,7 @@ const ResultSMS = () => {
       setSmsType(null);
       setUniVal("");
       setSmsLogs([]);
+      setExamAliasSingle("");
     }
   };
 
@@ -278,15 +290,30 @@ const ResultSMS = () => {
         exams: {},
         formula: selectedFormula || "self",
         yearValue: selectedYear,
+        year: selectedYear,
+        term: selectedTerm,
+        examname: "",
       };
 
+      // Set examname: if multiple exams use the single alias input, otherwise use the selected exam value
+      if (examRows.length > 1) {
+        payload.examname = examAliasSingle;
+      } else {
+        payload.examname = examRows[0]?.exam || "";
+      }
+
       examRows.forEach((row, index) => {
+        const aliasVal = row.exam; // alias should be exam value (Option A)
+        const nameKey =
+          examOptions.find((opt) => opt.value === row.exam)?.key || row.exam;
         payload.exams[`exam_${index + 1}`] = {
-          alias: row.examAlias,
-          name: row.exam,
-          outof: row.outOf,
+          alias: aliasVal,
+          name: nameKey,
+          outof: row.outOf || "100",
         };
       });
+
+      // console.log(payload);
 
       const response = await api.post("/sms/smsres", payload);
       setSchoolDetails(response.data.schoolDetails);
@@ -452,20 +479,34 @@ const ResultSMS = () => {
         yearValue: selectedYear,
         selectedStudents: selectedStudents,
         unival: uniVal,
+        examname: "",
+        year: selectedYear,
+        term: selectedTerm
       };
 
+      if (examRows.length > 1) {
+        payload.examname = examAliasSingle;
+      } else {
+        payload.examname = examRows[0]?.exam || "";
+      }
+
       examRows.forEach((row, index) => {
+        const aliasVal = row.exam;
+        const nameKey =
+          examOptions.find((opt) => opt.value === row.exam)?.key || row.exam;
         payload.exams[`exam_${index + 1}`] = {
-          alias: row.examAlias,
-          name: row.exam,
-          outof: row.outOf,
+          alias: aliasVal,
+          name: nameKey,
+          outof: row.outOf || "100",
         };
       });
 
-      const response = await api.post("/sms/sendresultsms", payload);
+      console.log(payload)
+      await api.post("/sms/sendresultsms", payload);
       showToast("SMS sent successfully!", "success", { duration: 3000 });
       fetchSmsLogs(uniVal);
     } catch (err) {
+      console.log(err)
       setSMSError("Failed to send SMS. Please try again.");
       showToast(err?.response?.data?.message || "Failed to send SMS", "error", {
         duration: 3000,
@@ -523,10 +564,10 @@ const ResultSMS = () => {
                 <ReusableSelect
                   id="form"
                   placeholder="Select Form"
-                  options={formOptions}
+                  options={setFormOptions}
                   value={
                     selectedForm
-                      ? formOptions.find((opt) => opt.value === selectedForm)
+                      ? setFormOptions.find((opt) => opt.value === selectedForm)
                       : undefined
                   }
                   onChange={(e) => {
@@ -575,9 +616,9 @@ const ResultSMS = () => {
             ) : (
               <div className="flex flex-col pb-1 space-y-2">
                 <div className="flex flex-row items-center gap-2 font-medium dark:text-gray-300">
-                  <div className="w-2/5">Exam</div>
-                  <div className="w-2/5">Exam Alias</div>
-                  <div className="w-1/5">Out of %</div>
+                  <div className="w-3/5">Exam</div>
+                  {/* <div className="w-2/5">Exam Alias</div> */}
+                  <div className="w-2/5">Out of %</div>
                 </div>
 
                 {examRows.map((row, index) => {
@@ -587,7 +628,7 @@ const ResultSMS = () => {
                       key={index}
                       className="flex flex-row items-center gap-2"
                     >
-                      <div className="w-2/5">
+                      <div className="w-3/5">
                         <Dropdown
                           options={getAvailableOptions(index)}
                           value={row.exam}
@@ -606,24 +647,9 @@ const ResultSMS = () => {
                       </div>
                       <div className="w-2/5">
                         <ReusableInput
-                          type="text"
-                          placeholder="Exam Alias"
-                          value={row.examAlias}
-                          onChange={(e) =>
-                            handleInputChange(
-                              index,
-                              "examAlias",
-                              e.target.value
-                            )
-                          }
-                          disabled={isDisabled}
-                        />
-                      </div>
-                      <div className="w-1/5">
-                        <ReusableInput
                           type="number"
                           placeholder="Out of %"
-                          value={row.outOf}
+                          value={row.outOf || "100"}
                           onChange={(e) =>
                             handleInputChange(index, "outOf", e.target.value)
                           }
@@ -656,6 +682,22 @@ const ResultSMS = () => {
                   )}
                 </div>
 
+                {/* Single alias input: appears when 2+ exams, placed directly below Add Exam button (top) */}
+                {examRows.length > 1 && (
+                  <div className="mt-2 w-full">
+                    <label className="dark:text-gray-300">
+                      Exam Alias (global)
+                    </label>
+                    <ReusableInput
+                      type="text"
+                      placeholder="Enter alias (min 3 chars)"
+                      value={examAliasSingle}
+                      onChange={(e) => setExamAliasSingle(e.target.value)}
+                      className="my-1"
+                    />
+                  </div>
+                )}
+
                 <div
                   className={`mt-2 flex ${
                     examRows.length > 1
@@ -664,7 +706,7 @@ const ResultSMS = () => {
                   }`}
                 >
                   {examRows.length > 1 && (
-                    <div className="w-2/5">
+                    <div className="w-3/5 mr-2">
                       <ReusableSelect
                         id="formula"
                         placeholder="Select Formula"

@@ -96,10 +96,10 @@ const AdminDashboard = ({ data }) => {
           </h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={enrollmentData}>
+              <LineChart data={enrollmentData} margin={{left : -10}}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="year" />
-                <YAxis/>
+                <YAxis />
                 <Tooltip />
                 <Legend />
                 <Line
@@ -122,17 +122,24 @@ const AdminDashboard = ({ data }) => {
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-            Subject Averages
+            {[19, 20, 21, 22].includes(data?.form)
+              ? `Form ${data.form} Subject Averages`
+              : `GR. ${data.form} L.A Merits`}
           </h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={subjectData}
                 layout="vertical"
-                margin={{ left: 30 }}
+                margin={{ left: -40 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" domain={[0, 12]} />
+                <XAxis
+                  type="number"
+                  domain={
+                    [19, 20, 21, 22].includes(data?.form) ? [0, 12] : [0, 4]
+                  }
+                />
                 <YAxis dataKey="subject" type="category" width={80} />
                 <Tooltip />
                 <Bar dataKey="average" fill="#8884d8" radius={[0, 4, 4, 0]} />

@@ -7,7 +7,7 @@ import api from "../../hooks/api";
 import { useToast } from "../Toast";
 import { formOptions, yearOptions, termOptions } from "../../utils/CommonData";
 
-const Marksheet = () => {
+const Marksheet = ({ syst_level }) => {
   const { showToast } = useToast();
 
   const [selectedYear, setSelectedYear] = useState(null);
@@ -20,6 +20,11 @@ const Marksheet = () => {
   const [examOptions, setExamOptions] = useState([]);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const setFormOptions = formOptions.find((option) => option.label === syst_level)?.options || [];
+
+    let isCBC;
+    syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
 
   const resetBelow = (field) => {
     switch (field) {
@@ -90,11 +95,15 @@ const Marksheet = () => {
         const formatted = response.data.map((exam) => ({
           value: exam.exam_name,
           label: exam.exam_name,
+          key: exam.id
         }));
 
         setExamOptions(formatted);
       } catch (error) {
-        showToast("Error fetching exams", "error",{ duration: 3000, position: "top-right"});
+        showToast("Error fetching exams", "error", {
+          duration: 3000,
+          position: "top-right",
+        });
       }
     }
   };
@@ -138,6 +147,7 @@ const Marksheet = () => {
           position: "top-right",
         });
       } catch (error) {
+        console.log(error)
         showToast(
           error?.response?.data.message || "Error fetching PDF",
           "error",
@@ -157,7 +167,7 @@ const Marksheet = () => {
       <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
         Marksheet
       </h1>
-  
+
       <div className="flex flex-col lg:flex-row gap-4">
         {/* Loading Overlay */}
         {loading && (
@@ -170,7 +180,7 @@ const Marksheet = () => {
             </div>
           </div>
         )}
-  
+
         {/* Form Controls */}
         <div className="w-full lg:w-1/4">
           <ReusableDiv
@@ -202,22 +212,22 @@ const Marksheet = () => {
                   className="w-full"
                 />
               </div>
-  
+
               <div className="w-full">
                 <label
                   htmlFor="form"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Form
+                  Level
                 </label>
                 <ReusableSelect
                   id="form"
                   placeholder={
-                    selectedYear ? "Select Form" : "Please select year first"
+                    selectedYear ? "Select Level" : "Please select year first"
                   }
-                  options={formOptions}
+                  options={setFormOptions}
                   value={
-                    formOptions.find(
+                    setFormOptions.find(
                       (option) => option.value === selectedForm
                     ) || undefined
                   }
@@ -229,7 +239,7 @@ const Marksheet = () => {
                   className="w-full"
                 />
               </div>
-  
+
               <div className="w-full">
                 <label
                   htmlFor="term"
@@ -240,7 +250,7 @@ const Marksheet = () => {
                 <ReusableSelect
                   id="term"
                   placeholder={
-                    selectedForm ? "Select Term" : "Please select form first"
+                    selectedForm ? "Select Term" : "Please select level first"
                   }
                   options={termOptions}
                   value={
@@ -256,7 +266,7 @@ const Marksheet = () => {
                   className="w-full"
                 />
               </div>
-  
+
               <div className="w-full">
                 <label
                   htmlFor="exam"
@@ -286,7 +296,7 @@ const Marksheet = () => {
                   className="w-full"
                 />
               </div>
-  
+
               <div className="w-full">
                 <label
                   htmlFor="stream"
@@ -314,7 +324,7 @@ const Marksheet = () => {
             </div>
           </ReusableDiv>
         </div>
-  
+
         {/* PDF Viewer */}
         <div className="w-full lg:w-3/4">
           <ReusableDiv
@@ -332,7 +342,10 @@ const Marksheet = () => {
                   </span>
                 </div>
               ) : pdfUrl ? (
-                <div className="flex flex-col h-full" style={{ minHeight: '70vh' }}>
+                <div
+                  className="flex flex-col h-full"
+                  style={{ minHeight: "70vh" }}
+                >
                   <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
                     Marksheet:
                   </h2>

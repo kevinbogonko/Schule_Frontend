@@ -12,7 +12,7 @@ import api from "../../hooks/api";
 import Button from "../ui/raw/Button";
 import SubjectTeacherRU from "../snippets/SubjectTeacherRU";
 
-const SubjectTeacher = () => {
+const SubjectTeacher = ({syst_level}) => {
   const { showToast } = useToast();
 
   const [subTeacherData, setSubTeacherData] = useState([]);
@@ -32,6 +32,12 @@ const SubjectTeacher = () => {
   const [modalState, setModalState] = useState({
     editSubjectTeacher: false,
   });
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  let isCBC;
+  syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
 
   const columns = [
     { name: "CODE", uid: "code", sortable: true },
@@ -69,15 +75,19 @@ const SubjectTeacher = () => {
       setLoading(true);
       const response = await api.post("/stream/getstreams", { form, year });
       const formattedStreams = response.data.map((s) => ({
-        value: s.id,
+        value: s.stream_id,
         label: s.stream_name,
       }));
       setStreams(formattedStreams);
     } catch (err) {
       if (err.response?.data?.status === 404) {
-        showToast("No streams available. Please Add Stream.", "error", {
-          duration: 3000,
-        });
+        showToast(
+          err.response?.data?.message || "No streams available. Please Add Stream.",
+          "error",
+          {
+            duration: 3000,
+          }
+        );
       } else if (err.response?.data?.status !== 404) {
         showToast("Failed to fetch streams", "error", { duration: 3000 });
       }
@@ -102,16 +112,19 @@ const SubjectTeacher = () => {
         const teacherRes = await api.post("/teacher/getteachers", {
           year: selectedYear,
         });
+
         const formattedTeachers = teacherRes.data.map((t) => ({
           value: t.id,
           label: `${t.title} ${t.fname} ${t.lname}`,
         }));
+
         setTeachers(formattedTeachers);
       } else {
         setTeachers([]);
       }
     } catch (error) {
-      showToast("Error fetching subject teachers", "error");
+      // console.log(error)
+      showToast(error.response?.data?.message || "Error fetching subject teachers", "error", {duration : 3000, position : "top-right"});
     } finally {
       setLoading(false);
     }
@@ -144,7 +157,7 @@ const SubjectTeacher = () => {
       setSelectedSubject(null);
       setSelectedTeacher(null);
     } catch (err) {
-      showToast("Assignment failed", "error", { duration: 3000 });
+      showToast(err?.response?.data?.message ||"Assignment failed", "error", { duration: 3000 });
     } finally {
       setAssignLoading(false);
     }
@@ -161,7 +174,10 @@ const SubjectTeacher = () => {
         setShowLoadingOverlay(false);
       }, 300);
     } catch (err) {
-      showToast("Failed to load teacher data", "error");
+      showToast(
+        err.response?.data?.message || "Failed to load teacher data",
+        "error"
+      );
       setShowLoadingOverlay(false);
     }
   };
@@ -169,7 +185,7 @@ const SubjectTeacher = () => {
 return (
   <div className="p-0">
     <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
-      Subject Teachers
+      {isCBC ? "Learning Facilitators" : "Subject Teachers"}
     </h1>
 
     <div className="flex flex-col lg:flex-row gap-2">
@@ -217,12 +233,12 @@ return (
                 htmlFor="form"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Form
+                {syst_level === "Secondary (8-4-4)" ? "Form" : "Grade"}
               </label>
               <ReusableSelect
                 id="form"
-                placeholder="Select Form"
-                options={formOptions}
+                placeholder={`Select ${isCBC ? "grade" : "form"}`}
+                options={setFormOptions}
                 value={selectedForm}
                 onChange={async (e) => {
                   const form = e.target.value;
@@ -272,11 +288,11 @@ return (
                   htmlFor="subject"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Subject
+                  {isCBC ? "Learning Area" : "Subject"}
                 </label>
                 <ReusableSelect
                   id="subject"
-                  placeholder="Select Subject"
+                  placeholder={`Select ${isCBC ? "learning area" : "subject"}`}
                   options={unassignedSubjects}
                   value={selectedSubject?.value || ""}
                   onChange={(e) => {
@@ -291,13 +307,13 @@ return (
 
               <div className="w-full">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Teacher
+                  {isCBC ? "Facilitator" : "Teacher"}
                 </label>
                 <Dropdown
                   options={teachers}
                   value={selectedTeacher}
                   onChange={setSelectedTeacher}
-                  placeholder={"Select Teacher"}
+                  placeholder={`Select ${isCBC ? "facilitator" : "teacher"}`}
                   menuPlacement="auto"
                   searchable
                   clearable
@@ -348,6 +364,17 @@ return (
               selected: "bg-blue-100 dark:bg-gray-700",
             }}
             mobileBreakpoint="sm"
+          />
+          <SubjectTeacherRU
+            modalState={modalState}
+            setModalState={setModalState}
+            selectedForm={selectedForm}
+            selectedYear={selectedYear}
+            rowData={rowData}
+            teacherOptions={teachers}
+            // streamOptions={streamOptions}
+            refreshTable={() => fetchSubjectTeachers(selectedStream)}
+            isCBC={isCBC}
           />
         </div>
       </div>

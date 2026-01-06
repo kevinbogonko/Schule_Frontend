@@ -15,6 +15,7 @@ import {
   FiChevronRight,
   FiSun,
   FiMoon,
+  FiCalendar,
 } from "react-icons/fi";
 import { FaChalkboard, FaChalkboardTeacher } from "react-icons/fa";
 import {
@@ -61,10 +62,30 @@ import StudentSMS from "./StudentSMS";
 import StaffSMS from "./StaffSMS";
 import SelectiveStudents from "./SelectiveStudents";
 import LoadingSpinner from "./LoadingSpinner";
+import User from "./User";
+
+// TT
+import OptimizeTT from "./TT/OptimizeTT";
+import DayClusters from "./TT/DayClusters";
+import TimeSlots from "./TT/TimeSlots";
+import TimeTableSubjects from "./TT/TimeTableSubjects";
+import TTPDFReport from "./TT/TTPDFReport";
+
+// AI
+import UploadIngestion from "./AI/UploadIngestion";
+import ContentManagement from "./AI/ContentManagement";
+import ContentGeneration from "./AI/ContentGeneration";
+import Analytics from "./AI/Analytics";
+import Presentation from "./AI/Presentation";
+import Settings from "./AI/Settings";
+import Exam from "./Analytics/Exam";
 
 const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
 const Dashboard = () => {
+  // const syst_level = "Secondary (8-4-4)";
+  const syst_level = "Junior Secondary (CBC)";
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -291,11 +312,15 @@ const Dashboard = () => {
           label: "Forms",
           icon: <FaChalkboard className="text-lg" />,
           subItems: [
-            { id: "class-streams", label: "Streams", component: <Stream /> },
+            {
+              id: "class-streams",
+              label: "Streams",
+              component: <Stream syst_level={syst_level} />,
+            },
             {
               id: "class-teachers",
               label: "Class Teachers",
-              component: <ClassTeacher />,
+              component: <ClassTeacher syst_level={syst_level} />,
             },
           ],
         },
@@ -307,12 +332,12 @@ const Dashboard = () => {
             {
               id: "student-list",
               label: "Student List",
-              component: <Student user={user?.role} />,
+              component: <Student user={user?.role} syst_level={syst_level} />,
             },
             {
               id: "student-photos",
               label: "Student Photos",
-              component: <StudentPhotos />,
+              component: <StudentPhotos syst_level={syst_level} />,
             },
           ],
         },
@@ -321,16 +346,103 @@ const Dashboard = () => {
           label: "Teachers",
           icon: <PiChalkboardTeacherBold className="text-lg" />,
           subItems: [
-            { id: "staff-list", label: "Teacher List", component: <Staff /> },
+            {
+              id: "staff-list",
+              label: "Teacher List",
+              component: <Staff syst_level={syst_level} />,
+            },
             {
               id: "staff-photos",
               label: "Teachers' Photos",
-              component: <StaffPhotos />,
+              component: <StaffPhotos syst_level={syst_level} />,
             },
             {
               id: "subject-teachers",
               label: "Subject Teachers",
-              component: <SubjectTeacher />,
+              component: <SubjectTeacher syst_level={syst_level} />,
+            },
+          ],
+        },
+        {
+          id: "ai",
+          label: "AI",
+          icon: <FiCalendar className="text-lg" />,
+          subItems: [
+            {
+              id: "upload_ingestion",
+              label: "Upload Ing.",
+              component: <UploadIngestion />,
+            },
+            {
+              id: "content_management",
+              label: "Content Mgt.",
+              component: <ContentManagement />,
+            },
+            {
+              id: "content_generation",
+              label: "Generate Content",
+              component: <ContentGeneration />,
+            },
+            {
+              id: "analytics",
+              label: "Analytics",
+              component: <Analytics />,
+            },
+            {
+              id: "Presentation",
+              label: "Presentation",
+              component: <Presentation />,
+            },
+            {
+              id: "Settings",
+              label: "Settings",
+              component: <Settings />,
+            },
+          ],
+        },
+        {
+          label: "Timetable",
+          icon: <FiCalendar className="text-lg" />,
+          subItems: [
+            {
+              id: "manange-tt",
+              label: "Manage Timetables",
+              component: <OptimizeTT />,
+            },
+            {
+              id: "print-tt",
+              label: "Print Timetables",
+              component: <TTPDFReport syst_level={syst_level} />,
+            },
+            {
+              id: "day-clusters",
+              label: "Day Clusters",
+              component: <DayClusters />,
+            },
+            {
+              id: "time-clusters",
+              label: "Timeslots",
+              component: <TimeSlots />,
+            },
+            {
+              id: "subject-config",
+              label: "Subject Configuration",
+              component: <TimeTableSubjects />,
+            },
+            {
+              id: "manage-subjects",
+              label: "Manage Subjects",
+              component: <Subject syst_level={syst_level} />,
+            },
+            {
+              id: "subject-teachers",
+              label: "Subject Teachers",
+              component: <SubjectTeacher syst_level={syst_level} />,
+            },
+            {
+              id: "manage-stream",
+              label: "Streams",
+              component: <Stream syst_level={syst_level} />,
             },
           ],
         },
@@ -339,13 +451,26 @@ const Dashboard = () => {
           label: "Examinations",
           icon: <PiExamBold className="text-lg" />,
           subItems: [
-            { id: "add-mark", label: "Add Marks", component: <AddMark /> },
+            {
+              id: "exams",
+              label: "Manage Exams",
+              component: <Exam syst_level={syst_level} />,
+            },
+            {
+              id: "add-mark",
+              label: "Add Marks",
+              component: <AddMark syst_level={syst_level} />,
+            },
             {
               id: "grading-scheme",
               label: "Grading Scheme",
-              component: <Grading />,
+              component: <Grading syst_level={syst_level} />,
             },
-            { id: "marklist", label: "Marklist", component: <Marklist2 /> },
+            {
+              id: "marklist",
+              label: "Marklist",
+              component: <Marklist2 syst_level={syst_level} />,
+            },
           ],
         },
         {
@@ -353,21 +478,25 @@ const Dashboard = () => {
           label: "Communication",
           icon: <FiMail className="text-lg" />,
           subItems: [
-            { id: "result-sms", label: "Result SMS", component: <ResultSMS /> },
+            {
+              id: "result-sms",
+              label: "Result SMS",
+              component: <ResultSMS syst_level={syst_level} />,
+            },
             {
               id: "co-sms",
               label: "Opening/Closing SMS",
-              component: <COSMS />,
+              component: <COSMS syst_level={syst_level} />,
             },
             {
               id: "studgen-sms",
               label: "Compose SMS (Student)",
-              component: <StudentSMS />,
+              component: <StudentSMS syst_level={syst_level} />,
             },
             {
               id: "staffgen-sms",
               label: "Compose SMS (Staff)",
-              component: <StaffSMS />,
+              component: <StaffSMS syst_level={syst_level} />,
             },
           ],
         },
@@ -376,21 +505,25 @@ const Dashboard = () => {
           label: "Reports",
           icon: <TbReportAnalytics className="text-lg" />,
           subItems: [
-            { id: "marksheet", label: "Marksheet", component: <Marksheet /> },
+            {
+              id: "marksheet",
+              label: "Marksheet",
+              component: <Marksheet syst_level={syst_level} />,
+            },
             {
               id: "marklist",
               label: "Marklist",
-              component: <MarklistPDFReport />,
+              component: <MarklistPDFReport syst_level={syst_level} />,
             },
             {
               id: "markanalysis",
               label: "Subject Analysis",
-              component: <MarkAnalysis />,
+              component: <MarkAnalysis syst_level={syst_level} />,
             },
             {
               id: "report-form",
               label: "Report Form",
-              component: <StudentReport />,
+              component: <StudentReport syst_level={syst_level} />,
             },
           ],
         },
@@ -412,23 +545,23 @@ const Dashboard = () => {
             {
               id: "subjects",
               label: "Manage Subjects",
-              component: <Subject />,
+              component: <Subject syst_level={syst_level} />,
             },
             {
               id: "selective-subjects",
               label: "Selective Subjects",
-              component: <SelectiveStudents />,
+              component: <SelectiveStudents syst_level={syst_level} />,
             },
             {
               id: "promotion",
               label: "Promote Students",
-              component: <Promotion />,
+              component: <Promotion syst_level={syst_level} />,
             },
-            // {
-            //   id: "users",
-            //   label: "Users",
-            //   component: <Promotion />,
-            // },
+            {
+              id: "users",
+              label: "Users",
+              component: <User />,
+            },
             // { id: "account", label: "Account" },
           ],
         }
@@ -455,9 +588,32 @@ const Dashboard = () => {
             {
               id: "add-mark",
               label: "Add Marks",
-              component: <AddMarkTeacher />,
+              component: <AddMarkTeacher staffId={user?.user_id} />,
             },
             { id: "marklist", label: "Marklist", component: <Marklist2 /> },
+          ],
+        },
+        {
+          id: "reports",
+          label: "Reports",
+          icon: <TbReportAnalytics className="text-lg" />,
+          subItems: [
+            { id: "marksheet", label: "Marksheet", component: <Marksheet /> },
+            {
+              id: "marklist",
+              label: "Marklist",
+              component: <MarklistPDFReport />,
+            },
+            {
+              id: "markanalysis",
+              label: "Subject Analysis",
+              component: <MarkAnalysis />,
+            },
+            {
+              id: "report-form",
+              label: "Report Form",
+              component: <StudentReport />,
+            },
           ],
         },
         {
@@ -471,7 +627,7 @@ const Dashboard = () => {
               component: <StaffInfo staffId={user?.user_id} />,
             },
           ],
-        },
+        }
         // {
         //   id: "settings",
         //   label: "Settings",
@@ -504,7 +660,7 @@ const Dashboard = () => {
               component: <StudentAttemptedExams studentId={user?.user_id} />,
             },
           ],
-        },
+        }
         // {
         //   id: "settings",
         //   label: "Settings",

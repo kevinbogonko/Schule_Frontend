@@ -41,11 +41,15 @@ const TableMarkComponent = ({
 
   const getBadgeColor = (grade) => {
     if (!grade || grade === "-") return "#9CA3AF";
-    if (grade === "A") return "#FF9800";
-    if (["A-", "B+", "B"].includes(grade)) return "#8BC34A";
-    if (["B-", "C+", "C"].includes(grade)) return "#FFEB3B";
-    if (["C-", "D+", "D"].includes(grade)) return "#FF9800";
-    if (["D-", "E"].includes(grade)) return "#F44336";
+    if (grade === "A") return "#10B981";
+    if (["A-", "B+", "B"].includes(grade)) return "#059669";
+    if (["B-", "C+", "C"].includes(grade)) return "#8BC34A";
+    if (["C-", "D+", "D"].includes(grade)) return "#F59E0B";
+    if (["D-", "E"].includes(grade)) return "#EF4444";
+    if (["EE"].includes(grade)) return "#059669";
+    if (["ME"].includes(grade)) return "#8BC34A";
+    if (["AE"].includes(grade)) return "#F59E0B";
+    if (["BE"].includes(grade)) return "#EF4444";
     return "#9CA3AF";
   };
 
@@ -237,13 +241,10 @@ const TableMarkComponent = ({
 
       if (jsonData.length === 0) return;
 
-      // Process the Excel data to match our table structure
       const processedData = jsonData.map((row) => {
         const newRow = { id: row.id || row.ID || row.Id || "" };
 
-        // Extract marks from the Excel columns (like 101, 101_1, etc.)
         numberColumns.forEach((col) => {
-          // Try to find matching columns in the Excel file (case insensitive)
           const excelCol = Object.keys(row).find(
             (key) =>
               key.toString().toLowerCase() === col.toString().toLowerCase()
@@ -251,7 +252,6 @@ const TableMarkComponent = ({
           newRow[col] = excelCol ? parseFloat(row[excelCol]) || 0 : 0;
         });
 
-        // Copy text columns
         textColumns.forEach((col) => {
           const excelCol = Object.keys(row).find(
             (key) =>
@@ -260,7 +260,6 @@ const TableMarkComponent = ({
           newRow[col] = excelCol ? row[excelCol] : "";
         });
 
-        // Calculate mark and grade for the imported row
         const mark = calculateMark(newRow);
         return {
           ...newRow,
@@ -269,12 +268,9 @@ const TableMarkComponent = ({
         };
       });
 
-      // Update the editedData state with the imported data
       setEditedData((prev) => {
-        // Create a map of existing data for quick lookup
         const existingDataMap = new Map(prev.map((item) => [item.id, item]));
 
-        // Merge existing data with imported data
         const mergedData = processedData.map((importedItem) => {
           const existingItem = existingDataMap.get(importedItem.id);
           return existingItem
@@ -282,7 +278,6 @@ const TableMarkComponent = ({
             : importedItem;
         });
 
-        // Add any existing items that weren't in the import
         prev.forEach((item) => {
           if (!processedData.some((impItem) => impItem.id === item.id)) {
             mergedData.push(item);
@@ -292,7 +287,6 @@ const TableMarkComponent = ({
         return mergedData;
       });
 
-      // Update input values
       const newInputValues = { ...inputValues };
       processedData.forEach((item) => {
         numberColumns.forEach((col) => {
@@ -301,7 +295,6 @@ const TableMarkComponent = ({
       });
       setInputValues(newInputValues);
 
-      // Reset file input to allow re-importing the same file
       e.target.value = "";
     };
     reader.readAsArrayBuffer(file);
@@ -379,7 +372,7 @@ const TableMarkComponent = ({
   return (
     <div className="max-w-3xl flex-1">
       <div className="flex flex-col gap-4 mb-4">
-        <div className="flex justify-between items-end">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div className="w-full sm:max-w-[44%]">
             <div className="relative flex items-center border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800">
               <div className="absolute left-3 text-gray-300 dark:text-gray-500">
@@ -507,14 +500,16 @@ const TableMarkComponent = ({
         </div>
       </form>
 
-      <div className="py-2 px-2 flex justify-between items-center">
-        <Pagination
-          currentPage={page}
-          totalPages={Math.ceil(filteredItems.length / rowsPerPage)}
-          onPageChange={setPage}
-        />
+      <div className="py-2 px-2 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="w-full sm:w-auto flex justify-center">
+          <Pagination
+            currentPage={page}
+            totalPages={Math.ceil(filteredItems.length / rowsPerPage)}
+            onPageChange={setPage}
+          />
+        </div>
         {showButtons && (
-          <div className="flex gap-2 flex-wrap justify-end">
+          <div className="flex flex-wrap gap-2 justify-center sm:justify-end w-full sm:w-auto">
             <Button
               variant="secondary"
               onClick={handleCancel}
@@ -524,14 +519,14 @@ const TableMarkComponent = ({
               Reset
             </Button>
 
-            <label className="my-4 px-4 py-2 rounded-md font-medium transition-all duration-200 focus:outline-none flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+            <label className="my-4 px-4 py-2 rounded-md font-medium transition-all duration-200 focus:outline-none flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm">
               <input
                 type="file"
                 accept=".xlsx, .xls"
                 onChange={handleExcelImport}
                 className="hidden"
               />
-              <FaRegFileExcel className="mr-1" />
+              <FaRegFileExcel className="w-4 h-4" />
               Import
             </label>
 
@@ -553,7 +548,7 @@ const TableMarkComponent = ({
 };
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
-  <div className="flex gap-1">
+  <div className="flex flex-wrap gap-1 justify-center">
     <button
       className="px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
       disabled={currentPage === 1}

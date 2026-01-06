@@ -15,7 +15,7 @@ import Button from "../ui/raw/Button";
 import api from "../../hooks/api";
 import { GrDocumentDownload } from "react-icons/gr";
 
-const StudentReport = () => {
+const StudentReport = ({ syst_level }) => {
   const { showToast } = useToast();
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
@@ -27,6 +27,7 @@ const StudentReport = () => {
   const [examRows, setExamRows] = useState([
     { exam: null, examAlias: "", outOf: "" },
   ]);
+  const [examAliasSingle, setExamAliasSingle] = useState(""); // global alias for 2+ exams
   const [selectedFormula, setSelectedFormula] = useState("");
   const [isAddDisabled, setIsAddDisabled] = useState(true);
   const [pdfUrl, setPdfUrl] = useState(null);
@@ -36,6 +37,11 @@ const StudentReport = () => {
   const [selectedStudentList, setSelectedStudentList] = useState([]);
   const [selectStreamChecked, setSelectStreamChecked] = useState(false);
   const [selectStudentChecked, setSelectStudentChecked] = useState(false);
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  const isCBC = syst_level !== "Secondary (8-4-4)";
 
   const getAvailableOptions = (currentIndex) => {
     const selectedExams = examRows
@@ -47,20 +53,38 @@ const StudentReport = () => {
     );
   };
 
+  const validateOutOf = (value) => /^([1-9][0-9]?|100)$/.test(String(value));
+
+  // Row-level validation: now per-row alias is optional; global alias required when multiple exams
   const validateRow = (row) => {
-    const isAliasValid = row.examAlias.trim().length >= 3;
-    const isOutOfValid = /^([1-9][0-9]?|100)$/.test(row.outOf);
-    return row.exam && isAliasValid && isOutOfValid;
+    const hasExam = Boolean(row.exam);
+    const outOfValid = validateOutOf(row.outOf || "100");
+    return hasExam && outOfValid;
   };
 
+  // Compute overall form validity (used for enabling buttons)
   useEffect(() => {
-    const valid = examRows.every(validateRow);
+    // every row must be valid
+    const rowsValid = examRows.length > 0 && examRows.every(validateRow);
+
+    // if multiple exams, require global alias >= 3 chars
+    const multiAliasValid =
+      examRows.length > 1 ? examAliasSingle.trim().length >= 3 : true;
+
+    // set add/apply disabled state
+    const valid = rowsValid && multiAliasValid;
     setIsAddDisabled(!valid);
 
+    // default formula when multiple rows
     if (examRows.length > 1 && !selectedFormula) {
       setSelectedFormula("average");
     }
-  }, [examRows, selectedFormula]);
+
+    // if single row, keep examAliasSingle synced for convenience
+    if (examRows.length === 1) {
+      setExamAliasSingle(examRows[0].exam || "");
+    }
+  }, [examRows, examAliasSingle, selectedFormula]);
 
   const addExamRow = () => {
     if (examRows.length < 3) {
@@ -73,6 +97,10 @@ const StudentReport = () => {
       const newRows = examRows.slice(0, -1);
       setExamRows(newRows);
       if (newRows.length < 2) setSelectedFormula("");
+      // when down to single, sync global alias to the single exam value
+      if (newRows.length === 1) {
+        setExamAliasSingle(newRows[0].exam || "");
+      }
     }
   };
 
@@ -80,6 +108,8 @@ const StudentReport = () => {
     const newRows = [...examRows];
     newRows[index].exam = value;
     setExamRows(newRows);
+    // if single row, sync global alias state
+    if (newRows.length === 1) setExamAliasSingle(value || "");
   };
 
   const handleInputChange = (index, field, value) => {
@@ -121,17 +151,20 @@ const StudentReport = () => {
       setExamOptions([]);
       setSelectedFormula("");
       setExamRows([{ exam: null, examAlias: "", outOf: "" }]);
+      setExamAliasSingle("");
     }
     if (field === "form") {
       setSelectedTerm("");
       setExamOptions([]);
       setSelectedFormula("");
       setExamRows([{ exam: null, examAlias: "", outOf: "" }]);
+      setExamAliasSingle("");
     }
     if (field === "term") {
       setExamOptions([]);
       setSelectedFormula("");
       setExamRows([{ exam: null, examAlias: "", outOf: "" }]);
+      setExamAliasSingle("");
     }
   };
 
@@ -156,13 +189,25 @@ const StudentReport = () => {
         yearValue: selectedYear,
         studentIds: selectedStudentList,
         term: selectedTerm,
+        year: selectedYear
       };
 
+      // examname: single exam -> exam value; multiple -> global alias
+      if (examRows.length > 1) {
+        payload.examname = examAliasSingle.trim();
+      } else {
+        payload.examname = examRows[0]?.exam || "";
+      }
+
       examRows.forEach((row, index) => {
+        // per your request (option C) alias is the exam value
+        const aliasVal = row.exam;
+        const nameKey =
+          examOptions.find((opt) => opt.value === row.exam)?.key || row.exam;
         payload.exams[`exam_${index + 1}`] = {
-          alias: row.examAlias,
-          name: row.exam,
-          outof: row.outOf,
+          alias: aliasVal,
+          name: nameKey,
+          outof: row.outOf || "100",
         };
       });
 
@@ -171,8 +216,8 @@ const StudentReport = () => {
       });
 
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setPdfUrl(pdfUrl);
+      const url = URL.createObjectURL(pdfBlob);
+      setPdfUrl(url);
     } catch (err) {
       console.error("Error fetching PDF:", err);
       setError("Failed to load PDF. Please try again.");
@@ -308,10 +353,13 @@ const StudentReport = () => {
     }
   }, [selectStreamChecked]);
 
-  const showExamControls = examRows.some(
-    (row) => row.exam && row.examAlias && row.outOf
-  );
-  const showStreamControls = showExamControls && examRows.every(validateRow);
+  // showStreamControls: require every row to be valid and global alias when multiple
+  const rowsValidForStreams =
+    examRows.length > 0 &&
+    examRows.every((r) => r.exam && validateOutOf(r.outOf || "100"));
+  const multiAliasValid =
+    examRows.length > 1 ? examAliasSingle.trim().length >= 3 : true;
+  const showStreamControls = rowsValidForStreams && multiAliasValid;
 
   return (
     <div className="p-0">
@@ -359,17 +407,17 @@ const StudentReport = () => {
                   htmlFor="form"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Form
+                  {isCBC ? "Grade" : "Form"}
                 </label>
                 <ReusableSelect
                   id="form"
                   placeholder={
-                    selectedYear ? "Select Form" : "Please select year first"
+                    selectedYear ? "Select Level" : "Please select year first"
                   }
-                  options={formOptions}
+                  options={setFormOptions}
                   value={
                     selectedForm
-                      ? formOptions.find((opt) => opt.value === selectedForm)
+                      ? setFormOptions.find((opt) => opt.value === selectedForm)
                       : undefined
                   }
                   onChange={(e) => {
@@ -427,10 +475,9 @@ const StudentReport = () => {
               </div>
             ) : (
               <div className="flex flex-col space-y-3 pb-4">
-                <div className="flex flex-row items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
-                  <div className="w-2/5">Exam</div>
-                  <div className="w-2/5">Exam Alias</div>
-                  <div className="w-1/5">Out of %</div>
+                <div className="flex flex-row items-center gap-2 font-medium dark:text-gray-300">
+                  <div className="w-3/5">Exam</div>
+                  <div className="w-2/5">Out of %</div>
                 </div>
 
                 {examRows.map((row, index) => {
@@ -440,7 +487,7 @@ const StudentReport = () => {
                       key={index}
                       className="flex flex-row items-center gap-2"
                     >
-                      <div className="w-2/5">
+                      <div className="w-3/5">
                         <Dropdown
                           options={getAvailableOptions(index)}
                           value={row.exam}
@@ -459,30 +506,13 @@ const StudentReport = () => {
                       </div>
                       <div className="w-2/5">
                         <ReusableInput
-                          type="text"
-                          placeholder="Exam Alias"
-                          value={row.examAlias}
-                          onChange={(e) =>
-                            handleInputChange(
-                              index,
-                              "examAlias",
-                              e.target.value
-                            )
-                          }
-                          disabled={isDisabled}
-                          className="w-full"
-                        />
-                      </div>
-                      <div className="w-1/5">
-                        <ReusableInput
                           type="number"
                           placeholder="Out of %"
-                          value={row.outOf}
+                          value={row.outOf || "100"}
                           onChange={(e) =>
                             handleInputChange(index, "outOf", e.target.value)
                           }
                           disabled={isDisabled}
-                          className="w-full"
                         />
                       </div>
                     </div>
@@ -510,6 +540,26 @@ const StudentReport = () => {
                     </Button>
                   )}
                 </div>
+
+                {/* Global alias input placed BELOW Add/Remove buttons as requested */}
+                {examRows.length > 1 && (
+                  <div className="mt-2 w-full">
+                    <label className="dark:text-gray-300">
+                      Overall Exam Alias
+                    </label>
+                    <ReusableInput
+                      type="text"
+                      placeholder="Enter overall alias (min 3 chars)"
+                      value={examAliasSingle}
+                      onChange={(e) => setExamAliasSingle(e.target.value)}
+                      className="my-1"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      This alias will be used as exam name for the combined
+                      report.
+                    </div>
+                  </div>
+                )}
 
                 {showStreamControls && (
                   <div className="mt-2">
@@ -622,7 +672,7 @@ const StudentReport = () => {
               style={{ minHeight: "70vh" }}
             >
               <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
-                Student Report Form:
+                Student Report:
               </h2>
               <div className="flex-1 overflow-hidden rounded-md border border-gray-200 dark:border-gray-600">
                 <iframe

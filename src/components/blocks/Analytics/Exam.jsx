@@ -1,124 +1,71 @@
-import React, { useState, useEffect } from "react";
-import ReusableDiv from "../ReusableDiv";
-import TableComponent from "../TableComponent";
-import ReusableSelect from "../ReusableSelect";
+import { useState, useEffect } from "react";
+import ReusableDiv from "../../ReusableDiv";
+import TableComponent from "../../TableComponent";
+import ReusableSelect from "../../ReusableSelect";
 import { FaUsersGear, FaSpinner } from "react-icons/fa6";
-import { BsPencil, BsEye, BsTrash } from "react-icons/bs";
+import { BsPencil, BsTrash } from "react-icons/bs";
 import { FiPlus } from "react-icons/fi";
-import { formOptions, yearOptions } from "../../utils/CommonData";
-import { useToast } from "../Toast";
-import api from "../../hooks/api";
-import StreamCRUD from "../snippets/StreamCRUD";
+import {
+  formOptions,
+  yearOptions,
+  termOptions,
+} from "../../../utils/CommonData";
+import { useToast } from "../../Toast";
+import api from "../../../hooks/api";
+import ExamCRUD from "../../snippets/ExamCRUD";
 
-const Stream = ({syst_level}) => {
+const Exam = ({ syst_level }) => {
   const { showToast } = useToast();
 
-  const [subTeacherData, setSubTeacherData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedYear, setSelectedYear] = useState("");
+  const [selectedTerm, setSelectedTerm] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
-  const [teachers, setTeachers] = useState([]);
+  const [examsData, setExamsData] = useState([]);
   const [rowData, setRowData] = useState(null);
   const [modalState, setModalState] = useState({
-    addStream: false,
-    editStream: false,
-    viewStream: false,
+    addExam: false,
+    editExam: false,
   });
 
   const setFormOptions =
     formOptions.find((option) => option.label === syst_level)?.options || [];
 
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
-  const [streamOptions, setStreamOptions] = useState([]);
 
   const columns = [
-    { name: "STREAM", uid: "stream_name", sortable: true },
-    { name: "STREAM TEACHER", uid: "teacher_name", sortable: true },
+    { name: "EXAM NAME", uid: "exam_name", sortable: true },
+    { name: "SCHEDULED AT", uid: "scheduled_at", sortable: true },
     { name: "ACTIONS", uid: "actions" },
   ];
 
-  const resetBelow = (field) => {
-    if (field === "year" || field === "form") {
-      setSubTeacherData([]);
-      setTeachers([]);
+  const handlePreSetExams = async () => {
+    if (!selectedYear || !selectedTerm || !selectedForm) {
+      showToast("Please select year, term and form first", "error", {
+        duration: 3000,
+        position: "top-center",
+      });
+      return;
     }
-  };
 
-  const fetchStreamNames = async () => {
-    try {
-      const response = await api.get("/stream/getstreamnames");
-      const formattedStreams = response.data.map((stream) => ({
-        value: stream.id,
-        label: stream.stream_name,
-      }));
-      setStreamOptions(formattedStreams);
-    } catch (error) {
-      showToast(
-        error.response?.data?.message || "Failed to fetch streams",
-        "error",
-        { duration: 3000, position: "top-center" }
-      );
-    }
-  };
-
-  const fetchStreamsAndTeachers = async (form, year) => {
-    try {
-      setLoading(true);
-
-      const teacherRes = await api.post("/teacher/getteachers", { year });
-      const formattedTeachers = teacherRes.data.map((t) => ({
-        value: t.id,
-        label: `${t.title} ${t.fname} ${t.lname}`,
-      }));
-      setTeachers(formattedTeachers);
-
-      try {
-        const classRes = await api.post("/teacher/getclassteachers", {
-          form,
-          year,
-        });
-        const teacherMap = {};
-        teacherRes.data.forEach((t) => {
-          teacherMap[t.id] = `${t.title} ${t.fname} ${t.lname}`;
-        });
-
-        const formattedData = classRes.data.map((c) => ({
-          ...c,
-          teacher_name: teacherMap[c.teacher_id] || "N/A",
-        }));
-
-        setSubTeacherData(formattedData);
-      } catch (error) {
-        setSubTeacherData([]);
-      }
-    } catch (error) {
-      showToast(
-        error.response?.data?.message || "Failed to fetch teachers",
-        "error",
-        { duration: 3000, position: "top-center" }
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (rowData) => {
-    if (!window.confirm("Are you sure you want to delete this stream?")) return;
     setLoading(true);
     try {
-      const response = await api.post(`/stream/deletestream/${rowData}`, {
+      const response = await api.post("/exam/addexam", {
+        term: selectedTerm,
         form: selectedForm,
+        year: selectedYear,
       });
+
       if ([200, 201, 204].includes(response.status)) {
-        showToast("Stream deleted successfully", "success", {
+        showToast("Pre-set exams added successfully", "success", {
           duration: 3000,
           position: "top-center",
         });
-        fetchStreamsAndTeachers(selectedForm, selectedYear);
+        fetchExams();
       }
     } catch (error) {
       showToast(
-        error.response?.data?.message || "Failed to delete stream",
+        error.response?.data?.message || "Failed to add pre-set exams",
         "error",
         { duration: 3000, position: "top-center" }
       );
@@ -127,19 +74,87 @@ const Stream = ({syst_level}) => {
     }
   };
 
-  const handleFormChange = async (e) => {
-    const form = e.target.value;
-    setSelectedForm(form);
-    resetBelow("form");
-    if (form && selectedYear) {
-      await fetchStreamsAndTeachers(form, selectedYear);
+  const fetchExams = async () => {
+    if (!selectedYear || !selectedTerm || !selectedForm) {
+      setExamsData([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post("/exam/exams", {
+        term: selectedTerm,
+        form: selectedForm,
+        year: selectedYear,
+      });
+      setExamsData(response.data || []);
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || "Failed to fetch exams",
+        "error",
+        { duration: 3000, position: "top-center" }
+      );
+      setExamsData([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleYearChange = async (e) => {
+  const handleDelete = async (row) => {
+    if (!window.confirm("Are you sure you want to delete this exam?")) return;
+
+    setLoading(true);
+    try {
+      const response = await api.post("/exam/deleteexam", { id: row });
+
+      if ([200, 201, 204].includes(response.status)) {
+        showToast("Exam deleted successfully", "success", {
+          duration: 3000,
+          position: "top-center",
+        });
+        fetchExams();
+      }
+    } catch (error) {
+        console.log(error.response?.data?.message);
+      showToast(
+        error.response?.data?.message || "Failed to delete exam",
+        "error",
+        { duration: 3000, position: "top-center" }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleYearChange = (e) => {
     const year = e.target.value;
     setSelectedYear(year);
-    resetBelow("year");
+    setSelectedTerm("");
+    setSelectedForm("");
+    setExamsData([]);
+  };
+
+  const handleTermChange = async (e) => {
+    const term = e.target.value;
+    setSelectedTerm(term);
+    setSelectedForm("");
+
+    if (term && selectedYear) {
+      await fetchExams();
+    } else {
+      setExamsData([]);
+    }
+  };
+
+  const handleFormChange = (e) => {
+    const form = e.target.value;
+    setSelectedForm(form);
+
+    if (form && selectedYear && selectedTerm) {
+      fetchExams();
+    } else {
+      setExamsData([]);
+    }
   };
 
   const openModalWithData = (modalType, row = null) => {
@@ -152,20 +167,16 @@ const Stream = ({syst_level}) => {
   };
 
   useEffect(() => {
-    fetchStreamNames();
-  }, []);
-
-  useEffect(() => {
-    if (selectedForm && selectedYear) {
-      fetchStreamsAndTeachers(selectedForm, selectedYear);
+    if (selectedYear && selectedTerm && selectedForm) {
+      fetchExams();
     }
-  }, [selectedForm, modalState.addStream]);
+  }, [selectedYear, selectedTerm, selectedForm]);
 
   return (
     <div className="p-0 md:p-0">
       <div className="mb-4 md:mb-6">
         <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-500">
-          Manage Streams
+          Manage Exams
         </h1>
       </div>
 
@@ -184,7 +195,7 @@ const Stream = ({syst_level}) => {
         <div className="w-full lg:w-1/4">
           <ReusableDiv
             className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800 mb-2"
-            tag="Manage Streams"
+            tag="Manage Exams"
             icon={FaUsersGear}
           >
             <div className="flex flex-col space-y-3 pb-4">
@@ -206,6 +217,23 @@ const Stream = ({syst_level}) => {
               </div>
               <div className="w-full">
                 <label
+                  htmlFor="term"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Term
+                </label>
+                <ReusableSelect
+                  id="term"
+                  placeholder="Select Term"
+                  options={termOptions}
+                  value={selectedTerm}
+                  onChange={handleTermChange}
+                  disabled={!selectedYear}
+                  className="w-full"
+                />
+              </div>
+              <div className="w-full">
+                <label
                   htmlFor="form"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
@@ -217,7 +245,7 @@ const Stream = ({syst_level}) => {
                   options={setFormOptions}
                   value={selectedForm}
                   onChange={handleFormChange}
-                  disabled={!selectedYear}
+                  disabled={!selectedTerm}
                   className="w-full"
                 />
               </div>
@@ -229,7 +257,7 @@ const Stream = ({syst_level}) => {
           <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md p-2 md:p-4">
             <TableComponent
               columns={columns}
-              data={subTeacherData}
+              data={examsData}
               loading={loading}
               horizontalTableFlow
               showSelectAllCheckbox={false}
@@ -238,36 +266,41 @@ const Stream = ({syst_level}) => {
               buttons={{
                 addButton: {
                   show: true,
-                  label: "Add Stream",
+                  label: "Add Exam",
                   icon: <FiPlus className="w-4 h-4" />,
                   onClick: () => {
-                    if (!selectedYear || !selectedForm) {
-                      showToast("Please select year and form first", "error");
+                    if (!selectedYear || !selectedTerm || !selectedForm) {
+                      showToast(
+                        "Please select year, term and form first",
+                        "error",
+                        {
+                          duration: 3000,
+                          position: "top-center",
+                        }
+                      );
                       return;
                     }
-                    openModalWithData("addStream");
+                    openModalWithData("addExam");
                   },
+                },
+                uploadButton: {
+                  show: true,
+                  label: "Pre-set Exam",
+                  onClick: handlePreSetExams,
+                  className: "mr-2",
                 },
                 actionButtons: {
                   show: true,
                   options: [
                     {
-                      label: "View",
-                      icon: <BsEye className="w-4 h-4" />,
-                      onClick: (row) => openModalWithData("viewStream", row),
-                    },
-                    {
                       label: "Edit",
                       icon: <BsPencil className="w-4 h-4" />,
-                      onClick: (row) => openModalWithData("editStream", row),
+                      onClick: (row) => openModalWithData("editExam", row),
                     },
                     {
                       label: "Delete",
                       icon: <BsTrash className="w-4 h-4" />,
-                      onClick: (row) => {
-                        setRowData(row);
-                        handleDelete(row);
-                      },
+                      onClick: (row) => handleDelete(row),
                     },
                   ],
                 },
@@ -283,18 +316,18 @@ const Stream = ({syst_level}) => {
         </div>
       </div>
 
-      <StreamCRUD
+      <ExamCRUD
         modalState={modalState}
         setModalState={setModalState}
         selectedForm={selectedForm}
         selectedYear={selectedYear}
+        selectedTerm={selectedTerm}
+        syst_level={syst_level}
         rowData={rowData}
-        teacherOptions={teachers}
-        streamOptions={streamOptions}
-        refreshTable={() => fetchStreamsAndTeachers(selectedForm, selectedYear)}
+        refreshTable={fetchExams}
       />
     </div>
   );
 };
 
-export default Stream;
+export default Exam;

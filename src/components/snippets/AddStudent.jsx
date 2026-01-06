@@ -8,7 +8,7 @@ import api from "../../hooks/api";
 import { FaSpinner } from "react-icons/fa";
 import { useToast } from "../Toast";
 import Button from "../ui/raw/Button";
-import { sexOptions, formOptions, yearOptions } from "../../utils/CommonData";
+import { sexOptions, yearOptions } from "../../utils/CommonData";
 
 const AddStudent = ({
   modalState,
@@ -16,6 +16,7 @@ const AddStudent = ({
   selectedForm,
   selectedYear,
   streamOptions,
+  syst_level,
   rowData,
   refreshTable,
   onDelete,
@@ -154,7 +155,9 @@ const AddStudent = ({
         phone: formValues.phone.startsWith("+")
           ? formValues.phone.slice(1)
           : formValues.phone,
+          system : "CBC"
       };
+
       const response = await api.post("/student/addstudent", payload);
 
       if (response.status === 200 || response.status === 201) {
@@ -454,24 +457,26 @@ const AddStudent = ({
                   />
                 </div>
 
-                <div className="mb-2">
-                  <label
-                    htmlFor="kcpe_marks"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    KCPE Marks
-                  </label>
-                  <ReusableInput
-                    name="kcpe_marks"
-                    id="kcpe_marks"
-                    type="number"
-                    className="w-full mt-1"
-                    value={values.kcpe_marks}
-                    onChange={(e) => handleKcpeMarksChange(e, handleChange)}
-                    max="500"
-                    min="0"
-                  />
-                </div>
+                {syst_level === "Secondary (8-4-4)" && (
+                  <div className="mb-2">
+                    <label
+                      htmlFor="kcpe_marks"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      KCPE Marks
+                    </label>
+                    <ReusableInput
+                      name="kcpe_marks"
+                      id="kcpe_marks"
+                      type="number"
+                      className="w-full mt-1"
+                      value={values.kcpe_marks}
+                      onChange={(e) => handleKcpeMarksChange(e, handleChange)}
+                      max="500"
+                      min="0"
+                    />
+                  </div>
+                )}
 
                 <div className="mb-2">
                   <label
@@ -645,10 +650,11 @@ const AddStudent = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-1 space-y-1">
               <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Form
+                  Level
                 </label>
                 <p className="text-gray-800 dark:text-gray-200 font-medium">
-                  Form {selectedForm}
+                  {syst_level === "Secondary (8-4-4)" ? "Form" : "Grade"}{" "}
+                  {selectedForm}
                 </p>
               </div>
 
@@ -657,9 +663,8 @@ const AddStudent = ({
                   Stream
                 </label>
                 <p className="text-gray-800 dark:text-gray-200 font-medium">
-                  {streamOptions.find(
-                    (s) => s.value === studentData.stream_id
-                  )?.label || "-"}
+                  {streamOptions.find((s) => s.value === studentData.stream_id)
+                    ?.label || "-"}
                 </p>
               </div>
 
@@ -672,14 +677,16 @@ const AddStudent = ({
                 </p>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  KCPE Marks
-                </label>
-                <p className="text-gray-800 dark:text-gray-200 font-medium">
-                  {studentData.kcpe_marks || "-"}
-                </p>
-              </div>
+              {syst_level === "Secondary (8-4-4)" && (
+                <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    KCPE Marks
+                  </label>
+                  <p className="text-gray-800 dark:text-gray-200 font-medium">
+                    {studentData.kcpe_marks || "-"}
+                  </p>
+                </div>
+              )}
 
               <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
@@ -892,24 +899,26 @@ const AddStudent = ({
                   />
                 </div>
 
-                <div className="mb-2">
-                  <label
-                    htmlFor="kcpe_marks"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    KCPE Marks
-                  </label>
-                  <ReusableInput
-                    name="kcpe_marks"
-                    id="kcpe_marks"
-                    type="number"
-                    className="w-full mt-1"
-                    value={values.kcpe_marks}
-                    onChange={(e) => handleKcpeMarksChange(e, handleChange)}
-                    max="500"
-                    min="0"
-                  />
-                </div>
+                {syst_level === "Secondary (8-4-4)" && (
+                  <div className="mb-2">
+                    <label
+                      htmlFor="kcpe_marks"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      KCPE Marks
+                    </label>
+                    <ReusableInput
+                      name="kcpe_marks"
+                      id="kcpe_marks"
+                      type="number"
+                      className="w-full mt-1"
+                      value={values.kcpe_marks}
+                      onChange={(e) => handleKcpeMarksChange(e, handleChange)}
+                      max="500"
+                      min="0"
+                    />
+                  </div>
+                )}
 
                 <div className="mb-2">
                   <label

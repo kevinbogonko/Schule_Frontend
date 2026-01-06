@@ -20,16 +20,12 @@ const ReusableSelect = forwardRef(
   ) => {
     const [internalValue, setInternalValue] = useState(value || defaultValue);
 
-    // Handle both controlled and uncontrolled usage
     const handleChange = (e) => {
       const newValue = e.target.value;
       setInternalValue(newValue);
-      if (onChange) {
-        onChange(e);
-      }
+      if (onChange) onChange(e);
     };
 
-    // Sync with external value changes
     useEffect(() => {
       if (value !== undefined) {
         setInternalValue(value);
@@ -48,14 +44,14 @@ const ReusableSelect = forwardRef(
         autoFocus={autoFocus}
         required={required}
         className={`
-        block rounded-md border-0 p-1.5 ring-1 focus:ring-1 sm:text-sm sm:leading-6
-        bg-white dark:bg-gray-800
-        text-gray-900 dark:text-gray-200
-        ring-gray-300 dark:ring-gray-600
-        focus:ring-blue-500 dark:focus:ring-blue-400
-        ${disabled ? "cursor-not-allowed opacity-50" : ""}
-        ${className}
-      `}
+          block w-full rounded-md border-0 p-1.5 ring-1 focus:ring-1 sm:text-sm sm:leading-6
+          bg-white dark:bg-gray-800
+          text-gray-900 dark:text-gray-200
+          ring-gray-300 dark:ring-gray-600
+          focus:ring-blue-500 dark:focus:ring-blue-400
+          ${disabled ? "cursor-not-allowed opacity-50" : ""}
+          ${className}
+        `}
         {...props}
       >
         {placeholder && (
@@ -67,6 +63,7 @@ const ReusableSelect = forwardRef(
             {placeholder}
           </option>
         )}
+
         {options.map((option) => (
           <option
             key={option.value}

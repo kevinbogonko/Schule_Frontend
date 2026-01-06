@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ReusableDiv from '../ReusableDiv';
 import ReusableSelect from '../ReusableSelect';
 import { FaUsersGear } from 'react-icons/fa6';
@@ -12,7 +12,7 @@ import ReusableInput from '../ui/ReusableInput';
 import Button from '../ui/raw/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const AddMark = () => {
+const AddMark = ({syst_level}) => {
   const { showToast } = useToast();
   const [studentData, setStudentData] = useState([]);
   const [optimisticData, setOptimisticData] = useState(null);
@@ -22,6 +22,7 @@ const AddMark = () => {
   const [selectedForm, setSelectedForm] = useState('');
   const [selectedTerm, setSelectedTerm] = useState('');
   const [selectedExam, setSelectedExam] = useState('');
+  const [selectedExamKey, setSelectedExamKey] = useState("");
   const [selectedSubject, setSelectedSubject] = useState('');
   const [examOptions, setExamOptions] = useState([]);
   const [subjectOptions, setSubjectOptions] = useState([]);
@@ -45,6 +46,13 @@ const AddMark = () => {
   const [calculationMethod, setCalculationMethod] = useState('threePaperAvgAdd');
   const [isUpdatingPaperSetup, setIsUpdatingPaperSetup] = useState(false);
   const showPapers = true;
+  const multiPaperNonCBC = [21, 22]
+
+  const setFormOptions = formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  let isCBC;
+  syst_level === "Secondary (8-4-4)" ? isCBC = false : isCBC = true
+
 
   const resetBelow = (level) => {
     if (level === 'year') {
@@ -90,7 +98,8 @@ const AddMark = () => {
           const response = await api.post('/exam/exams', payload);
           setExamOptions(response.data.map(exam => ({
             value: exam.exam_name,
-            label: exam.exam_name
+            label: exam.exam_name,
+            key : exam.id
           })));
         } catch (err) {
           resetBelow('term');
@@ -132,11 +141,13 @@ const AddMark = () => {
     const fetchGradingScale = async () => {
       if (selectedForm && selectedExam && selectedSubject) {
         try {
-          const response = await api.post('grading/gradingscale', {
+          const response = await api.post("grading/gradingscale", {
             form: selectedForm,
-            exam: selectedExam,
-            subject: selectedSubject
+            // exam: selectedExam,
+            subject: selectedSubject,
+            exam_id: selectedExamKey,
           });
+          // console.log(response.data)
           setGradingScale(response.data);
         } catch (error) {
           showToast("Failed to fetch grading scale, using default", "warning", {
@@ -150,12 +161,12 @@ const AddMark = () => {
   }, [selectedSubject]);
 
   const fetchStudents = async () => {
-    if (selectedForm && selectedExam && selectedSubject) {
+    if (selectedForm && selectedExamKey && selectedSubject) {
       setIsRefreshing(true);
       const paperSetupPayload = {
         form: selectedForm,
-        exam: selectedExam,
-        subject: selectedSubject
+        exam_id: selectedExamKey,
+        subject: selectedSubject,
       };
 
       try {
@@ -178,7 +189,6 @@ const AddMark = () => {
 
       try {
         const response = await api.post('/exam/subjectmarks', paperSetupPayload);
-
         const transformed = response.data.map((s) => {
           const student = {
             ...s,
@@ -186,7 +196,7 @@ const AddMark = () => {
             status: 'Active'
           };
 
-          if (selectedForm === '1' || selectedForm === '2') {
+          if (!multiPaperNonCBC.includes(Number(selectedForm))) {
             student[selectedSubject] = s[selectedSubject] || 0;
             student.mark = student[selectedSubject];
           } else {
@@ -194,7 +204,9 @@ const AddMark = () => {
             student[`${selectedSubject}_1`] = s[`${selectedSubject}_1`] || 0;
             student[`${selectedSubject}_2`] = s[`${selectedSubject}_2`] || 0;
             student[`${selectedSubject}_3`] = s[`${selectedSubject}_3`] || 0;
-            student.mark = showPapers ? calculateMark(student) : student[selectedSubject];
+            student.mark = showPapers
+              ? calculateMark(student)
+              : student[selectedSubject];
           }
 
           return student;
@@ -202,6 +214,7 @@ const AddMark = () => {
 
         setStudentData(transformed);
       } catch (err) {
+        console.log(err)
         showToast(
           err.response?.data?.message || "Failed to fetch student data",
           "error",
@@ -229,8 +242,8 @@ const AddMark = () => {
   }, [papers]);
 
   const handleUpdatePaperSetup = async () => {
-    if (!selectedSubject || !selectedExam) {
-      showToast('Please select subject and exam first', 'error', {duration : 3000, position : 'top-right'});
+    if (!selectedSubject || !selectedExamKey) {
+      showToast('Please select subject/learning area and exam first', 'error', {duration : 3000, position : 'top-right'});
       return;
     }
   
@@ -239,7 +252,7 @@ const AddMark = () => {
     try {
       const formData = {
         id: selectedSubject,
-        exam: selectedExam,
+        exam_id: selectedExamKey,
         results: {
           papers: papers
         }
@@ -265,7 +278,7 @@ const AddMark = () => {
   };
 
   const calculateMark = (item) => {
-    if (selectedForm === '1' || selectedForm === '2') {
+    if (!multiPaperNonCBC.includes(Number(selectedForm))) {
       return item[selectedSubject] || 0;
     }
 
@@ -295,39 +308,54 @@ const AddMark = () => {
       { uid: "name", name: "Name", sortable: true }
     ];
 
-    if (selectedForm === '1' || selectedForm === '2') {
+    if (!multiPaperNonCBC.includes(Number(selectedForm))) {
       return [
         ...baseColumns,
         { uid: selectedSubject, name: selectedSubject, sortable: true },
-        { uid: "mark", name: "Mark", sortable: true },
-        { uid: "grade", name: "Grade", sortable: true }
+        { uid: "mark", name: `${isCBC ? "Score" : "Mark"}`, sortable: true },
+        { uid: "grade", name: `${isCBC ? "PL" : "Grade"}`, sortable: true },
       ];
     } else {
       if (showPapers) {
         const paperColumns = [];
-        if (papers >= 1) paperColumns.push({ uid: `${selectedSubject}_1`, name: "Paper 1", sortable: true });
-        if (papers >= 2) paperColumns.push({ uid: `${selectedSubject}_2`, name: "Paper 2", sortable: true });
-        if (papers >= 3) paperColumns.push({ uid: `${selectedSubject}_3`, name: "Paper 3", sortable: true });
+        if (papers >= 1)
+          paperColumns.push({
+            uid: `${selectedSubject}_1`,
+            name: "Paper 1",
+            sortable: true,
+          });
+        if (papers >= 2)
+          paperColumns.push({
+            uid: `${selectedSubject}_2`,
+            name: "Paper 2",
+            sortable: true,
+          });
+        if (papers >= 3)
+          paperColumns.push({
+            uid: `${selectedSubject}_3`,
+            name: "Paper 3",
+            sortable: true,
+          });
 
         return [
           ...baseColumns,
           ...paperColumns,
-          { uid: "mark", name: "Mark", sortable: true },
-          { uid: "grade", name: "Grade", sortable: true }
+          { uid: "mark", name: `${isCBC ? "Score" : "Mark"}`, sortable: true },
+          { uid: "grade", name: `${isCBC ? "PL" : "Grade"}`, sortable: true },
         ];
       } else {
         return [
           ...baseColumns,
           { uid: selectedSubject, name: selectedSubject, sortable: true },
-          { uid: "mark", name: "Mark", sortable: true },
-          { uid: "grade", name: "Grade", sortable: true }
+          { uid: "mark", name: `${isCBC ? "Score" : "Mark"}`, sortable: true },
+          { uid: "grade", name: `${isCBC ? "PL" : "Grade"}`, sortable: true },
         ];
       }
     }
   };
 
   const getNumberColumns = () => {
-    if (selectedForm === '1' || selectedForm === '2') {
+    if (!multiPaperNonCBC.includes(Number(selectedForm))) {
       return [selectedSubject];
     } else {
       if (showPapers) {
@@ -343,7 +371,7 @@ const AddMark = () => {
   };
 
   const getMarkCalculation = () => {
-    if (selectedForm === '1' || selectedForm === '2') return null;
+    if (!multiPaperNonCBC.includes(Number(selectedForm))) return null;
     if (!showPapers) return null;
     if (papers === 2) return 'twoPaperAvg';
     if (papers === 3) return calculationMethod;
@@ -356,10 +384,11 @@ const AddMark = () => {
       setOptimisticData(data);
       
       const payload = {
-        exam_name: selectedExam,
+        exam_id: selectedExamKey,
         results: data
       };
       
+
       await api.put('/exam/updatemarks', payload);
       showToast('Marks saved successfully', 'success', {duration : 3000, position : 'top-right'});
       
@@ -395,9 +424,8 @@ const AddMark = () => {
   return (
     <div className="p-0">
       <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
-        Add Student's Mark
+        Add Student's {isCBC ? "Score" : "Mark"}
       </h1>
-
       <div className="flex flex-col lg:flex-row gap-2">
         {/* Controls Section */}
         <div className="w-full lg:w-1/4">
@@ -435,14 +463,14 @@ const AddMark = () => {
                   htmlFor="form"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Form
+                  {isCBC ? "Grade" : "Form"}
                 </label>
                 <ReusableSelect
                   id="form"
-                  placeholder="Select Form"
-                  options={formOptions}
+                  placeholder={`Select ${isCBC ? "grade" : "form"}`}
+                  options={setFormOptions}
                   value={
-                    formOptions.find((opt) => opt.value === selectedForm) ||
+                    setFormOptions.find((opt) => opt.value === selectedForm) ||
                     undefined
                   }
                   onChange={(e) => {
@@ -492,6 +520,12 @@ const AddMark = () => {
                   value={selectedExam}
                   onChange={(e) => {
                     setSelectedExam(e.target.value);
+                    setSelectedExamKey(
+                      examOptions.find(
+                        (examOption) =>
+                          examOption.value === String(e.target.value)
+                      )?.key
+                    );
                     resetBelow("exam");
                   }}
                   disabled={!selectedTerm}
@@ -504,11 +538,11 @@ const AddMark = () => {
                   htmlFor="subject"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Subject
+                  {isCBC ? "Learning Area" : "Subject"}
                 </label>
                 <ReusableSelect
                   id="subject"
-                  placeholder="Select Subject"
+                  placeholder={`Select ${isCBC ? "learning area" : "Subject"}`}
                   options={subjectOptions}
                   value={selectedSubject}
                   onChange={(e) => {
@@ -523,7 +557,7 @@ const AddMark = () => {
           </ReusableDiv>
 
           {studentData.length > 0 &&
-            (selectedForm === "3" || selectedForm === "4") && (
+            multiPaperNonCBC.includes(Number(selectedForm)) && (
               <ReusableDiv
                 className="ml-0 mr-0 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
                 tag="Paper Setup"

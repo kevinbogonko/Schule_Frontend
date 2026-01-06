@@ -1,0 +1,50 @@
+{
+  "documents": [
+    {
+      "id": "1",
+      "filename": "research-paper.pdf",
+      "size": 2457600,
+      "status": "processed",
+      "chunks": 42,
+      "toc_entries": 8,
+      "uploadedAt": "2024-01-15T10:30:00Z",
+      "metadata": {
+        "title": "AI Research Paper 2024",
+        "subject": "Artificial Intelligence",
+        "tags": "research,ai,machine-learning",
+        "description": "Comprehensive research on neural networks"
+      },
+      "processingLogs": [
+        {
+          "step": "uploading",
+          "timestamp": "2024-01-15T10:30:00Z",
+          "status": "completed"
+        },
+        {
+          "step": "extracting",
+          "timestamp": "2024-01-15T10:31:00Z",
+          "status": "completed"
+        },
+        {
+          "step": "chunking",
+          "timestamp": "2024-01-15T10:32:00Z",
+          "status": "completed"
+        },
+        {
+          "step": "embedding",
+          "timestamp": "2024-01-15T10:33:00Z",
+          "status": "completed"
+        },
+        {
+          "step": "indexing",
+          "timestamp": "2024-01-15T10:34:00Z",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "supportedFormats": [".pdf", ".doc", ".docx", ".txt", ".md"],
+    "maxFileSize": 10485760
+  }
+}

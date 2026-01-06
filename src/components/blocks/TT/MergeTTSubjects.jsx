@@ -22,8 +22,8 @@ const MergeTTSubjects = ({
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [subjectsToMerge, setSubjectsToMerge] = useState([]);
   const [availableSubjects, setAvailableSubjects] = useState([]);
-  const [mergedDoubles, setMergedDoubles] = useState("");
-  const [mergedSingles, setMergedSingles] = useState("");
+  const [mergedDoubles, setMergedDoubles] = useState(0);
+  const [mergedSingles, setMergedSingles] = useState(0);
   const [mergedAlias, setMergedAlias] = useState("");
   const [pairStreams, setPairStreams] = useState(false);
   const [selectedStreams, setSelectedStreams] = useState([]);
@@ -39,6 +39,29 @@ const MergeTTSubjects = ({
     );
   };
 
+  const getAvailableStreams = () => {
+    return streams.filter(
+      (stream) =>
+        !streamPairs.some((pair) => pair.includes(stream.value)) &&
+        !selectedStreams.some((s) => String(s.value) === stream.value)
+    );
+  };
+
+  const handleInputChange = (index, field, value) => {
+    const updatedSubjects = [...subjectsToMerge];
+    updatedSubjects[index] = {
+      ...updatedSubjects[index],
+      [field]: value,
+    };
+    setSubjectsToMerge(updatedSubjects);
+  };
+
+  const handleRemoveSubject = (index) => {
+    const updatedSubjects = [...subjectsToMerge];
+    updatedSubjects.splice(index, 1);
+    setSubjectsToMerge(updatedSubjects);
+  };
+
   useEffect(() => {
     if (subjects && subjects.length > 0) {
       const formatted = formatSubjectOptions(subjects);
@@ -46,34 +69,26 @@ const MergeTTSubjects = ({
 
       if (editMode && subjectToEdit) {
         // Pre-populate with existing merged subject data
-        const mergedSubjects = subjectToEdit.merge_with
-          ? [
-              subjectToEdit,
-              ...subjects.filter((sub) =>
-                subjectToEdit.merge_with.includes(sub.id)
-              ),
-            ]
-          : [subjectToEdit];
+        const mergedSubjects = subjectToEdit.mergedSubjects || [];
 
         setSubjectsToMerge(
           mergedSubjects.map((sub) => ({
             id: sub.id,
             value: sub.id,
             label: sub.label || sub.name,
-            name: sub.name,
-            init: sub.alias,
+            name: sub.name || sub.label,
+            init: sub.init || sub.alias,
             alias: sub.alias,
             singles: sub.singles || 0,
             doubles: sub.doubles || 0,
-            originalSingles: sub.singles || 0, // Preserve original values
-            originalDoubles: sub.doubles || 0, // Preserve original values
-            isCustom: true,
-            isMerged: true,
+            isCustom: sub.isCustom || false,
+            isMerged: false,
+            utility: sub.utility,
           }))
         );
         setMergedAlias(subjectToEdit.merge_alias || "");
-        setMergedSingles(subjectToEdit.merge_singles || "");
-        setMergedDoubles(subjectToEdit.merge_doubles || "");
+        setMergedSingles(subjectToEdit.merge_singles || 0);
+        setMergedDoubles(subjectToEdit.merge_doubles || 0);
         setStreamPairs(subjectToEdit.pair || []);
         setPairStreams(subjectToEdit.isPaired || false);
       }
@@ -103,8 +118,6 @@ const MergeTTSubjects = ({
           ...subject,
           doubles: subject.doubles || 0,
           singles: subject.singles || 0,
-          originalDoubles: subject.doubles || 0, // Store original values
-          originalSingles: subject.singles || 0, // Store original values
         },
       ]);
       setSelectedSubject(null);
@@ -117,53 +130,65 @@ const MergeTTSubjects = ({
     setIsSubmitting(true);
 
     try {
-      // Create merged subjects while preserving original values for non-merged scenarios
-      const mergedSubjects = subjectsToMerge.map((subject) => ({
-        ...subject,
+      // Create merged subject for display
+      const mergedSubject = {
+        id: `merged_${subjectsToMerge
+          .map((s) => s.id)
+          .sort()
+          .join("_")}`,
+        value: `merged_${subjectsToMerge
+          .map((s) => s.id)
+          .sort()
+          .join("_")}`,
+        label: mergedAlias
+          ? `${mergedAlias} (${subjectsToMerge
+              .map((s) => s.label)
+              .join(" + ")})`
+          : subjectsToMerge.map((s) => s.label).join(" + "),
+        name: subjectsToMerge.map((s) => s.name).join(" + "),
+        init: mergedAlias,
+        alias: mergedAlias,
+        singles: mergedSingles,
+        doubles: mergedDoubles,
+        isCustom: true,
         isMerged: true,
+        merged_with: subjectsToMerge.map((s) => s.id),
         merge_alias: mergedAlias,
-        merge_with: subjectsToMerge
-          .filter((s) => s.id !== subject.id)
-          .map((s) => s.id),
-        merge_singles: mergedSingles === "" ? 0 : parseInt(mergedSingles),
-        merge_doubles: mergedDoubles === "" ? 0 : parseInt(mergedDoubles),
+        merge_singles: mergedSingles,
+        merge_doubles: mergedDoubles,
+        mergedSubjects: subjectsToMerge.map((sub) => ({
+          ...sub,
+          merge_alias: mergedAlias,
+          merge_singles: mergedSingles,
+          merge_doubles: mergedDoubles,
+          merged_with: subjectsToMerge
+            .filter((s) => s.id !== sub.id)
+            .map((s) => s.id),
+        })),
+        utility: subjectsToMerge[0]?.utility || "d",
         isPaired: pairStreams,
         pair: streamPairs,
-        // Keep original values in case the subject is later unmerged
-        singles: subject.originalSingles || 0,
-        doubles: subject.originalDoubles || 0,
-      }));
+      };
 
-      let updatedSubjects;
-      if (editMode && subjectToEdit) {
-        // In edit mode, update the existing subjects
-        updatedSubjects = subjects.map((sub) => {
-          const mergedSubject = mergedSubjects.find((s) => s.id === sub.id);
-          return mergedSubject || sub;
-        });
-      } else {
-        // In create mode, add the merged subjects while preserving originals
-        updatedSubjects = subjects.map((sub) => {
-          const mergedSubject = mergedSubjects.find((s) => s.id === sub.id);
-          return mergedSubject || sub;
-        });
+      // Create updated subjects array
+      // 1. Remove existing merged subjects if in edit mode
+      let updatedSubjects =
+        editMode && subjectToEdit
+          ? subjects.filter(
+              (sub) =>
+                !subjectToEdit.mergedSubjects.some((s) => s.id === sub.id)
+            )
+          : [...subjects];
 
-        // Add any new subjects that weren't in the original list
-        const newSubjects = mergedSubjects.filter(
-          (ms) => !subjects.some((s) => s.id === ms.id)
-        );
-        if (newSubjects.length > 0) {
-          updatedSubjects = [...updatedSubjects, ...newSubjects];
-        }
-      }
+      // 2. Remove any subjects being merged
+      updatedSubjects = updatedSubjects.filter(
+        (sub) => !subjectsToMerge.some((s) => s.id === sub.id)
+      );
+
+      // 3. Add the merged subject for display
+      updatedSubjects = [...updatedSubjects, mergedSubject];
 
       setActiveSubjects(updatedSubjects);
-      setSubjectsToMerge([]);
-      setMergedDoubles("");
-      setMergedSingles("");
-      setMergedAlias("");
-      setStreamPairs([]);
-      setPairStreams(false);
       setModalState(false);
     } catch (error) {
       console.error("Error merging subjects:", error);
@@ -175,22 +200,20 @@ const MergeTTSubjects = ({
   const handleClear = () => {
     setSubjectsToMerge([]);
     setSelectedSubject(null);
-    setMergedDoubles("");
-    setMergedSingles("");
+    setMergedDoubles(0);
+    setMergedSingles(0);
     setMergedAlias("");
     setStreamPairs([]);
     setPairStreams(false);
   };
 
   const calculateTotal = () => {
-    const singles = mergedSingles === "" ? 0 : parseInt(mergedSingles);
-    const doubles = mergedDoubles === "" ? 0 : parseInt(mergedDoubles);
-    return singles + 2 * doubles;
+    return mergedSingles + 2 * mergedDoubles;
   };
 
   const handleAddPair = () => {
     if (selectedStreams.length < 2) return;
-    setStreamPairs([...streamPairs, selectedStreams.map((s) => s.value)]);
+    setStreamPairs([...streamPairs, selectedStreams.map((s) => s)]);
     setSelectedStreams([]);
   };
 
@@ -202,9 +225,7 @@ const MergeTTSubjects = ({
   };
 
   const isMergeDisabled = () => {
-    const singles = mergedSingles === "" ? 0 : parseInt(mergedSingles);
-    const doubles = mergedDoubles === "" ? 0 : parseInt(mergedDoubles);
-    const totalLessons = singles + doubles;
+    const totalLessons = mergedSingles + mergedDoubles;
     return (
       isSubmitting ||
       subjectsToMerge.length < 2 ||
@@ -250,13 +271,7 @@ const MergeTTSubjects = ({
     <ModalForm
       isOpen={modalState}
       onClose={() => {
-        setSubjectsToMerge([]);
-        setSelectedSubject(null);
-        setMergedDoubles("");
-        setMergedSingles("");
-        setMergedAlias("");
-        setStreamPairs([]);
-        setPairStreams(false);
+        handleClear();
         setModalState(false);
       }}
       title={`${editMode ? "Edit" : "Merge"} Subjects - Form ${currentForm}`}
@@ -281,10 +296,7 @@ const MergeTTSubjects = ({
           placeholder="Select Subject"
           className="w-full dark:bg-gray-700 dark:text-white dark:border-gray-600"
           value={selectedSubject}
-          onChange={(selected) => {
-            setSelectedSubject(selected);
-            handleSubjectSelect(selected);
-          }}
+          onChange={handleSubjectSelect}
           isClearable
           isDisabled={editMode}
         />
@@ -320,10 +332,8 @@ const MergeTTSubjects = ({
             </thead>
             <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800">
               {subjectsToMerge.map((subject, index) => {
-                const singles =
-                  subject.singles === "" ? 0 : parseInt(subject.singles);
-                const doubles =
-                  subject.doubles === "" ? 0 : parseInt(subject.doubles);
+                const singles = subject.singles || 0;
+                const doubles = subject.doubles || 0;
                 const total = singles + 2 * doubles;
                 return (
                   <tr key={`${subject.value}-${index}`}>
@@ -341,7 +351,11 @@ const MergeTTSubjects = ({
                         type="number"
                         value={subject.singles}
                         onChange={(e) =>
-                          handleInputChange(index, "singles", e.target.value)
+                          handleInputChange(
+                            index,
+                            "singles",
+                            parseInt(e.target.value) || 0
+                          )
                         }
                         min={0}
                         max={10}
@@ -354,7 +368,11 @@ const MergeTTSubjects = ({
                         type="number"
                         value={subject.doubles}
                         onChange={(e) =>
-                          handleInputChange(index, "doubles", e.target.value)
+                          handleInputChange(
+                            index,
+                            "doubles",
+                            parseInt(e.target.value) || 0
+                          )
                         }
                         min={0}
                         max={10}
@@ -398,7 +416,9 @@ const MergeTTSubjects = ({
                   <ReusableInput
                     type="number"
                     value={mergedSingles}
-                    onChange={(e) => setMergedSingles(e.target.value)}
+                    onChange={(e) =>
+                      setMergedSingles(parseInt(e.target.value) || 0)
+                    }
                     min={0}
                     max={10}
                     className="w-20"
@@ -408,7 +428,9 @@ const MergeTTSubjects = ({
                   <ReusableInput
                     type="number"
                     value={mergedDoubles}
-                    onChange={(e) => setMergedDoubles(e.target.value)}
+                    onChange={(e) =>
+                      setMergedDoubles(parseInt(e.target.value) || 0)
+                    }
                     min={0}
                     max={10}
                     className="w-20"
@@ -470,12 +492,12 @@ const MergeTTSubjects = ({
                         return stream?.label || s;
                       })
                       .join(", ")}
-                    <button
+                    <Button
+                    variant="danger"
                       onClick={() => handleRemovePair(index)}
-                      className="ml-2 text-red-500 hover:text-red-700 text-xs"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </li>
                 ))}
               </ul>

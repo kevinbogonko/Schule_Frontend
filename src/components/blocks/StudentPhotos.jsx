@@ -10,7 +10,7 @@ import { useToast } from "../Toast";
 import { formOptions, yearOptions } from "../../utils/CommonData";
 import RUStudentPhoto from "../snippets/RUStudentPhoto";
 
-const StudentPhotos = () => {
+const StudentPhotos = ({ syst_level }) => {
   const { showToast } = useToast();
   const [studentData, setStudentData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -24,6 +24,9 @@ const StudentPhotos = () => {
     editStudentPhoto: false,
     viewStudentPhoto: false,
   });
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
 
   const columns = [
     { name: "REG NO.", uid: "id", sortable: true },
@@ -58,7 +61,10 @@ const StudentPhotos = () => {
         setShowLoadingOverlay(true);
         try {
           const [studentRes, streamRes] = await Promise.all([
-            api.post("/student/getstudents", { form: selectedForm, year: selectedYear }),
+            api.post("/student/getstudents", {
+              form: selectedForm,
+              year: selectedYear,
+            }),
             api.post("/stream/getstreams", {
               year: selectedYear,
               form: selectedForm,
@@ -159,9 +165,9 @@ const StudentPhotos = () => {
                   placeholder={
                     selectedYear ? "Select Form" : "Please select year first"
                   }
-                  options={formOptions}
+                  options={setFormOptions}
                   value={
-                    formOptions.find(
+                    setFormOptions.find(
                       (option) => option.value === selectedForm
                     ) || undefined
                   }

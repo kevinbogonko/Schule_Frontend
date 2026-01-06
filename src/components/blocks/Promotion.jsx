@@ -18,7 +18,7 @@ import Button from "../ui/raw/Button";
 import api from "../../hooks/api";
 import TableComponent from "../TableComponent";
 
-const Promotion = () => {
+const Promotion = ({ syst_level }) => {
   const { showToast } = useToast();
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
@@ -31,6 +31,7 @@ const Promotion = () => {
   const [examRows, setExamRows] = useState([
     { exam: null, examAlias: "", outOf: "" },
   ]);
+  const [examAliasSingle, setExamAliasSingle] = useState("");
   const [selectedFormula, setSelectedFormula] = useState("");
   const [isAddDisabled, setIsAddDisabled] = useState(true);
   const [studentResults, setStudentResults] = useState(null);
@@ -43,7 +44,12 @@ const Promotion = () => {
   const [selectedGrade, setSelectedGrade] = useState("");
   const [promotedStudents, setPromotedStudents] = useState([]);
 
-  const gradeOptions = [
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  const isCBC = syst_level !== "Secondary (8-4-4)";
+
+  const defaultGradeOptions = [
     { value: "1", label: "E" },
     { value: "2", label: "D-" },
     { value: "3", label: "D" },
@@ -57,6 +63,16 @@ const Promotion = () => {
     { value: "11", label: "A-" },
     { value: "12", label: "A" },
   ];
+
+  // If CBC, override gradeOptions with the required CBC set
+  const gradeOptions = isCBC
+    ? [
+        { value: "1", label: "BE" },
+        { value: "2", label: "AE" },
+        { value: "3", label: "ME" },
+        { value: "4", label: "EE" },
+      ]
+    : defaultGradeOptions;
 
   const studentColumns = [
     { name: "REG NO.", uid: "id", sortable: true },
@@ -97,18 +113,25 @@ const Promotion = () => {
   };
 
   const validateRow = (row) => {
-    const isAliasValid = row.examAlias.trim().length >= 3;
-    const isOutOfValid = /^([1-9][0-9]?|100)$/.test(row.outOf);
-    return row.exam && isAliasValid && isOutOfValid;
+    // Validate outOf (allow empty, will default to 100)
+    const isOutOfValid = /^([1-9][0-9]?|100)$/.test(row.outOf || "100");
+    // For single-exam flow we expect row.examAlias to be present (we populate it on select)
+    const isSingleAliasValid = (row.examAlias || "").trim().length >= 3;
+    const hasExamSelected = Boolean(row.exam);
+    return hasExamSelected && isOutOfValid && isSingleAliasValid;
   };
 
   useEffect(() => {
-    const valid = examRows.every(validateRow);
+    // For multi-exam flow we validate the global examAliasSingle instead of per-row alias
+    const rowsValid = examRows.every(validateRow);
+    const globalAliasValid =
+      examRows.length > 1 ? examAliasSingle.trim().length >= 3 : true;
+    const valid = rowsValid && globalAliasValid;
     setIsAddDisabled(!valid);
     if (examRows.length > 1 && !selectedFormula) {
       setSelectedFormula("average");
     }
-  }, [examRows, selectedFormula]);
+  }, [examRows, selectedFormula, examAliasSingle]);
 
   const addExamRow = () => {
     if (examRows.length < 3) {
@@ -121,12 +144,19 @@ const Promotion = () => {
       const newRows = examRows.slice(0, -1);
       setExamRows(newRows);
       if (newRows.length < 2) setSelectedFormula("");
+      // Clear global alias if now single exam (not strictly necessary)
+      if (newRows.length === 1) {
+        setExamAliasSingle("");
+      }
     }
   };
 
   const handleExamChange = async (index, value) => {
     const newRows = [...examRows];
     newRows[index].exam = value;
+    // Populate the per-row alias from examOptions label when an exam is selected
+    const matched = examOptions.find((opt) => opt.value === value);
+    newRows[index].examAlias = matched?.label || value || "";
     setExamRows(newRows);
     setShowGradesDiv(!!value);
   };
@@ -176,6 +206,7 @@ const Promotion = () => {
       setShowGradesDiv(false);
       setStudentsList([]);
       setPromotedStudents([]);
+      setExamAliasSingle("");
     }
     if (field === "form") {
       setSelectedTerm("");
@@ -188,6 +219,7 @@ const Promotion = () => {
       setShowGradesDiv(false);
       setStudentsList([]);
       setPromotedStudents([]);
+      setExamAliasSingle("");
     }
     if (field === "term") {
       setExamOptions([]);
@@ -196,6 +228,7 @@ const Promotion = () => {
       setStudentResults(null);
       setShowGradesDiv(false);
       setPromotedStudents([]);
+      setExamAliasSingle("");
     }
   };
 
@@ -208,13 +241,28 @@ const Promotion = () => {
         exams: {},
         formula: selectedFormula || "self",
         yearValue: selectedYear,
+        year: selectedYear,
+        term: selectedTerm,
+        examname: "",
       };
 
+      // Set examname: if multiple exams use the single alias input, otherwise use the selected exam value
+      if (examRows.length > 1) {
+        payload.examname = examAliasSingle;
+      } else {
+        payload.examname = examRows[0]?.exam || "";
+      }
+
       examRows.forEach((row, index) => {
+        // alias should be global alias for multi-exam, or per-row alias for single-exam
+        const aliasVal =
+          examRows.length > 1 ? examAliasSingle : row.examAlias || row.exam;
+        const nameKey =
+          examOptions.find((opt) => opt.value === row.exam)?.key || row.exam;
         payload.exams[`exam_${index + 1}`] = {
-          alias: row.examAlias,
-          name: row.exam,
-          outof: row.outOf,
+          alias: aliasVal,
+          name: nameKey,
+          outof: row.outOf || "100",
         };
       });
 
@@ -349,7 +397,7 @@ const Promotion = () => {
         year: selectedYear,
         studentIds: promotedStudents.map((s) => s.id),
       });
-      setPromotedStudents([])
+      setPromotedStudents([]);
       showToast("Grade filtered students promoted successfully!", "success", {
         duration: 3000,
       });
@@ -465,7 +513,7 @@ const Promotion = () => {
                 value={
                   promotionOptions.find(
                     (opt) => opt.value === selectedPromotionOption
-                  ) || ''
+                  ) || ""
                 }
                 onChange={(e) => {
                   const newVal = e.target.value;
@@ -508,10 +556,12 @@ const Promotion = () => {
                   <ReusableSelect
                     id="form"
                     placeholder="Select Form"
-                    options={formOptions}
+                    options={setFormOptions}
                     value={
                       selectedForm
-                        ? formOptions.find((opt) => opt.value === selectedForm)
+                        ? setFormOptions.find(
+                            (opt) => opt.value === selectedForm
+                          )
                         : null
                     }
                     onChange={(e) => {
@@ -578,10 +628,12 @@ const Promotion = () => {
                   <ReusableSelect
                     id="form"
                     placeholder="Select Form"
-                    options={formOptions}
+                    options={setFormOptions}
                     value={
                       selectedForm
-                        ? formOptions.find((opt) => opt.value === selectedForm)
+                        ? setFormOptions.find(
+                            (opt) => opt.value === selectedForm
+                          )
                         : null
                     }
                     onChange={(e) => {
@@ -622,9 +674,8 @@ const Promotion = () => {
               ) : (
                 <div className="flex flex-col pb-1 space-y-2 h-full">
                   <div className="flex flex-row items-center gap-2 font-medium dark:text-gray-300">
-                    <div className="w-2/5">Exam</div>
-                    <div className="w-2/5">Exam Alias</div>
-                    <div className="w-1/5">Out of %</div>
+                    <div className="w-3/5">Exam</div>
+                    <div className="w-2/5">Out of %</div>
                   </div>
 
                   {examRows.map((row, index) => {
@@ -634,7 +685,7 @@ const Promotion = () => {
                         key={index}
                         className="flex flex-row items-center gap-2"
                       >
-                        <div className="w-2/5">
+                        <div className="w-3/5">
                           <Dropdown
                             options={getAvailableOptions(index)}
                             value={row.exam}
@@ -653,24 +704,9 @@ const Promotion = () => {
                         </div>
                         <div className="w-2/5">
                           <ReusableInput
-                            type="text"
-                            placeholder="Exam Alias"
-                            value={row.examAlias}
-                            onChange={(e) =>
-                              handleInputChange(
-                                index,
-                                "examAlias",
-                                e.target.value
-                              )
-                            }
-                            disabled={isDisabled}
-                          />
-                        </div>
-                        <div className="w-1/5">
-                          <ReusableInput
                             type="number"
                             placeholder="Out of %"
-                            value={row.outOf}
+                            value={row.outOf || "100"}
                             onChange={(e) =>
                               handleInputChange(index, "outOf", e.target.value)
                             }
@@ -702,6 +738,20 @@ const Promotion = () => {
                       </Button>
                     )}
                   </div>
+                  {examRows.length > 1 && (
+                    <div className="mt-2 w-full">
+                      <label className="dark:text-gray-300">
+                        Exam Alias (global)
+                      </label>
+                      <ReusableInput
+                        type="text"
+                        placeholder="Enter alias (min 3 chars)"
+                        value={examAliasSingle}
+                        onChange={(e) => setExamAliasSingle(e.target.value)}
+                        className="my-1"
+                      />
+                    </div>
+                  )}
 
                   {showGradesDiv && (
                     <div className="ml-0 mr-0 h-32 overflow-y-auto bg-blue-50 dark:bg-gray-700 mt-2 rounded-md">

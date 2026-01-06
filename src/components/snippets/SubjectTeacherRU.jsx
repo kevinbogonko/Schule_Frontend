@@ -13,6 +13,7 @@ const SubjectTeacherRU = ({
   rowData,
   selectedForm,
   refreshTable,
+  isCBC
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +42,14 @@ const SubjectTeacherRU = ({
         } catch (err) {
           setError("Failed to fetch teacher");
           setShowLoadingOverlay(false);
+          showToast(
+            err.response?.data?.message ||
+              "Failed to fetch teacher. Please try again.",
+            "error",
+            {
+              duration: 3000,
+            }
+          );
         }
         setIsLoading(false);
       }
@@ -56,13 +65,21 @@ const SubjectTeacherRU = ({
         form: selectedForm,
         teacher_id: teacherId,
       });
-      showToast("Subject teacher updated successfully", "success", {
+      showToast(`${isCBC ? "Learning facilitator" : "Subject teacher"} updated successfully`, "success", {
         duration: 3000,
       });
       setModalState((prev) => ({ ...prev, editSubjectTeacher: false }));
       refreshTable(); // refresh data after update
     } catch (err) {
+      console.log(err)
       setError("Update failed. Please try again.");
+      showToast(
+        err.response?.data?.message || "Update failed. Please try again.",
+        "error",
+        {
+          duration: 3000,
+        }
+      );
     }
     setIsSubmitting(false);
   };
@@ -89,7 +106,7 @@ const SubjectTeacherRU = ({
           setTeacherId("");
           setModalState((prev) => ({ ...prev, editSubjectTeacher: false }));
         }}
-        title="Update Subject Teacher"
+        title={isCBC ? "Update Learning Facilitator" : "Update Subject Teacher"}
         icon={FiEdit2}
         initialValues={{ teacher: teacherId }}
         onSubmit={handleSubmit}
@@ -113,13 +130,13 @@ const SubjectTeacherRU = ({
                 htmlFor="teacher"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                Teacher *
+                {isCBC ? "Facilitator" : "Teacher"} *
               </label>
               <ReusableSelect
                 name="teacher"
                 id="teacher"
                 options={teacherOptions}
-                placeholder="Select Teacher"
+                placeholder={`Select ${isCBC ? "facilitator" : "teacher"}`}
                 className="w-full dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 value={teacherId}
                 onChange={(e) => setTeacherId(e.target.value)}

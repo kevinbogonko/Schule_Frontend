@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReusableDiv from "../../ReusableDiv";
 import { FaSpinner, FaSave, FaTrash, FaEdit } from "react-icons/fa";
 import { yearOptions } from "../../../utils/CommonData";
@@ -55,6 +55,14 @@ const TimeTableSubjects = () => {
     form3: null,
     form4: null,
   });
+  const [activeForms, setActiveForms] = useState([]);
+  const [refSubjectConfig, setRefSubjectConfig] = useState([]);
+  const [streamOptions, setStreamOptions] = useState({
+    form1: [],
+    form2: [],
+    form3: [],
+    form4: [],
+  });
 
   const [modalState, setModalState] = useState({
     mergeSubject: false,
@@ -91,6 +99,48 @@ const TimeTableSubjects = () => {
     ],
   });
 
+  useEffect(() => {
+    const fetchActiveForms = async () => {
+      try {
+        const response = [2, 3, 4];
+        setActiveForms(response);
+      } catch (err) {
+        console.error("Failed to fetch active forms", err);
+        setActiveForms([]);
+      }
+    };
+
+    fetchActiveForms();
+  }, []);
+
+  const fetchStreams = async (year, form) => {
+    if (!year) return;
+
+    try {
+      const response = await api.post("/stream/getstreams", { year, form });
+      const formattedStreams = response.data.map((stream) => ({
+        value: stream.id,
+        label: stream.stream_name,
+      }));
+
+      setStreamOptions((prev) => ({
+        ...prev,
+        [`form${form}`]: formattedStreams,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch streams", err);
+      setStreamOptions((prev) => ({
+        ...prev,
+        [`form${form}`]: [
+          { value: 1, label: "WEST" },
+          { value: 2, label: "NORTH" },
+          { value: 3, label: "EAST" },
+          { value: 4, label: "SOUTH" },
+        ],
+      }));
+    }
+  };
+
   const termOptions = [
     { value: 1, label: "Term 1" },
     { value: 2, label: "Term 2" },
@@ -126,39 +176,73 @@ const TimeTableSubjects = () => {
         ? response.data
         : response.data.data || [];
 
-      // Create a map to track merged subjects
+      setRefSubjectConfig(responseData);
+
       const mergedSubjectsMap = new Map();
       const individualSubjects = [];
+      const customSubjectCodes = [];
 
-      // First pass: identify all merged subjects and their components
       responseData.forEach((subject) => {
+        if (subject.isCustom) {
+          customSubjectCodes.push(subject.code);
+        }
+
+        // Handle merged_with when it's a string (comma-separated)
+        const mergedWith =
+          typeof subject.merged_with === "string"
+            ? subject.merged_with.split(",").map((item) => item.trim())
+            : Array.isArray(subject.merged_with)
+            ? subject.merged_with
+            : [];
+
+        // Handle pair when it's a string (comma-separated)
+        const pair =
+          typeof subject.pair === "string"
+            ? subject.pair.split(",").map((item) => item.trim())
+            : Array.isArray(subject.pair)
+            ? subject.pair
+            : [];
+
         if (subject.ismerged) {
-          const mergeKey = subject.merged_with
-            ? [subject.code, ...subject.merged_with.split(",")].sort().join(",")
-            : subject.code.toString();
+          const mergeKey =
+            mergedWith.length > 0
+              ? [subject.code, ...mergedWith].sort().join(",")
+              : subject.code.toString();
 
           if (!mergedSubjectsMap.has(mergeKey)) {
+            // Get the aliases for each subject in the merge group
+            const mergedSubjectAliases = mergedWith.map((code) => {
+              const refSub = responseData.find((sub) => sub.code === code);
+              return refSub ? refSub.alias || refSub.name : code;
+            });
+
+            // console.log(mergedSubjectAliases);
+
             mergedSubjectsMap.set(mergeKey, {
               id: `merged_${mergeKey}`,
               value: `merged_${mergeKey}`,
-              label: subject.merge_alias || `Merged ${mergeKey}`,
-              name: subject.merge_alias || `Merged ${mergeKey}`,
-              init: subject.merge_alias || `M${mergeKey}`,
-              alias: subject.merge_alias || `M${mergeKey}`,
+              label: subject.merge_alias
+                ? `${subject.merge_alias} (${mergedSubjectAliases.join(" + ")})`
+                : mergedSubjectAliases.join(" + "),
+              name: subject.name,
+              init: subject.merge_alias || "",
+              alias: subject.merge_alias || "",
               singles: subject.merge_singles || 0,
               doubles: subject.merge_doubles || 0,
               isCustom: subject.iscustom || false,
               isMerged: true,
-              merged_with: subject.merged_with,
+              merged_with: mergedWith,
               merge_alias: subject.merge_alias,
               merge_singles: subject.merge_singles,
               merge_doubles: subject.merge_doubles,
               mergedSubjects: [],
               utility: subject.utility,
+              submittable: false,
+              isPaired: subject.isPaired || false,
+              pair: pair,
             });
           }
 
-          // Add this subject to the merged group's components
           mergedSubjectsMap.get(mergeKey).mergedSubjects.push({
             id: subject.code || subject.id,
             value: subject.code || subject.id,
@@ -171,9 +255,11 @@ const TimeTableSubjects = () => {
             isCustom: subject.iscustom || false,
             isMerged: false,
             utility: subject.utility,
+            submittable: true,
+            isPaired: subject.isPaired || false,
+            pair: pair,
           });
         } else {
-          // Add to individual subjects if not part of any merged group
           individualSubjects.push({
             id: subject.code || subject.id,
             value: subject.code || subject.id,
@@ -186,11 +272,21 @@ const TimeTableSubjects = () => {
             isCustom: subject.iscustom || false,
             isMerged: false,
             utility: subject.utility,
+            submittable: true,
+            isPaired: subject.isPaired || false,
+            pair: pair,
           });
         }
       });
 
-      // Second pass: combine merged groups and individual subjects
+      setAvailableLessonOptions((prev) => {
+        const updatedOptions = { ...prev };
+        updatedOptions[`form${form}`] = prev[`form${form}`].filter(
+          (lesson) => !customSubjectCodes.includes(lesson.value)
+        );
+        return updatedOptions;
+      });
+
       const formattedData = [
         ...Array.from(mergedSubjectsMap.values()),
         ...individualSubjects,
@@ -203,7 +299,10 @@ const TimeTableSubjects = () => {
       setCurrentPage((prev) => ({ ...prev, [`form${form}`]: 1 }));
     } catch (err) {
       console.error(err);
-      showToast(`Failed to fetch subjects for Form ${form}`, "error");
+      showToast(`Failed to fetch subjects for Form ${form}`, "error", {
+        duration: 3000,
+        position: "top-right",
+      });
       setActiveSubjects((prev) => ({
         ...prev,
         [`form${form}`]: [],
@@ -230,6 +329,8 @@ const TimeTableSubjects = () => {
       ...prev,
       [`form${form}`]: [],
     }));
+
+    fetchStreams(selectedOption, form);
   };
 
   const handleTermChange = (selectedOption, form) => {
@@ -268,7 +369,7 @@ const TimeTableSubjects = () => {
     const doubles = 0;
 
     const newLesson = {
-      id: Date.now(),
+      id: selectedLesson.value,
       value: selectedLesson.value,
       label: selectedLesson.label,
       init: selectedLesson.init,
@@ -277,6 +378,9 @@ const TimeTableSubjects = () => {
       isCustom: true,
       isMerged: false,
       utility: selectedUtility[formKey]?.value || "d",
+      submittable: true,
+      isPaired: false,
+      pair: [],
     };
 
     setActiveSubjects((prev) => {
@@ -317,7 +421,6 @@ const TimeTableSubjects = () => {
       const updatedSubjects = [...prev[formKey]];
 
       if (subjectToRemove.isMerged) {
-        // Handle merged subject deletion - split into individual subjects
         const individualSubjects = (subjectToRemove.mergedSubjects || []).map(
           (sub) => ({
             ...sub,
@@ -329,16 +432,18 @@ const TimeTableSubjects = () => {
             alias: sub.alias,
             singles: sub.singles,
             doubles: sub.doubles,
-            isCustom: true,
+            isCustom: sub.isCustom,
             isMerged: false,
             utility: sub.utility,
-            canBeMerged: true, // Add flag to indicate these can be merged again
+            canBeMerged: true,
+            submittable: true,
+            isPaired: sub.isPaired || false,
+            pair: sub.pair || [],
           })
         );
 
         updatedSubjects.splice(index, 1, ...individualSubjects);
       } else {
-        // Handle regular subject deletion
         updatedSubjects.splice(index, 1);
       }
 
@@ -387,47 +492,65 @@ const TimeTableSubjects = () => {
     try {
       setLoading((prev) => ({ ...prev, [`form${form}`]: true }));
 
-      // Format the subjects data for API
-      const formattedSubjects = activeSubjects[`form${form}`].map((subject) => {
-        if (subject.isMerged) {
-          return {
-            code: subject.id.replace("merged_", ""),
-            name: subject.label,
-            alias: subject.alias,
-            singles: subject.singles,
-            doubles: subject.doubles,
-            iscustom: subject.isCustom,
-            ismerged: true,
-            merged_with: subject.merged_with,
-            merge_alias: subject.merge_alias,
-            merge_singles: subject.merge_singles,
-            merge_doubles: subject.merge_doubles,
-            utility: subject.utility,
-          };
-        } else {
-          return {
-            code: subject.id,
-            name: subject.label,
-            alias: subject.alias,
-            singles: subject.singles,
-            doubles: subject.doubles,
-            iscustom: subject.isCustom,
-            ismerged: false,
-            merged_with: null,
-            merge_alias: null,
-            merge_singles: null,
-            merge_doubles: null,
-            utility: subject.utility,
-          };
-        }
-      });
+      const subjectsToSave = [];
+
+      activeSubjects[`form${form}`]
+        .filter((subject) => subject.submittable !== false)
+        .forEach((subject) => {
+          if (subject.isMerged) {
+            const mergedNameParts = subject.name.match(/\((.*?)\)/);
+            const subjectNames = mergedNameParts
+              ? mergedNameParts[1].split(" + ").map((s) => s.trim())
+              : subject.merged_with.map((code) => {
+                  const refSub = refSubjectConfig.find((s) => s.code === code);
+                  return refSub ? refSub.name : code;
+                });
+
+            subject.merged_with.forEach((code, index) => {
+              const refSub = refSubjectConfig.find((s) => s.code === code);
+              subjectsToSave.push({
+                code: code,
+                name: subjectNames[index] || refSub?.name || code,
+                alias: refSub?.alias || "",
+                singles: subject.merge_singles,
+                doubles: subject.merge_doubles,
+                iscustom: false,
+                ismerged: true,
+                merged_with: subject.merged_with.filter((c) => c !== code),
+                merge_alias: subject.merge_alias,
+                merge_singles: subject.merge_singles,
+                merge_doubles: subject.merge_doubles,
+                utility: subject.utility,
+                ispaired: subject.isPaired || false,
+                pair: subject.pair || [],
+              });
+            });
+          } else {
+            subjectsToSave.push({
+              code: subject.id,
+              name: subject.label,
+              alias: subject.alias || subject.init,
+              singles: subject.singles,
+              doubles: subject.doubles,
+              iscustom: subject.isCustom,
+              ismerged: false,
+              merged_with: null,
+              merge_alias: null,
+              merge_singles: null,
+              merge_doubles: null,
+              utility: subject.utility,
+              ispaired: subject.isPaired || false,
+              pair: subject.pair || [],
+            });
+          }
+        });
 
       const payload = {
         year: selectedYear[`form${form}`],
         form: form,
         term: selectedTerm[`form${form}`],
         utility: selectedUtility[`form${form}`],
-        subjects: formattedSubjects,
+        subjects: subjectsToSave,
       };
 
       await api.post("/timetable/savesubjconfig", payload);
@@ -437,10 +560,16 @@ const TimeTableSubjects = () => {
         [`form${form}`]: new Date().toLocaleString(),
       }));
 
-      showToast(`Form ${form} subjects saved successfully`, "success");
+      showToast(`Form ${form} subjects saved successfully`, "success", {
+        duration: 3000,
+        position: "top-right",
+      });
     } catch (err) {
       console.error(err);
-      showToast("Failed to save subjects", "error");
+      showToast("Failed to save subjects", "error", {
+        duration: 3000,
+        position: "top-right",
+      });
     } finally {
       setLoading((prev) => ({ ...prev, [`form${form}`]: false }));
     }
@@ -487,24 +616,9 @@ const TimeTableSubjects = () => {
   const handleMergeClick = (form, subjectToEdit = null) => {
     const currentSubjects = activeSubjects[`form${form}`] || [];
 
-    let formattedSubjects = currentSubjects
-      .filter((subject) => !subject.isMerged && subject.canBeMerged !== false) // Exclude already merged subjects and those marked as unmergeable
-      .map((subject) => ({
-        id: subject.id || subject.value,
-        value: subject.id || subject.value,
-        label: subject.label || subject.name,
-        name: subject.name || subject.label,
-        init: subject.init,
-        alias: subject.alias,
-        singles: subject.singles || 0,
-        doubles: subject.doubles || 0,
-        isCustom: subject.isCustom || false,
-        isMerged: subject.isMerged || false,
-        utility: subject.utility,
-      }));
+    let formattedSubjects;
 
     if (subjectToEdit) {
-      // If editing a merged subject, pre-populate with its components
       formattedSubjects = (subjectToEdit.mergedSubjects || []).map((sub) => ({
         id: sub.id,
         value: sub.id,
@@ -514,10 +628,32 @@ const TimeTableSubjects = () => {
         alias: sub.alias,
         singles: sub.singles,
         doubles: sub.doubles,
-        isCustom: true,
+        isCustom: sub.isCustom,
         isMerged: false,
         utility: sub.utility,
+        submittable: true,
+        isPaired: sub.isPaired || false,
+        pair: sub.pair || [],
       }));
+    } else {
+      formattedSubjects = currentSubjects
+        .filter((subject) => !subject.isMerged && subject.canBeMerged !== false)
+        .map((subject) => ({
+          id: subject.id || subject.value,
+          value: subject.id || subject.value,
+          label: subject.label || subject.name,
+          name: subject.name || subject.label,
+          init: subject.init,
+          alias: subject.alias,
+          singles: subject.singles || 0,
+          doubles: subject.doubles || 0,
+          isCustom: subject.isCustom || false,
+          isMerged: subject.isMerged || false,
+          utility: subject.utility,
+          submittable: true,
+          isPaired: subject.isPaired || false,
+          pair: subject.pair || [],
+        }));
     }
 
     setPreconfiguredSubjects(formattedSubjects);
@@ -529,7 +665,16 @@ const TimeTableSubjects = () => {
     });
   };
 
+  const handleMergeComplete = (mergedSubjects, form) => {
+    setActiveSubjects((prev) => ({
+      ...prev,
+      [`form${form}`]: mergedSubjects,
+    }));
+  };
+
   const renderFormDiv = (form) => {
+    if (!activeForms.includes(form)) return null;
+
     const formKey = `form${form}`;
     const subjects = getPaginatedSubjects(form);
     const totalPages =
@@ -546,7 +691,7 @@ const TimeTableSubjects = () => {
 
     return (
       <ReusableDiv
-        key={`form-${form}-div`} // Changed key to avoid spread warning
+        key={`form-${form}-div`}
         className="mb-4"
         tag={`Form ${form} Subjects: Configured ${
           activeSubjects[formKey]?.length || 0
@@ -593,7 +738,7 @@ const TimeTableSubjects = () => {
           {hasSubjects && (
             <div className="flex items-center gap-2">
               <Button
-                key={`merge-btn-${form}`} // Added key prop directly
+                key={`merge-btn-${form}`}
                 onClick={() => handleMergeClick(form)}
                 variant="primary"
                 size="sm"
@@ -604,7 +749,7 @@ const TimeTableSubjects = () => {
               </Button>
               {availableLessonOptions[formKey]?.length > 0 && (
                 <Dropdown
-                  key={`add-lesson-${form}`} // Added key prop directly
+                  key={`add-lesson-${form}`}
                   placeholder="Add Lesson"
                   options={availableLessonOptions[formKey]}
                   value={null}
@@ -663,13 +808,9 @@ const TimeTableSubjects = () => {
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                           {subject.label || subject.name}
-                          {subject.isMerged && (
-                            <span className="ml-2 text-xs text-gray-500">
-                              (Merged:{" "}
-                              {subject.mergedSubjects
-                                ?.map((s) => s.label || s.name)
-                                .join(", ")}
-                              )
+                          {subject.isPaired && (
+                            <span className="ml-2 text-xs text-blue-500">
+                              (Paired)
                             </span>
                           )}
                         </td>
@@ -730,7 +871,7 @@ const TimeTableSubjects = () => {
                           {subject.isMerged ? (
                             <>
                               <Button
-                                key={`edit-${subject.id}`} // Added key prop directly
+                                key={`edit-${subject.id}`}
                                 onClick={() => handleMergeClick(form, subject)}
                                 variant="icon"
                                 size="sm"
@@ -740,7 +881,7 @@ const TimeTableSubjects = () => {
                                 <FaEdit />
                               </Button>
                               <Button
-                                key={`delete-${subject.id}`} // Added key prop directly
+                                key={`delete-${subject.id}`}
                                 onClick={() =>
                                   handleRemoveSubject(form, globalIndex)
                                 }
@@ -754,7 +895,7 @@ const TimeTableSubjects = () => {
                             </>
                           ) : subject.isCustom ? (
                             <Button
-                              key={`delete-${subject.id}`} // Added key prop directly
+                              key={`delete-${subject.id}`}
                               onClick={() =>
                                 handleRemoveSubject(form, globalIndex)
                               }
@@ -796,7 +937,7 @@ const TimeTableSubjects = () => {
             {totalPages > 1 && (
               <div className="flex justify-center mt-4 gap-1">
                 <Button
-                  key={`prev-btn-${form}`} // Added key prop directly
+                  key={`prev-btn-${form}`}
                   onClick={() =>
                     setCurrentPage((prev) => ({
                       ...prev,
@@ -813,7 +954,7 @@ const TimeTableSubjects = () => {
                   Page {currentPage[formKey]} of {totalPages}
                 </span>
                 <Button
-                  key={`next-btn-${form}`} // Added key prop directly
+                  key={`next-btn-${form}`}
                   onClick={() =>
                     setCurrentPage((prev) => ({
                       ...prev,
@@ -831,7 +972,7 @@ const TimeTableSubjects = () => {
 
             <div className="flex justify-end mt-4 gap-2">
               <Button
-                key={`clear-btn-${form}`} // Added key prop directly
+                key={`clear-btn-${form}`}
                 onClick={() => handleClearForm(form)}
                 variant="secondary"
                 size="sm"
@@ -839,7 +980,7 @@ const TimeTableSubjects = () => {
                 Clear
               </Button>
               <Button
-                key={`save-btn-${form}`} // Added key prop directly
+                key={`save-btn-${form}`}
                 onClick={() => handleSaveForm(form)}
                 disabled={isSaveDisabled(form) || formLoading}
                 variant="primary"
@@ -875,7 +1016,7 @@ const TimeTableSubjects = () => {
       {[1, 2, 3, 4].map((form) => renderFormDiv(form))}
       {modalState.mergeSubject && (
         <MergeTTSubjects
-          key="merge-subjects-modal" // Added key prop directly
+          key="merge-subjects-modal"
           modalState={modalState.mergeSubject}
           setModalState={(state) =>
             setModalState((prev) => ({
@@ -884,21 +1025,11 @@ const TimeTableSubjects = () => {
             }))
           }
           setActiveSubjects={(subjects) => {
-            if (modalState.currentForm) {
-              setActiveSubjects((prev) => ({
-                ...prev,
-                [`form${modalState.currentForm}`]: subjects,
-              }));
-            }
+            handleMergeComplete(subjects, modalState.currentForm);
           }}
           subjects={preconfiguredSubjects}
           currentForm={modalState.currentForm}
-          streams={[
-            { value: 1, label: "WEST" },
-            { value: 2, label: "NORTH" },
-            { value: 3, label: "EAST" },
-            { value: 4, label: "SOUTH" },
-          ]}
+          streams={streamOptions[`form${modalState.currentForm}`] || []}
           editMode={modalState.editMode}
           subjectToEdit={modalState.subjectToEdit}
         />
