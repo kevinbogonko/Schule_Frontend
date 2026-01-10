@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import ModalForm from "../ui/raw/ModalForm";
+import ModalForm from "../ui/ModalForm";
 import ReusableInput from "../ui/ReusableInput";
-import ReusableTextarea from "../ReusableTextarea";
+import ReusableTextarea from "../ui/ReusableTextarea";
 import { FiEdit2, FiUpload } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
-import { useToast } from "../Toast";
+import { useToast } from "../ui/Toast";
 import ImageUploader from "./ImageUploader";
 import api from "../../hooks/api";
 

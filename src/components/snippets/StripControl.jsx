@@ -1,6 +1,6 @@
 import React from 'react'
-import ReusableDiv from '../ReusableDiv'
-import ReusableSelect from '../ReusableSelect'
+import ReusableDiv from "../ui/ReusableDiv";
+import ReusableSelect from "../ui/ReusableSelect";
 import { FaUsersGear } from 'react-icons/fa6'
 
 const StripControl = () => {

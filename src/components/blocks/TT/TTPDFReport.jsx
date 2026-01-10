@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from "react";
-import ReusableDiv from "../../ReusableDiv";
-import ReusableSelect from "../../ReusableSelect";
+import ReusableDiv from "../../ui/ReusableDiv";
+import ReusableSelect from "../../ui/ReusableSelect";
 import { FaUsersGear, FaSpinner } from "react-icons/fa6";
 import { GrDocumentDownload } from "react-icons/gr";
 import api from "../../../hooks/api";
-import { useToast } from "../../Toast";
+import { useToast } from "../../ui/Toast";
 import {
   formOptions,
   yearOptions,
   termOptions,
 } from "../../../utils/CommonData";
-import Dropdown from "../../Dropdown";
+import Dropdown from "../../ui/Dropdown";
 
 const TTPDFReport = ({ syst_level }) => {
+    let isCBC;
+    syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
   const { showToast } = useToast();
 
   const [timetableData, setTimetableData] = useState({
@@ -24,6 +26,7 @@ const TTPDFReport = ({ syst_level }) => {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedForm, setSelectedForm] = useState(null);
+  const [activeForms, setActiveForms] = useState([]);
   const [streamOptions, setStreamOptions] = useState([]);
   const [selectedStream, setSelectedStream] = useState(null);
   const [entireSchool, setEntireSchool] = useState(false);
@@ -207,7 +210,7 @@ const TTPDFReport = ({ syst_level }) => {
       };
 
       if (entireSchool) {
-        payload.forms = [2, 3, 4];
+        payload.forms = activeForms;
       } else if (entireForm) {
         payload.forms = [selectedForm];
       } else if (selectedStream) {
@@ -244,6 +247,22 @@ const TTPDFReport = ({ syst_level }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchActiveForms = async (setFormOptions) => {
+      try {
+        const response = setFormOptions.map(formOption => {
+          return formOption?.value
+        })
+        setActiveForms(response);
+      } catch (err) {
+        console.error("Failed to fetch active forms", err);
+        setActiveForms([]);
+      }
+    };
+
+    fetchActiveForms(setFormOptions);
+  }, []);
 
   useEffect(() => {
     const fetchTimetableOptions = async () => {
@@ -287,7 +306,7 @@ const TTPDFReport = ({ syst_level }) => {
   return (
     <div className="p-0">
       <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
-        Timetable PDF Report
+        Print Timetable PDF Report
       </h1>
 
       <div className="flex flex-col lg:flex-row gap-4">
@@ -326,7 +345,7 @@ const TTPDFReport = ({ syst_level }) => {
 
             <Dropdown
               label="Form"
-              placeholder="Select Form"
+              placeholder={isCBC ? "Grade" : "Form"}
               options={setFormOptions}
               value={setFormOptions}
               onChange={handleFormChange}
@@ -394,7 +413,7 @@ const TTPDFReport = ({ syst_level }) => {
                   htmlFor="entireForm"
                   className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
                 >
-                  Entire Form
+                  Entire {isCBC ? "Grade" : "Form"}
                 </label>
               </div>
             </div>

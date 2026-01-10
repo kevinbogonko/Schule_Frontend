@@ -1,5 +1,5 @@
 import React from 'react'
-import ModalForm from '../ui/raw/ModalForm'
+import ModalForm from '../ui/ModalForm'
 
 const ConfigureLessons = () => {
   return (

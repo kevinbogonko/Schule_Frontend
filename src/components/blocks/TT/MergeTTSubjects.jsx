@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import ModalForm from "../../ui/raw/ModalForm";
-import Dropdown from "../../Dropdown";
+import ModalForm from "../../ui/ModalForm";
+import Dropdown from "../../ui/Dropdown";
 import ReusableInput from "../../ui/ReusableInput";
-import Button from "../../ui/raw/Button";
+import Button from "../../ui/Button";
 import { FiTrash2 } from "react-icons/fi";
 import { FaCodeMerge } from "react-icons/fa6";
 import { FaSpinner } from "react-icons/fa";
-import Checkbox from "../../Checkbox";
+import Checkbox from "../../ui/Checkbox";
 
 const MergeTTSubjects = ({
   modalState,

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import ReusableDiv from "../../ReusableDiv";
-import TableComponent from "../../TableComponent";
-import ReusableSelect from "../../ReusableSelect";
+import ReusableDiv from "../../ui/ReusableDiv";
+import TableComponent from "../../ui/TableComponent";
+import ReusableSelect from "../../ui/ReusableSelect";
 import { FaUsersGear, FaSpinner } from "react-icons/fa6";
 import { BsPencil, BsTrash } from "react-icons/bs";
 import { FiPlus } from "react-icons/fi";
@@ -10,7 +10,7 @@ import {
   yearOptions,
   termOptions,
 } from "../../../utils/CommonData";
-import { useToast } from "../../Toast";
+import { useToast } from "../../ui/Toast";
 import api from "../../../hooks/api";
 import ExamCRUD from "../../snippets/ExamCRUD";
 

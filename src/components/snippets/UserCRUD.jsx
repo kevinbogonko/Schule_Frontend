@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import ModalForm from "../ui/raw/ModalForm";
+import ModalForm from "../ui/ModalForm";
 import ReusableInput from "../ui/ReusableInput";
 import {
   FiUserPlus,
   FiEdit2,
 } from "react-icons/fi";
-import ReusableSelect from "../ReusableSelect";
+import ReusableSelect from "../ui/ReusableSelect";
 import api from "../../hooks/api";
 import { FaSpinner } from "react-icons/fa";
-import { useToast } from "../Toast";
+import { useToast } from "../ui/Toast";
 
 const UserCRUD = ({ modalState, setModalState, rowData, refreshTable }) => {
   const { showToast } = useToast();

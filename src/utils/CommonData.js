@@ -479,3 +479,9 @@ export const clusterOptions = [
       { value: "cluster2", label: "Cluster 2" },
       { value: "cluster3", label: "Cluster 3" },
     ];
+
+export const timeSlotClusterOptions = [
+    { value: "MR", label: "Morning Remedial (MR)" },
+    { value: "D", label: "Standard Day (D)" },
+    { value: "ER", label: "Evening Remedial (ER)" },
+  ];

@@ -1,10 +1,10 @@
 import React from "react";
 import "./App.css";
-import { ToastProvider } from "./components/Toast";
-import Dashboard from "./components/blocks/Dashboard";
-import Login from "./components/blocks/Login";
-import ForgotPasswordOTP from "./components/blocks/ForgotPasswordOTP";
-import VerifyResetOTP from "./components/blocks/VerifyResetOTP";
+import { ToastProvider } from "./components/ui/Toast";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/LoginPage";
+import ForgotPasswordOTP from "./components/blocks/Auth/ForgotPasswordOTP";
+import VerifyResetOTP from "./components/blocks/Auth/VerifyResetOTP";
 import {
   BrowserRouter as Router,
   Routes,
@@ -12,9 +12,9 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/context/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
-import LoadingSpinner from "./components/blocks/LoadingSpinner";
-import GenerateTT from "./components/blocks/GenerateTT"
+import ProtectedRoute from "./components/protectedRoute/ProtectedRoute";
+import LoadingSpinner from "./components/ui/LoadingSpinner";
+import GenerateTT from "./components/blocks/TT/GenerateTT"
 import TimeTableSubjects from "./components/blocks/TT/TimeTableSubjects";
 import DayClusters from "./components/blocks/TT/DayClusters";
 import TimeSlots from "./components/blocks/TT/TimeSlots";

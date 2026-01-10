@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import ModalForm from "../ui/raw/ModalForm";
+import ModalForm from "../ui/ModalForm";
 import ReusableInput from "../ui/ReusableInput";
 import { FiUserPlus, FiEye, FiEdit2, FiTrash2 } from "react-icons/fi";
-import ReusableSelect from "../ReusableSelect";
-import ReusableTextarea from "../ReusableTextarea";
+import ReusableSelect from "../ui/ReusableSelect";
+import ReusableTextarea from "../ui/ReusableTextarea";
 import api from "../../hooks/api";
 import { FaSpinner } from "react-icons/fa";
-import { useToast } from "../Toast";
-import Button from "../ui/raw/Button";
+import { useToast } from "../ui/Toast";
+import Button from "../ui/Button";
 import { sexOptions, yearOptions } from "../../utils/CommonData";
 
 const AddStudent = ({

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
-import ReusableDiv from "../../ReusableDiv";
-import TableComponent from "../../TableComponent";
-import ReusableSelect from "../../ReusableSelect";
+import ReusableDiv from "../../ui/ReusableDiv";
+import TableComponent from "../../ui/TableComponent";
+import ReusableSelect from "../../ui/ReusableSelect";
 import { FaSpinner } from "react-icons/fa6";
 import { FiPlus } from "react-icons/fi";
 import { BsPencil, BsTrash } from "react-icons/bs";
 import { yearOptions, termOptions } from "../../../utils/CommonData";
-import { useToast } from "../../Toast";
+import { useToast } from "../../ui/Toast";
 import api from "../../../hooks/api";
-import Button from "../../ui/raw/Button";
+import Button from "../../ui/Button";
 import CRUDDayClusters from "./CRUDDayClusters";
-import Alert from "../../Alert";
+import Alert from "../../ui/Alert";
 
 const DayClusters = () => {
   const { showToast } = useToast();

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import api from "../../hooks/api";
-import { useToast } from "../Toast";
+import { useToast } from "../ui/Toast";
 
 const ImageUploader = ({
   folder = "misc",

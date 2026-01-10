@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { useToast } from '../Toast'
-import ModalForm from '../ui/raw/ModalForm'
+import { useToast } from "../ui/Toast";
+import ModalForm from '../ui/ModalForm'
 import ReusableInput from '../ui/ReusableInput'
 import { FiUserPlus } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';

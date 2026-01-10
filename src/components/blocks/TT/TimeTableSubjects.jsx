@@ -1,68 +1,75 @@
 import React, { useState, useEffect } from "react";
-import ReusableDiv from "../../ReusableDiv";
+import ReusableDiv from "../../ui/ReusableDiv";
 import { FaSpinner, FaSave, FaTrash, FaEdit } from "react-icons/fa";
-import { yearOptions } from "../../../utils/CommonData";
-import { useToast } from "../../Toast";
+import { yearOptions, formOptions } from "../../../utils/CommonData";
+import { useToast } from "../../ui/Toast";
 import api from "../../../hooks/api";
 import { FaCodeMerge } from "react-icons/fa6";
 import { GrDocumentConfig } from "react-icons/gr";
-import Button from "../../ui/raw/Button";
-import Dropdown from "../../Dropdown";
+import Button from "../../ui/Button";
+import Dropdown from "../../ui/Dropdown";
 import ReusableInput from "../../ui/ReusableInput";
 import MergeTTSubjects from "./MergeTTSubjects";
 
-const TimeTableSubjects = () => {
+const TimeTableSubjects = ({ syst_level }) => {
   const { showToast } = useToast();
-  const [loading, setLoading] = useState({
-    form1: false,
-    form2: false,
-    form3: false,
-    form4: false,
-  });
-  const [selectedYear, setSelectedYear] = useState({
-    form1: null,
-    form2: null,
-    form3: null,
-    form4: null,
-  });
-  const [selectedTerm, setSelectedTerm] = useState({
-    form1: null,
-    form2: null,
-    form3: null,
-    form4: null,
-  });
-  const [selectedUtility, setSelectedUtility] = useState({
-    form1: null,
-    form2: null,
-    form3: null,
-    form4: null,
-  });
-  const [activeSubjects, setActiveSubjects] = useState({
-    form1: [],
-    form2: [],
-    form3: [],
-    form4: [],
-  });
-  const [currentPage, setCurrentPage] = useState({
-    form1: 1,
-    form2: 1,
-    form3: 1,
-    form4: 1,
-  });
-  const [lastSaved, setLastSaved] = useState({
-    form1: null,
-    form2: null,
-    form3: null,
-    form4: null,
-  });
+  let isCBC;
+  syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
+
+  const initialState = (setFormOptions) => {
+
+    const stateStacks = {
+      loadingStack: {},
+      yearStack: {},
+      termStack: {},
+      utilityStack: {},
+      activeSubjectStack: {},
+      currentPageStack: {},
+      lastSavedStack: {},
+      streamStack: {},
+      availableLessonStack: {},
+    };
+
+    setFormOptions.forEach(formOption => {
+      const formKey = `form${formOption.value}`
+      stateStacks.loadingStack[formKey] = false;
+      stateStacks.yearStack[formKey] = null;
+      stateStacks.termStack[formKey] = null;
+      stateStacks.utilityStack[formKey] = null;
+      stateStacks.activeSubjectStack[formKey] = [];
+      stateStacks.currentPageStack[formKey] = 1;
+      stateStacks.lastSavedStack[formKey] = null;
+      stateStacks.streamStack[formKey] = [];
+      stateStacks.availableLessonStack[formKey] = [
+        { value: 700, label: "LIFE SKILLS", init: "LSK" },
+        { value: 800, label: "LIBRARY", init: "LIB" },
+        { value: 900, label: "PASTORAL PI", init: "PPI" },
+        { value: 600, label: "PHYSICAL ED.", init: "P.E" },
+      ];
+    })
+
+    return stateStacks
+
+  }
+
+  const setFormOptions = formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  const appInitState = initialState(setFormOptions)
+
+  const [loading, setLoading] = useState(appInitState.loadingStack);
+  const [selectedYear, setSelectedYear] = useState(appInitState.yearStack);
+  const [selectedTerm, setSelectedTerm] = useState(appInitState.termStack);
+  const [selectedUtility, setSelectedUtility] = useState(
+    appInitState.utilityStack
+  );
+  const [activeSubjects, setActiveSubjects] = useState(
+    appInitState.activeSubjectStack
+  );
+  const [currentPage, setCurrentPage] = useState(appInitState.currentPageStack);
+  const [lastSaved, setLastSaved] = useState(appInitState.lastSavedStack);
   const [activeForms, setActiveForms] = useState([]);
   const [refSubjectConfig, setRefSubjectConfig] = useState([]);
-  const [streamOptions, setStreamOptions] = useState({
-    form1: [],
-    form2: [],
-    form3: [],
-    form4: [],
-  });
+  const [streamOptions, setStreamOptions] = useState(appInitState.streamStack);
 
   const [modalState, setModalState] = useState({
     mergeSubject: false,
@@ -72,37 +79,16 @@ const TimeTableSubjects = () => {
   });
 
   const [preconfiguredSubjects, setPreconfiguredSubjects] = useState([]);
-  const [availableLessonOptions, setAvailableLessonOptions] = useState({
-    form1: [
-      { value: 700, label: "LIFE SKILLS", init: "LSK" },
-      { value: 800, label: "LIBRARY", init: "LIB" },
-      { value: 900, label: "PASTORAL PI", init: "PPI" },
-      { value: 600, label: "PHYSICAL ED.", init: "P.E" },
-    ],
-    form2: [
-      { value: 700, label: "LIFE SKILLS", init: "LSK" },
-      { value: 800, label: "LIBRARY", init: "LIB" },
-      { value: 900, label: "PASTORAL PI", init: "PPI" },
-      { value: 600, label: "PHYSICAL ED.", init: "P.E" },
-    ],
-    form3: [
-      { value: 700, label: "LIFE SKILLS", init: "LSK" },
-      { value: 800, label: "LIBRARY", init: "LIB" },
-      { value: 900, label: "PASTORAL PI", init: "PPI" },
-      { value: 600, label: "PHYSICAL ED.", init: "P.E" },
-    ],
-    form4: [
-      { value: 700, label: "LIFE SKILLS", init: "LSK" },
-      { value: 800, label: "LIBRARY", init: "LIB" },
-      { value: 900, label: "PASTORAL PI", init: "PPI" },
-      { value: 600, label: "PHYSICAL ED.", init: "P.E" },
-    ],
-  });
+  const [availableLessonOptions, setAvailableLessonOptions] = useState(
+    appInitState.availableLessonStack
+  );
 
   useEffect(() => {
-    const fetchActiveForms = async () => {
+    const fetchActiveForms = async (setFormOptions) => {
       try {
-        const response = [2, 3, 4];
+        const response = setFormOptions.map(formOption => {
+          return formOption?.value
+        })
         setActiveForms(response);
       } catch (err) {
         console.error("Failed to fetch active forms", err);
@@ -110,7 +96,7 @@ const TimeTableSubjects = () => {
       }
     };
 
-    fetchActiveForms();
+    fetchActiveForms(setFormOptions);
   }, []);
 
   const fetchStreams = async (year, form) => {
@@ -164,7 +150,6 @@ const TimeTableSubjects = () => {
 
     try {
       setLoading((prev) => ({ ...prev, [`form${form}`]: true }));
-
       const response = await api.post("/timetable/getsubjconfig", {
         year: year,
         form: form,
@@ -693,9 +678,9 @@ const TimeTableSubjects = () => {
       <ReusableDiv
         key={`form-${form}-div`}
         className="mb-4"
-        tag={`Form ${form} Subjects: Configured ${
-          activeSubjects[formKey]?.length || 0
-        } ${lastSavedTime}`}
+        tag={`${isCBC ? "Grade" : "Form"} ${form} ${
+          isCBC ? "Learning activities" : "Subjects"
+        }: Configured ${activeSubjects[formKey]?.length || 0} ${lastSavedTime}`}
         icon={GrDocumentConfig}
         collapsible={true}
         defaultCollapsed={true}
@@ -999,8 +984,12 @@ const TimeTableSubjects = () => {
         ) : (
           <div className="text-center py-4 text-gray-500 text-sm">
             {currentYear && currentTerm && currentUtility
-              ? "No subjects found"
-              : "Please select year, term and utility to load subjects"}
+              ? `No ${
+                  isCBC ? "learning activities" : "subjects"
+                } found`
+              : `Please select year, term and utility to load ${
+                  isCBC ? "learning activities" : "subjects"
+                }`}
           </div>
         )}
       </ReusableDiv>
@@ -1010,10 +999,10 @@ const TimeTableSubjects = () => {
   return (
     <div className="p-4">
       <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-6">
-        Timetable Subjects Configuration
+        Timetable {isCBC ? "Learning activities" : "Subjects"} Configuration
       </h1>
 
-      {[1, 2, 3, 4].map((form) => renderFormDiv(form))}
+      {activeForms.map((form) => renderFormDiv(form))}
       {modalState.mergeSubject && (
         <MergeTTSubjects
           key="merge-subjects-modal"

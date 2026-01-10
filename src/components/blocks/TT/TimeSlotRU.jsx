@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { FaSpinner, FaPlus, FaMinus } from "react-icons/fa";
 import { FiEdit2, FiEye } from "react-icons/fi";
-import ModalForm from "../../ui/raw/ModalForm";
-import ReusableSelect from "../../ReusableSelect";
-import ReusableDiv from "../../ReusableDiv";
-import TimeInput from "../../TimeInput";
-import Checkbox from "../../Checkbox";
-import Button from "../../ui/raw/Button";
+import ModalForm from "../../ui/ModalForm";
+import ReusableSelect from "../../ui/ReusableSelect";
+import ReusableDiv from "../../ui/ReusableDiv";
+import TimeInput from "../../ui/TimeInput";
+import Checkbox from "../../ui/Checkbox";
+import Button from "../../ui/Button";
 import ReusableInput from "../../ui/ReusableInput";
 import { MdDone } from "react-icons/md";
-import TableComponent from "../../TableComponent";
-import Alert from "../../Alert";
+import TableComponent from "../../ui/TableComponent";
+import Alert from "../../ui/Alert";
 import api from "../../../hooks/api";
-import { useToast } from "../../Toast";
+import { useToast } from "../../ui/Toast";
 
 const TimeSlotRU = ({
   modalState,

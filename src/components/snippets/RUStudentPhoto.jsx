@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import ModalForm from "../ui/raw/ModalForm";
+import ModalForm from "../ui/ModalForm";
 import { FiEdit2 } from "react-icons/fi";
-import { useToast } from "../Toast";
+import { useToast } from "../ui/Toast";
 import ImageUploader from "./ImageUploader";
 import { FaSpinner } from "react-icons/fa";
 import api from "../../hooks/api";

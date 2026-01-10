@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api, { attachAccessTokenSetter } from "../../hooks/apiRefreshToken";
-import LoadingSpinner from "../blocks/LoadingSpinner";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const AuthContext = createContext();
 

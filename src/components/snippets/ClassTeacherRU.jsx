@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import ModalForm from '../ui/raw/ModalForm';
-import ReusableSelect from '../ReusableSelect';
+import ModalForm from '../ui/ModalForm';
+import ReusableSelect from "../ui/ReusableSelect";
 import { FiEdit2 } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
-import { useToast } from '../Toast';
+import { useToast } from "../ui/Toast";
 import api from '../../hooks/api';
 
 const ClassTeacherRU = ({ modalState, setModalState, teacherOptions, rowData, selectedForm, refreshTable }) => {
