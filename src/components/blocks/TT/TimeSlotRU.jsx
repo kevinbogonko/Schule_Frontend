@@ -23,14 +23,15 @@ const TimeSlotRU = ({
   selectedYear,
   selectedTerm,
   selectedUtility,
+  isCBC
 }) => {
     const { showToast } = useToast();
   const [timeSlots, setTimeSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [startTime, setStartTime] = useState("08:00");
-  const [endTime, setEndTime] = useState("16:00");
-  const [duration, setDuration] = useState(40);
+  const [startTime, setStartTime] = useState(`${isCBC ? "08:20" : "08:00"}`);
+  const [endTime, setEndTime] = useState(`${isCBC ? "15:10" : "16:00"}`);
+  const [duration, setDuration] = useState(`${isCBC ? 35 : 40}`);
   const [includeBreaks, setIncludeBreaks] = useState(false);
   const [breaks, setBreaks] = useState([]);
   const [scheduleData, setScheduleData] = useState([]);
@@ -148,9 +149,9 @@ const TimeSlotRU = ({
       setScheduleData([]);
       setBreaks([]);
       setIncludeBreaks(false);
-      setStartTime("08:00");
-      setEndTime("16:00");
-      setDuration(40);
+      setStartTime(`${isCBC ? "08:20" : "08:00"}`);
+      setEndTime(`${isCBC ? "15:10" : "16:00"}`);
+      setDuration(`${isCBC ? 35 : 40}`);
     }
   }, [
     modalState.editTimeSlot,
@@ -421,7 +422,7 @@ const TimeSlotRU = ({
                               }}
                               min={1}
                               max={60}
-                              placeholder="e.g. 40"
+                              placeholder={`${isCBC ? "e.g 35" : "e.g 40"}`}
                               className="w-20 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                             />
                           </div>
@@ -488,7 +489,7 @@ const TimeSlotRU = ({
                                     }
                                     className="w-full dark:bg-gray-600 dark:border-gray-500 dark:text-white"
                                     min={5}
-                                    max={60}
+                                    max={120}
                                   />
                                 </div>
                                 <div className="space-y-1">

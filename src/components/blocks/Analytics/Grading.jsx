@@ -84,7 +84,7 @@ const Grading = ({ syst_level }) => {
       const response = await api.post("grading/gradingscale", {
         form: selectedForm,
         subject: row,
-        exam_id: selectedExamKey,
+        exam_id: selectedExam,
       });
       setSubjectScale(response.data);
       setModalState((prev) => ({ ...prev, viewGradeMark: true }));
@@ -111,7 +111,6 @@ const Grading = ({ syst_level }) => {
           form: selectedForm,
           exam: selectedExam,
         });
-        // console.log(response.data);
         setGradingScales(response.data);
       } catch (error) {
         // console.error("Error fetching grading scales:", error);
@@ -145,7 +144,7 @@ const Grading = ({ syst_level }) => {
           });
           setExamOptions(
             response.data.map((exam) => ({
-              value: exam.exam_name,
+              value: exam.id,
               label: exam.exam_name,
               key: exam.id,
             }))
@@ -328,7 +327,7 @@ const Grading = ({ syst_level }) => {
           refreshTable={fetchGradingScales}
           loading={updateLoading}
           selectedForm={selectedForm}
-          selectedExamKey={selectedExamKey}
+          selectedExamKey={selectedExam}
           selectedSubject={selectedRowId}
           initialData={subjectScale}
           isCBC={syst_level !== "Secondary (8-4-4)" ? true : false}

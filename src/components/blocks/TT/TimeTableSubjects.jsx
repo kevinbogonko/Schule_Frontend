@@ -157,6 +157,8 @@ const TimeTableSubjects = ({ syst_level }) => {
         utility: utility,
       });
 
+      // console.log(response.data)
+
       const responseData = Array.isArray(response.data)
         ? response.data
         : response.data.data || [];
@@ -545,7 +547,7 @@ const TimeTableSubjects = ({ syst_level }) => {
         [`form${form}`]: new Date().toLocaleString(),
       }));
 
-      showToast(`Form ${form} subjects saved successfully`, "success", {
+      showToast(`Grade ${form} subjects saved successfully`, "success", {
         duration: 3000,
         position: "top-right",
       });

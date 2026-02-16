@@ -35,15 +35,10 @@ export const eventTypeOptions = {
     ],
   };
 
-// export const formOptions=[
-//     { value: '1', label: 'Form 1' },
-//     { value: '2', label: 'Form 2' },
-//     { value: '3', label: 'Form 3' },
-//     { value: '4', label: 'Form 4' },
-// ]
 
 export const formOptions = [
   {
+    value: 2,
     label: "Pre-Primary (CBC)",
     options: [
       { value: 0, label: "PP1", system: "CBC" },
@@ -51,17 +46,25 @@ export const formOptions = [
     ],
   },
   {
-    label: "Primary (CBC)",
+    value: 3,
+    label: "Lower Primary (CBC)",
     options: [
       { value: 1, label: "Grade 1", system: "CBC" },
       { value: 2, label: "Grade 2", system: "CBC" },
       { value: 3, label: "Grade 3", system: "CBC" },
+    ],
+  },
+  {
+    value: 4,
+    label: "Upper Primary (CBC)",
+    options: [
       { value: 4, label: "Grade 4", system: "CBC" },
       { value: 5, label: "Grade 5", system: "CBC" },
       { value: 6, label: "Grade 6", system: "CBC" },
     ],
   },
   {
+    value: 5,
     label: "Junior Secondary (CBC)",
     options: [
       { value: 7, label: "Grade 7", system: "CBC" },
@@ -70,6 +73,7 @@ export const formOptions = [
     ],
   },
   {
+    value: 6,
     label: "Senior Secondary (CBC)",
     options: [
       { value: 10, label: "Grade 10", system: "CBC" },
@@ -78,10 +82,11 @@ export const formOptions = [
     ],
   },
   {
+    value: 1,
     label: "Secondary (8-4-4)",
     options: [
-      { value: 19, label: "Form 1", system: "8-4-4" },
-      { value: 20, label: "Form 2", system: "8-4-4" },
+      // { value: 19, label: "Form 1", system: "8-4-4" },
+      // { value: 20, label: "Form 2", system: "8-4-4" },
       { value: 21, label: "Form 3", system: "8-4-4" },
       { value: 22, label: "Form 4", system: "8-4-4" },
     ],
@@ -184,28 +189,52 @@ export const getColumns = (syst_level) => {
 
   const non844CBCColumns = [
     {
-      name: "BE",
-      uid: "BE",
+      name: "BE2",
+      uid: "BE2",
       sortable: true,
-      render: (item) => `${item.BE.min}-${item.BE.max}`,
+      render: (item) => `${item.BE2.min}-${item.BE2.max}`,
     },
     {
-      name: "AE",
-      uid: "AE",
+      name: "BE1",
+      uid: "BE1",
       sortable: true,
-      render: (item) => `${item.AE.min}-${item.AE.max}`,
+      render: (item) => `${item.BE1.min}-${item.BE1.max}`,
     },
     {
-      name: "ME",
-      uid: "ME",
+      name: "AE2",
+      uid: "AE2",
       sortable: true,
-      render: (item) => `${item.ME.min}-${item.ME.max}`,
+      render: (item) => `${item.AE2.min}-${item.AE2.max}`,
     },
     {
-      name: "EE",
-      uid: "EE",
+      name: "AE1",
+      uid: "AE1",
       sortable: true,
-      render: (item) => `${item.EE.min}-${item.EE.max}`,
+      render: (item) => `${item.AE1.min}-${item.AE1.max}`,
+    },
+    {
+      name: "ME2",
+      uid: "ME2",
+      sortable: true,
+      render: (item) => `${item.ME2.min}-${item.ME2.max}`,
+    },
+    {
+      name: "ME1",
+      uid: "ME1",
+      sortable: true,
+      render: (item) => `${item.ME1.min}-${item.ME1.max}`,
+    },
+    {
+      name: "EE2",
+      uid: "EE2",
+      sortable: true,
+      render: (item) => `${item.EE2.min}-${item.EE2.max}`,
+    },
+    {
+      name: "EE1",
+      uid: "EE1",
+      sortable: true,
+      render: (item) => `${item.EE1.min}-${item.EE1.max}`,
     },
   ];
 
@@ -484,4 +513,35 @@ export const timeSlotClusterOptions = [
     { value: "MR", label: "Morning Remedial (MR)" },
     { value: "D", label: "Standard Day (D)" },
     { value: "ER", label: "Evening Remedial (ER)" },
+  ];
+
+// Subscription period options
+export const periodOptions = [
+      { value: "1", label: "1 month" },
+      { value: "3", label: "3 months" },
+      { value: "6", label: "6 months" },
+      { value: "12", label: "1 year" },
+      { value: "24", label: "2 years" },
+      { value: "36", label: "3 years" },
+      { value: "48", label: "4 years" },
+      { value: "60", label: "5 years" },
+    ];
+
+  // Module options
+export const moduleOptions = [
+    { value: "analytics", label: "Analytics" },
+    { value: "timetabling", label: "Timetabling" },
+    { value: "finance", label: "Finance" },
+    { value: "ai", label: "AI" },
+  ];
+
+  // Category options
+export const categoryOptions = [
+    { value: "comprehensive", label: "Comprehensive" },
+    { value: "secondary", label: "Senior" },
+  ];
+
+export const statusOptions = [
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
   ];

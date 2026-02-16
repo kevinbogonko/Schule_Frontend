@@ -21,7 +21,7 @@ const GradingRU = ({
 
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    e_1: isCBC ? initialData?.BE?.max || "" : initialData?.E?.max || "",
+    e_1: isCBC ? initialData?.BE2?.max || "" : initialData?.E?.max || "",
   });
 
   // Update form data when initialData changes
@@ -29,7 +29,7 @@ const GradingRU = ({
     if (initialData?.E?.max) {
       setFormData((prev) => ({
         ...prev,
-        e_1: isCBC ? initialData.BE.max : initialData.E.max,
+        e_1: isCBC ? initialData.BE2.max : initialData.E.max,
       }));
     }
   }, [initialData]);
@@ -61,6 +61,7 @@ const GradingRU = ({
         subject_id: selectedSubject,
       };
 
+
       const response = await api.put("grading/updategrading", payload);
       if (response.status === 200 || response.status === 201) {
         showToast("Grading scale updated successfully", "success", {
@@ -71,7 +72,6 @@ const GradingRU = ({
         refreshTable();
       }
     } catch (err) {
-        console.log(err)
       showToast(
         err.response?.data?.message || "Failed to update grading scale",
         "error",
@@ -106,7 +106,7 @@ const GradingRU = ({
             htmlFor="e_1"
             className="block text-sm font-medium text-gray-700"
           >
-            {isCBC ? "BE performance level" : "E Grade"} Max range Value
+            {isCBC ? "BE2 performance level" : "E Grade"} Max range Value
             (00-99) *
           </label>
           <ReusableInput

@@ -18,7 +18,7 @@ import ReusableInput from "../../ui/ReusableInput";
 import Button from "../../ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
 
-const AddMarkTeacher = ({staffId}) => {
+const AddMarkTeacher = ({ staffId, syst_level }) => {
   const { showToast } = useToast();
   const [studentData, setStudentData] = useState([]);
   const [optimisticData, setOptimisticData] = useState(null);
@@ -48,6 +48,12 @@ const AddMarkTeacher = ({staffId}) => {
     "A-": { min: 75, max: 79 },
     A: { min: 80, max: 100 },
   });
+
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
+
+  let isCBC;
+  syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
 
   // Dynamic paper config state
   const [papers, setPapers] = useState(2);
@@ -344,7 +350,7 @@ const AddMarkTeacher = ({staffId}) => {
     if (!selectedSubject || !selectedExam) {
       showToast("Please select subject and exam first", "error", {
         duration: 3000,
-        position : 'top-right'
+        position: "top-right",
       });
       return;
     }
@@ -367,7 +373,7 @@ const AddMarkTeacher = ({staffId}) => {
       await api.put("exam/updatepapersetup", formData);
       showToast("Paper setup updated successfully", "success", {
         duration: 3000,
-        position : 'top-right'
+        position: "top-right",
       });
 
       // Show loading state before refresh
@@ -379,7 +385,7 @@ const AddMarkTeacher = ({staffId}) => {
       showToast(
         error.response?.data?.message || "Failed to update paper setup",
         "error",
-        { duration: 3000, position : 'top-right' }
+        { duration: 3000, position: "top-right" }
       );
     } finally {
       setIsUpdatingPaperSetup(false);
@@ -498,7 +504,10 @@ const AddMarkTeacher = ({staffId}) => {
       };
 
       await api.put("/exam/updatemarks", payload);
-      showToast("Marks saved successfully", "success", { duration: 3000, position : 'top-right' });
+      showToast("Marks saved successfully", "success", {
+        duration: 3000,
+        position: "top-right",
+      });
 
       // Smooth refresh with slight delay
       setIsRefreshing(true);
@@ -508,7 +517,10 @@ const AddMarkTeacher = ({staffId}) => {
     } catch (error) {
       // Revert optimistic update on error
       setOptimisticData(null);
-      showToast("Failed to save marks", "error", { duration: 3000, position : 'top-right' });
+      showToast("Failed to save marks", "error", {
+        duration: 3000,
+        position: "top-right",
+      });
     }
   };
 
@@ -577,9 +589,9 @@ const AddMarkTeacher = ({staffId}) => {
                 <ReusableSelect
                   id="form"
                   placeholder="Select Form"
-                  options={formOptions}
+                  options={setFormOptions}
                   value={
-                    formOptions.find((opt) => opt.value === selectedForm) ||
+                    setFormOptions.find((opt) => opt.value === selectedForm) ||
                     undefined
                   }
                   onChange={(e) => {

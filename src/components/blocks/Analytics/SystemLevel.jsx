@@ -14,9 +14,10 @@ const SystemLevel = () => {
   const levelOptions = [
     { label: "Secondary (8-4-4)", value: 1 },
     { label: "Pre-Primary (CBC)", value: 2 },
-    { label: "Primary (CBC)", value: 3 },
-    { label: "Junior Secondary (CBC)", value: 4 },
-    { label: "Senior Secondary (CBC)", value: 5 },
+    { label: "Lower Primary (CBC)", value: 3 },
+    { label: "Upper Primary (CBC)", value: 4 },
+    { label: "Junior Secondary (CBC)", value: 5 },
+    { label: "Senior Secondary (CBC)", value: 6 },
   ];
 
   // 2. Selected radio value (1–5)

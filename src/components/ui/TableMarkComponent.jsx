@@ -46,10 +46,14 @@ const TableMarkComponent = ({
     if (["B-", "C+", "C"].includes(grade)) return "#8BC34A";
     if (["C-", "D+", "D"].includes(grade)) return "#F59E0B";
     if (["D-", "E"].includes(grade)) return "#EF4444";
-    if (["EE"].includes(grade)) return "#059669";
-    if (["ME"].includes(grade)) return "#8BC34A";
-    if (["AE"].includes(grade)) return "#F59E0B";
-    if (["BE"].includes(grade)) return "#EF4444";
+    if (["EE2"].includes(grade)) return "#059669";
+    if (["EE1"].includes(grade)) return "#059669";
+    if (["ME2"].includes(grade)) return "#8BC34A";
+    if (["ME1"].includes(grade)) return "#8BC34A";
+    if (["AE2"].includes(grade)) return "#F59E0B";
+    if (["AE1"].includes(grade)) return "#F59E0B";
+    if (["BE2"].includes(grade)) return "#EF4444";
+    if (["BE1"].includes(grade)) return "#EF4444";
     return "#9CA3AF";
   };
 

@@ -15,7 +15,10 @@ import { BsPencil, BsEye } from "react-icons/bs";
 import { FiPlus } from "react-icons/fi";
 import TimeSlotRU from "./TimeSlotRU";
 
-const TimeSlots = () => {
+const TimeSlots = (syst_level) => {
+  let isCBC;
+  syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
+
   const { showToast } = useToast();
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedTerm, setSelectedTerm] = useState("");
@@ -181,6 +184,9 @@ const TimeSlots = () => {
 
   return (
     <div>
+      <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
+        Timeslots
+      </h1>
       {showLoadingOverlay && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-700 p-4 md:p-6 rounded-lg shadow-lg text-center max-w-xs md:max-w-sm">
@@ -191,7 +197,6 @@ const TimeSlots = () => {
           </div>
         </div>
       )}
-
       <div className="flex my-2 gap-4">
         <div className="w-full lg:w-1/4">
           <ReusableDiv className="ml-0 mr-0 mb-2 ring-1 h-fit dark:bg-gray-800">
@@ -294,7 +299,6 @@ const TimeSlots = () => {
           />
         </div>
       </div>
-
       <TimeSlotRU
         modalState={modalState}
         setModalState={setModalState}
@@ -304,6 +308,7 @@ const TimeSlots = () => {
         selectedYear={selectedYear}
         selectedTerm={selectedTerm}
         selectedUtility={selectedUtility}
+        isCBC
       />
     </div>
   );

@@ -170,6 +170,9 @@ const DayClusters = () => {
 
   return (
     <div className="p-0">
+      <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-6">
+        Day Clusters
+      </h1>
       <Alert
         message={
           "Note: MR = Morning Remedial, D = Standard Day Schedule, ER = Evening Remedial"
@@ -253,7 +256,8 @@ const DayClusters = () => {
                       label: "Edit",
                       icon: <BsPencil className="w-4 h-4" />,
                       onClick: (row) => {
-                        handleEditClick(row)},
+                        handleEditClick(row);
+                      },
                     },
                     {
                       label: "Delete",

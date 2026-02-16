@@ -802,14 +802,10 @@ const GenerateTT = () => {
           )}
 
           <div>
-            <Button
-            variant="secondary"
-            className="ring-1"
-            >
+            <Button variant="secondary" className="ring-1">
               Configure
             </Button>
           </div>
-
 
           <div className="flex gap-4 mt-2">
             <Button

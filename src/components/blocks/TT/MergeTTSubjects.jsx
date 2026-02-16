@@ -274,7 +274,7 @@ const MergeTTSubjects = ({
         handleClear();
         setModalState(false);
       }}
-      title={`${editMode ? "Edit" : "Merge"} Subjects - Form ${currentForm}`}
+      title={`${editMode ? "Edit" : "Merge"} Subjects - Grade ${currentForm}`}
       icon={FaCodeMerge}
       onSubmit={handleMergeLessons}
       closeOnOutsideClick={false}

@@ -81,6 +81,8 @@ import Settings from "../components/blocks/AI/Settings";
 import Exam from "../components/blocks/Analytics/Exam";
 import SystemLevel from "../components/blocks/Analytics/SystemLevel";
 import { eventEmitter } from "../utils/eventEmitter";
+import Tenant from "../components/blocks/Analytics/Tenant";
+// import { formOptions } from "../utils/CommonData";
 
 const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
@@ -89,10 +91,12 @@ const Dashboard = () => {
     1: "Secondary (8-4-4)",
     2: "Pre-Primary (CBC)",
     3: "Primary (CBC)",
-    4: "Junior Secondary (CBC)",
-    5: "Senior Secondary (CBC)",
+    4: "Primary (CBC)",
+    5: "Junior Secondary (CBC)",
+    6: "Senior Secondary (CBC)",
   };
 
+  // const [systemStack, setSystemStack] = useState({})
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -133,14 +137,16 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchSystemLevel = async () => {
       try {
-        const response = await api.get("/system/getlevels");
-        if (response.data && Array.isArray(response.data)) {
-          // Find the level where status = 1
-          const activeLevel = response.data.find((level) => level.status === 1);
-          if (activeLevel && activeLevel.id) {
-            // Map the id to system stack name
-            const levelName = systemStack[activeLevel.id] || null;
-            setSystLevel(levelName);
+        if(user.role !== "sudo") {
+          const response = await api.get("/system/getlevels");
+          if (response.data && Array.isArray(response.data)) {
+            // Find the level where status = 1
+            const activeLevel = response.data.find((level) => level.status === 1);
+            if (activeLevel && activeLevel.id) {
+              // Map the id to system stack name
+              const levelName = systemStack[activeLevel.id] || null;
+              setSystLevel(levelName);
+            }
           }
         }
       } catch (error) {
@@ -185,6 +191,11 @@ const Dashboard = () => {
           response = await api.get("/particular/getparticulars");
           setImagePath(
             response.data?.logo_path || "/images/defaults/logo.webp"
+          );
+        } else if (user.role === "sud") {
+          // response = await api.get("/particular/getparticulars");
+          setImagePath(
+            "/images/defaults/logo.webp"
           );
         }
       } catch (error) {
@@ -269,6 +280,13 @@ const Dashboard = () => {
         setIsMobileMenuOpen(false);
       }
     };
+
+    // const stack = {}
+    // formOptions.map((item) => {
+    //   stack[item.value] = item.label
+    // })
+
+    // setSystemStack(stack)
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -464,7 +482,7 @@ const Dashboard = () => {
             {
               id: "time-clusters",
               label: "Timeslots",
-              component: <TimeSlots />,
+              component: <TimeSlots syst_level={systLevel} />,
             },
             {
               id: "subject-config",
@@ -622,7 +640,7 @@ const Dashboard = () => {
             {
               id: "student-list",
               label: "Student List",
-              component: <Student />,
+              component: <Student syst_level={systLevel} />,
             },
           ],
         },
@@ -634,9 +652,18 @@ const Dashboard = () => {
             {
               id: "add-mark",
               label: "Add Marks",
-              component: <AddMarkTeacher staffId={user?.user_id} />,
+              component: (
+                <AddMarkTeacher
+                  staffId={user?.user_id}
+                  syst_level={systLevel}
+                />
+              ),
             },
-            { id: "marklist", label: "Marklist", component: <Marklist2 /> },
+            {
+              id: "marklist",
+              label: "Marklist",
+              component: <Marklist2 syst_level={systLevel} />,
+            },
           ],
         },
         {
@@ -644,21 +671,25 @@ const Dashboard = () => {
           label: "Reports",
           icon: <TbReportAnalytics className="text-lg" />,
           subItems: [
-            { id: "marksheet", label: "Marksheet", component: <Marksheet /> },
+            {
+              id: "marksheet",
+              label: "Marksheet",
+              component: <Marksheet syst_level={systLevel} />,
+            },
             {
               id: "marklist",
               label: "Marklist",
-              component: <MarklistPDFReport />,
+              component: <MarklistPDFReport syst_level={systLevel} />,
             },
             {
               id: "markanalysis",
               label: "Subject Analysis",
-              component: <MarkAnalysis />,
+              component: <MarkAnalysis syst_level={systLevel} />,
             },
             {
               id: "report-form",
               label: "Report Form",
-              component: <StudentReport />,
+              component: <StudentReport syst_level={systLevel} />,
             },
           ],
         },
@@ -670,7 +701,9 @@ const Dashboard = () => {
             {
               id: "my-information",
               label: "My Information",
-              component: <StaffInfo staffId={user?.user_id} />,
+              component: (
+                <StaffInfo staffId={user?.user_id} syst_level={systLevel} />
+              ),
             },
           ],
         }
@@ -685,7 +718,9 @@ const Dashboard = () => {
             {
               id: "marklist",
               label: "My Information",
-              component: <StudentInfo studentId={user?.user_id} />,
+              component: (
+                <StudentInfo studentId={user?.user_id} syst_level={systLevel} />
+              ),
             },
           ],
         },
@@ -697,10 +732,33 @@ const Dashboard = () => {
             {
               id: "marklist",
               label: "My Marks",
-              component: <StudentAttemptedExams studentId={user?.user_id} />,
+              component: (
+                <StudentAttemptedExams
+                  studentId={user?.user_id}
+                  syst_level={systLevel}
+                />
+              ),
             },
           ],
         }
+      );
+    }
+     else if (user?.role === "sudo") {
+      baseItems.push(
+        {
+          id: "tenants",
+          label: "Tenants",
+          icon: <FiUsers className="text-lg" />,
+          subItems: [
+            {
+              id: "manage_tenants",
+              label: "Schools",
+              component: (
+                <Tenant />
+              ),
+            },
+          ],
+        },
       );
     }
 
@@ -799,7 +857,7 @@ const Dashboard = () => {
       >
         {windowWidth < 768 && (
           <div className="p-4 flex items-center justify-between border-b border-indigo-700 dark:border-gray-700 h-16 transition-colors duration-500">
-            <div className="text-xl font-semibold">Schule</div>
+            <div className="text-xl font-semibold">Escuela</div>
             <button
               onClick={toggleMobileMenu}
               className="p-1 text-white hover:text-indigo-200 dark:hover:text-gray-300 transition-colors duration-300"
@@ -816,7 +874,7 @@ const Dashboard = () => {
             {isSidebarOpen ? (
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-indigo-600 dark:bg-gray-700 rounded-md transition-colors duration-500" />
-                <span className="text-xl font-semibold">Schule</span>
+                <span className="text-xl font-semibold">Escuela</span>
               </div>
             ) : (
               <button
@@ -1015,23 +1073,11 @@ const Dashboard = () => {
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                   <div className="flex flex-col md:flex-row justify-between items-center">
                     <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 md:mb-0 transition-colors duration-500">
-                      © 2026 Schule Softwares. All rights reserved.
+                      © {new Date().getFullYear()} Escuela Softwares. All rights reserved.
                     </div>
                     <div className="flex space-x-6">
                       <a
-                        href="#"
-                        className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-300"
-                      >
-                        Privacy Policy
-                      </a>
-                      <a
-                        href="#"
-                        className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-300"
-                      >
-                        Terms of Service
-                      </a>
-                      <a
-                        href="#"
+                        href="/contact"
                         className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-300"
                       >
                         Contact Us

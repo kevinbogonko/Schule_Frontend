@@ -439,17 +439,6 @@ const StudentDashboard = ({ data }) => {
                   );
                 }
               )}
-              <tr className="bg-gray-50 dark:bg-gray-700">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                  Total Marks
-                </td>
-                <td
-                  colSpan="2"
-                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200"
-                >
-                  {data.latest_results.marks}
-                </td>
-              </tr>
               <tr>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
                   Points
@@ -472,28 +461,45 @@ const StudentDashboard = ({ data }) => {
                   {data.latest_results.grade}
                 </td>
               </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                  Stream Rank
-                </td>
-                <td
-                  colSpan="2"
-                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200"
-                >
-                  #{data.latest_results.stream_rank}
-                </td>
-              </tr>
-              <tr className="bg-gray-50 dark:bg-gray-700">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                  Overall Rank
-                </td>
-                <td
-                  colSpan="2"
-                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200"
-                >
-                  #{data.latest_results.overal_rank}
-                </td>
-              </tr>
+              {[19, 20, 20, 21].includes(data.form) ? (
+                <>
+                  <tr className="bg-gray-50 dark:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
+                      Total Marks
+                    </td>
+                    <td
+                      colSpan="2"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200"
+                    >
+                      {data.latest_results.marks}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
+                      Stream Rank
+                    </td>
+                    <td
+                      colSpan="2"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200"
+                    >
+                      #{data.latest_results.stream_rank}
+                    </td>
+                  </tr>
+                  <tr className="bg-gray-50 dark:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
+                      Overall Rank
+                    </td>
+                    <td
+                      colSpan="2"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200"
+                    >
+                      #{data.latest_results.overal_rank}
+                    </td>
+                  </tr>
+                </>
+              ) : (
+                ""
+              )}
             </tbody>
           </table>
         </div>
