@@ -63,7 +63,6 @@ const Marklist = ({syst_level}) => {
           form: selectedForm,
           exam: selectedExam,
         });
-        console.log(response.data);
         // Generate dynamic columns from subjects
         if (response.data.length > 0) {
           const firstStudent = response.data[0];

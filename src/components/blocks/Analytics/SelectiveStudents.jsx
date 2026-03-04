@@ -123,6 +123,7 @@ const SelectiveStudents = ({ syst_level }) => {
       setCheckedState(currentChecks);
       setAllChecked(allSelected);
     } catch (error) {
+      console.log(error)
       setRefinedStudents([]);
       showToast(
         error.response?.data?.message || "Failed to fetch students",

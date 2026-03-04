@@ -100,6 +100,8 @@ const Marklist2 = ({syst_level}) => {
             ?.value,
         });
 
+        // console.log(response.data)
+
         if (response.data.length > 0) {
           const firstStudent = response.data[0];
           const subjectColumns = Object.keys(firstStudent.subjects).map(

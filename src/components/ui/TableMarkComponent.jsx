@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { GoSearch } from "react-icons/go";
 import { AiOutlineClear } from "react-icons/ai";
 import { FaRegFileExcel, FaRegSave } from "react-icons/fa";
@@ -35,6 +41,9 @@ const TableMarkComponent = ({
   const [inputValues, setInputValues] = useState({});
   const [showButtons, setShowButtons] = useState(false);
 
+  // Track the last set of student IDs to avoid resetting on every render
+  const lastInitialIdsRef = useRef("");
+
   useEffect(() => {
     setShowButtons(!!subjectCode);
   }, [subjectCode]);
@@ -46,20 +55,16 @@ const TableMarkComponent = ({
     if (["B-", "C+", "C"].includes(grade)) return "#8BC34A";
     if (["C-", "D+", "D"].includes(grade)) return "#F59E0B";
     if (["D-", "E"].includes(grade)) return "#EF4444";
-    if (["EE2"].includes(grade)) return "#059669";
-    if (["EE1"].includes(grade)) return "#059669";
-    if (["ME2"].includes(grade)) return "#8BC34A";
-    if (["ME1"].includes(grade)) return "#8BC34A";
-    if (["AE2"].includes(grade)) return "#F59E0B";
-    if (["AE1"].includes(grade)) return "#F59E0B";
-    if (["BE2"].includes(grade)) return "#EF4444";
-    if (["BE1"].includes(grade)) return "#EF4444";
+    if (["EE2", "EE1"].includes(grade)) return "#059669";
+    if (["ME2", "ME1"].includes(grade)) return "#8BC34A";
+    if (["AE2", "AE1"].includes(grade)) return "#F59E0B";
+    if (["BE2", "BE1"].includes(grade)) return "#EF4444";
     return "#9CA3AF";
   };
 
   const getGradeFromMark = useCallback(
     (mark) => {
-      if (isNaN(mark)) return "-";
+      if (!gradingScale || isNaN(mark)) return "-";
       for (const [grade, range] of Object.entries(gradingScale)) {
         if (mark >= range.min && mark <= range.max) {
           return grade;
@@ -67,7 +72,7 @@ const TableMarkComponent = ({
       }
       return "-";
     },
-    [gradingScale]
+    [gradingScale],
   );
 
   const calculateMark = useCallback(
@@ -100,10 +105,16 @@ const TableMarkComponent = ({
       }
       return Math.min(99, Math.max(0, calculatedMark));
     },
-    [markCalculation, numberColumns]
+    [markCalculation, numberColumns],
   );
 
+  // Only reinitialize from props when the student list (IDs) actually changes —
+  // NOT on every render. This prevents Excel imports from being wiped.
   useEffect(() => {
+    const incomingIds = initialData.map((d) => d.id).join(",");
+    if (incomingIds === lastInitialIdsRef.current) return;
+    lastInitialIdsRef.current = incomingIds;
+
     const formattedData = initialData.map((item) => {
       const withDefaults = {
         ...item,
@@ -119,12 +130,13 @@ const TableMarkComponent = ({
         grade: getGradeFromMark(mark),
       };
     });
+
     setEditedData(formattedData);
 
     const newInputValues = {};
     formattedData.forEach((item) => {
       numberColumns.forEach((col) => {
-        newInputValues[`${item.id}-${col}`] = item[col].toString();
+        newInputValues[`${item.id}-${col}`] = (item[col] ?? 0).toString();
       });
     });
     setInputValues(newInputValues);
@@ -142,10 +154,10 @@ const TableMarkComponent = ({
             mark: newMark,
             grade: getGradeFromMark(newMark),
           };
-        })
+        }),
       );
     },
-    [calculateMark, getGradeFromMark]
+    [calculateMark, getGradeFromMark],
   );
 
   const handleNumberInputChange = useCallback(
@@ -164,7 +176,7 @@ const TableMarkComponent = ({
         handleDataChange(id, columnKey, numValue);
       }
     },
-    [handleDataChange]
+    [handleDataChange],
   );
 
   const handleNumberInputBlur = useCallback(
@@ -179,7 +191,7 @@ const TableMarkComponent = ({
       }));
       handleDataChange(id, columnKey, numValue);
     },
-    [handleDataChange, inputValues]
+    [handleDataChange, inputValues],
   );
 
   const getNumberInputValue = useCallback(
@@ -189,15 +201,15 @@ const TableMarkComponent = ({
         ? inputValues[key]
         : (cellValue || "0").toString();
     },
-    [inputValues]
+    [inputValues],
   );
 
   const filteredItems = useMemo(() => {
     if (!filterValue) return editedData;
     return editedData.filter((item) =>
       Object.values(item).some((value) =>
-        String(value).toLowerCase().includes(filterValue.toLowerCase())
-      )
+        String(value).toLowerCase().includes(filterValue.toLowerCase()),
+      ),
     );
   }, [editedData, filterValue]);
 
@@ -232,77 +244,180 @@ const TableMarkComponent = ({
     onCancel?.();
   };
 
-  const handleExcelImport = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  // ─── Excel Import ────────────────────────────────────────────────────────────
+const handleExcelImport = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target.result);
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const data = new Uint8Array(evt.target.result);
       const workbook = XLSX.read(data, { type: "array" });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(firstSheet);
 
-      if (jsonData.length === 0) return;
+      if (!firstSheet["!ref"]) {
+        console.warn("Excel sheet is empty");
+        return;
+      }
 
-      const processedData = jsonData.map((row) => {
-        const newRow = { id: row.id || row.ID || row.Id || "" };
+      const range = XLSX.utils.decode_range(firstSheet["!ref"]);
 
-        numberColumns.forEach((col) => {
-          const excelCol = Object.keys(row).find(
-            (key) =>
-              key.toString().toLowerCase() === col.toString().toLowerCase()
-          );
-          newRow[col] = excelCol ? parseFloat(row[excelCol]) || 0 : 0;
+      // ── Read headers cell-by-cell ──────────────────────────────────────────
+      const headers = [];
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddr = XLSX.utils.encode_cell({ r: range.s.r, c: col });
+        const cell = firstSheet[cellAddr];
+        const label = cell ? (cell.w ?? cell.v?.toString() ?? "").trim() : "";
+        headers.push({ colIndex: col, label });
+      }
+
+      // Normalize: lowercase, trim, collapse whitespace
+      const norm = (k) =>
+        k.toString().trim().toLowerCase().replace(/\s+/g, "_");
+
+      // Strip everything except alphanumerics (for fuzzy fallback)
+      const strip = (k) =>
+        k
+          .toString()
+          .replace(/[^a-z0-9]/gi, "")
+          .toLowerCase();
+
+      // Find a header by normalized exact match, then fuzzy strip match
+      const findHeader = (col) => {
+        const colNorm = norm(col);
+        const colStripped = strip(col);
+
+        // 1. Exact normalized match  e.g. "102_1" === "102_1"
+        let match = headers.find((h) => norm(h.label) === colNorm);
+        if (match) return match;
+
+        // 2. Strip match  e.g. "102_1" vs "1021" or "102 1"
+        match = headers.find((h) => strip(h.label) === colStripped);
+        return match || null;
+      };
+
+      // Get the base subject code from a paper column
+      // e.g. "102_1" → "102",  "102" → "102"
+      const getBaseCode = (col) => {
+        const str = col.toString();
+        const underscoreIdx = str.lastIndexOf("_");
+        return underscoreIdx !== -1 ? str.substring(0, underscoreIdx) : str;
+      };
+
+      // ── Parse data rows ────────────────────────────────────────────────────
+      const processedData = [];
+
+      for (let rowIdx = range.s.r + 1; rowIdx <= range.e.r; rowIdx++) {
+        // Build rowMap: header label → raw cell value
+        const rowMap = {};
+        headers.forEach(({ colIndex, label }) => {
+          const cellAddr = XLSX.utils.encode_cell({ r: rowIdx, c: colIndex });
+          const cell = firstSheet[cellAddr];
+          rowMap[label] =
+            cell !== undefined && cell !== null ? cell.v : undefined;
         });
 
-        textColumns.forEach((col) => {
-          const excelCol = Object.keys(row).find(
-            (key) =>
-              key.toString().toLowerCase() === col.toString().toLowerCase()
+        // Resolve ID column
+        const idHeader = headers.find((h) => norm(h.label) === "id");
+        if (!idHeader) {
+          console.warn("No 'id' column found in Excel headers");
+          break;
+        }
+        const rawId = rowMap[idHeader.label];
+        const idValue =
+          rawId !== undefined && rawId !== "" ? rawId.toString().trim() : "";
+
+        if (!idValue) continue;
+
+        const newRow = { id: idValue };
+
+        // ── Match each numberColumn with fallback to base code ───────────────
+        numberColumns.forEach((col) => {
+          // Try the specific column first e.g. "102_1"
+          const specificHeader = findHeader(col);
+
+          if (specificHeader) {
+            const raw = rowMap[specificHeader.label];
+            newRow[col] =
+              raw !== undefined && raw !== "" ? parseFloat(raw) || 0 : 0;
+            return;
+          }
+
+          // Fallback: try base code e.g. "102" if "102_1" not found
+          const baseCode = getBaseCode(col);
+          if (baseCode !== col.toString()) {
+            const baseHeader = findHeader(baseCode);
+            if (baseHeader) {
+              const raw = rowMap[baseHeader.label];
+              const val =
+                raw !== undefined && raw !== "" ? parseFloat(raw) || 0 : 0;
+              newRow[col] = val;
+              return;
+            }
+          }
+
+          // Nothing matched
+          newRow[col] = 0;
+          console.warn(
+            `No match for "${col}" or base "${baseCode}". ` +
+              `Available: ${JSON.stringify(headers.map((h) => h.label))}`,
           );
-          newRow[col] = excelCol ? row[excelCol] : "";
+        });
+
+        // Match textColumns
+        textColumns.forEach((col) => {
+          const matchedHeader = findHeader(col);
+          newRow[col] =
+            matchedHeader && rowMap[matchedHeader.label] !== undefined
+              ? String(rowMap[matchedHeader.label])
+              : "";
         });
 
         const mark = calculateMark(newRow);
-        return {
+        processedData.push({
           ...newRow,
           mark,
           grade: getGradeFromMark(mark),
-        };
-      });
-
-      setEditedData((prev) => {
-        const existingDataMap = new Map(prev.map((item) => [item.id, item]));
-
-        const mergedData = processedData.map((importedItem) => {
-          const existingItem = existingDataMap.get(importedItem.id);
-          return existingItem
-            ? { ...existingItem, ...importedItem }
-            : importedItem;
         });
+      }
 
-        prev.forEach((item) => {
-          if (!processedData.some((impItem) => impItem.id === item.id)) {
-            mergedData.push(item);
-          }
+      if (processedData.length === 0) {
+        console.warn("No valid rows imported");
+        return;
+      }
+
+      // ── Merge: only update existing rows, never add new ones ────────────────
+      setEditedData((prev) =>
+        prev.map((existingItem) => {
+          const match = processedData.find(
+            (imp) =>
+              imp.id.toString().trim() === existingItem.id.toString().trim(),
+          );
+          return match ? { ...existingItem, ...match } : existingItem;
+        }),
+      );
+
+      // Sync input display values
+      setInputValues((prev) => {
+        const updated = { ...prev };
+        processedData.forEach((item) => {
+          numberColumns.forEach((col) => {
+            updated[`${item.id}-${col}`] = (item[col] ?? 0).toString();
+          });
         });
-
-        return mergedData;
+        return updated;
       });
-
-      const newInputValues = { ...inputValues };
-      processedData.forEach((item) => {
-        numberColumns.forEach((col) => {
-          newInputValues[`${item.id}-${col}`] = item[col].toString();
-        });
-      });
-      setInputValues(newInputValues);
-
+    } catch (err) {
+      console.error("Excel import failed:", err);
+    } finally {
       e.target.value = "";
-    };
-    reader.readAsArrayBuffer(file);
+    }
   };
+
+  reader.readAsArrayBuffer(file);
+};
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const renderCell = useCallback(
     (item, columnKey, index) => {
@@ -341,7 +456,9 @@ const TableMarkComponent = ({
             }
           />
         );
-      } else if (numberColumns.includes(columnKey)) {
+      }
+
+      if (numberColumns.includes(columnKey)) {
         return (
           <ReusableInput
             type="number"
@@ -370,7 +487,7 @@ const TableMarkComponent = ({
       getNumberInputValue,
       textColumns,
       numberColumns,
-    ]
+    ],
   );
 
   return (

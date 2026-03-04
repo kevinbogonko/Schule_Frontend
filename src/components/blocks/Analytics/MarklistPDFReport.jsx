@@ -4,7 +4,11 @@ import ReusableSelect from "../../ui/ReusableSelect";
 import { FaUsersGear, FaSpinner } from "react-icons/fa6";
 import { GrDocumentDownload } from "react-icons/gr";
 import api from "../../../hooks/api";
-import { formOptions, yearOptions, termOptions } from "../../../utils/CommonData";
+import {
+  formOptions,
+  yearOptions,
+  termOptions,
+} from "../../../utils/CommonData";
 
 const MarklistPDFReport = ({ syst_level }) => {
   const [selectedYear, setSelectedYear] = useState(null);
@@ -76,7 +80,7 @@ const MarklistPDFReport = ({ syst_level }) => {
           },
           {
             responseType: "blob",
-          }
+          },
         );
 
         const blob = new Blob([response.data], { type: "application/pdf" });
@@ -109,7 +113,7 @@ const MarklistPDFReport = ({ syst_level }) => {
               value: exam.exam_name,
               label: exam.exam_name,
               key: exam.id,
-            }))
+            })),
           );
         } catch (error) {
           console.error("Error fetching exam options:", error);
@@ -118,6 +122,15 @@ const MarklistPDFReport = ({ syst_level }) => {
     };
     fetchExamOptions();
   }, [selectedForm, selectedTerm, selectedYear]);
+
+  // Clean up blob URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
 
   return (
     <div className="p-0">
@@ -159,7 +172,7 @@ const MarklistPDFReport = ({ syst_level }) => {
                   options={yearOptions}
                   value={
                     yearOptions.find(
-                      (option) => option.value === selectedYear
+                      (option) => option.value === selectedYear,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -185,7 +198,7 @@ const MarklistPDFReport = ({ syst_level }) => {
                   options={setFormOptions}
                   value={
                     setFormOptions.find(
-                      (option) => option.value === selectedForm
+                      (option) => option.value === selectedForm,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -212,7 +225,7 @@ const MarklistPDFReport = ({ syst_level }) => {
                   options={termOptions}
                   value={
                     termOptions.find(
-                      (option) => option.value === selectedTerm
+                      (option) => option.value === selectedTerm,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -239,7 +252,7 @@ const MarklistPDFReport = ({ syst_level }) => {
                   options={examOptions}
                   value={
                     examOptions.find(
-                      (option) => option.value === selectedExam
+                      (option) => option.value === selectedExam,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -258,7 +271,7 @@ const MarklistPDFReport = ({ syst_level }) => {
         <div className="w-full lg:w-3/4">
           <ReusableDiv
             icon={GrDocumentDownload}
-            tag={isCBC ? "Soresheet Report" : "Marklist Report"}
+            tag={isCBC ? "Scoresheet Report" : "Marklist Report"}
             className="ml-0 mr-0 ring-1 bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md h-full"
             collapsible={true}
           >
@@ -279,17 +292,72 @@ const MarklistPDFReport = ({ syst_level }) => {
                   className="flex flex-col h-full"
                   style={{ minHeight: "70vh" }}
                 >
-                  <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
-                    {isCBC ? "Soresheet" : "Marklist"}
-                  </h2>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                    <h2 className="text-lg font-medium text-gray-800 dark:text-white">
+                      {isCBC ? "Scoresheet" : "Marklist"}
+                    </h2>
+
+                    {/* Download button for all devices */}
+                    <a
+                      href={pdfUrl}
+                      download={`${isCBC ? "scoresheet" : "marklist"}_${selectedForm}_${selectedTerm}_${selectedExam}.pdf`}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
+                    >
+                      <GrDocumentDownload />
+                      Download PDF
+                    </a>
+                  </div>
+
+                  {/* Responsive PDF Viewer */}
                   <div className="flex-1 overflow-hidden rounded-md border border-gray-200 dark:border-gray-600">
-                    <iframe
-                      src={pdfUrl}
-                      title="Student Report PDF"
-                      width="100%"
-                      height="100%"
-                      className="min-h-[70vh]"
-                    />
+                    {/* Desktop: iframe (hidden on mobile) */}
+                    <div className="hidden md:block h-full">
+                      <iframe
+                        src={pdfUrl}
+                        title="Student Report PDF"
+                        width="100%"
+                        height="100%"
+                        className="min-h-[70vh]"
+                        style={{ border: "none" }}
+                      />
+                    </div>
+
+                    {/* Mobile: Google Docs Viewer + Options (visible only on mobile) */}
+                    <div className="block md:hidden">
+                      <div className="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-700 min-h-[50vh]">
+                        <p className="text-center mb-6 text-gray-600 dark:text-gray-300">
+                          PDF preview is optimized for larger screens. Choose
+                          how you'd like to view on your mobile device.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                          <a
+                            href={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg text-center transition-colors"
+                          >
+                            View in Google Docs
+                          </a>
+                          <a
+                            href={pdfUrl}
+                            download={`${isCBC ? "scoresheet" : "marklist"}_${selectedForm}_${selectedTerm}_${selectedExam}.pdf`}
+                            className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-center transition-colors"
+                          >
+                            Download PDF
+                          </a>
+                        </div>
+
+                        {/* Optional: Open in new tab option */}
+                        <a
+                          href={pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-4 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          Or open in new tab
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (
