@@ -6,7 +6,11 @@ import { PiExam } from "react-icons/pi";
 import { TbReport } from "react-icons/tb";
 import { FaPlus, FaMinus, FaSpinner } from "react-icons/fa";
 import { MdDone } from "react-icons/md";
-import { formOptions, yearOptions, termOptions } from "../../../utils/CommonData";
+import {
+  formOptions,
+  yearOptions,
+  termOptions,
+} from "../../../utils/CommonData";
 import { useToast } from "../../ui/Toast";
 import ReusableInput from "../../ui/ReusableInput";
 import Dropdown from "../../ui/Dropdown";
@@ -35,12 +39,21 @@ const MarkAnalysis = ({ syst_level }) => {
 
   const isCBC = syst_level !== "Secondary (8-4-4)";
 
+  // Clean up blob URL when component unmounts or when pdfUrl changes
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
+
   const getAvailableOptions = (currentIndex) => {
     const selectedExams = examRows
       .map((row, idx) => (idx !== currentIndex ? row.exam : null))
       .filter(Boolean);
     return examOptions.filter(
-      (option) => !selectedExams.includes(option.value)
+      (option) => !selectedExams.includes(option.value),
     );
   };
 
@@ -55,7 +68,7 @@ const MarkAnalysis = ({ syst_level }) => {
 
     // Every row must have an exam selected and a valid outOf
     const rowsValid = examRows.every(
-      (r) => r.exam && validateOutOf(r.outOf || "100")
+      (r) => r.exam && validateOutOf(r.outOf || "100"),
     );
 
     if (examRows.length === 1) {
@@ -112,7 +125,7 @@ const MarkAnalysis = ({ syst_level }) => {
           "error",
           {
             duration: 2000,
-          }
+          },
         );
         return;
       }
@@ -149,17 +162,20 @@ const MarkAnalysis = ({ syst_level }) => {
       setSelectedFormula("");
       setExamRows([{ exam: null, outOf: "" }]);
       setExamAliasSingle("");
+      setPdfUrl(null);
     } else if (field === "form") {
       setSelectedTerm("");
       setExamOptions([]);
       setSelectedFormula("");
       setExamRows([{ exam: null, outOf: "" }]);
       setExamAliasSingle("");
+      setPdfUrl(null);
     } else if (field === "term") {
       setExamOptions([]);
       setSelectedFormula("");
       setExamRows([{ exam: null, outOf: "" }]);
       setExamAliasSingle("");
+      setPdfUrl(null);
     }
   };
 
@@ -228,7 +244,7 @@ const MarkAnalysis = ({ syst_level }) => {
         "error",
         {
           duration: 2000,
-        }
+        },
       );
     } finally {
       setButtonLoading(false);
@@ -258,7 +274,7 @@ const MarkAnalysis = ({ syst_level }) => {
                 value: exam.exam_name,
                 label: exam.exam_name,
                 key: exam.id,
-              }))
+              })),
             );
           }
         } catch (err) {
@@ -269,7 +285,7 @@ const MarkAnalysis = ({ syst_level }) => {
             {
               duration: 3000,
               position: "top-center",
-            }
+            },
           );
         } finally {
           setLoading(false);
@@ -279,6 +295,13 @@ const MarkAnalysis = ({ syst_level }) => {
 
     fetchExamOptions();
   }, [selectedYear, selectedForm, selectedTerm]);
+
+  // Get filename for download
+  const getFileName = () => {
+    const examName =
+      examRows.length > 1 ? examAliasSingle : examRows[0]?.exam || "analysis";
+    return `mark_analysis_${selectedForm}_${selectedTerm}_${examName}_${selectedYear}.pdf`;
+  };
 
   return (
     <div className="p-0">
@@ -309,7 +332,7 @@ const MarkAnalysis = ({ syst_level }) => {
                   options={yearOptions}
                   value={
                     yearOptions.find(
-                      (option) => option.value === selectedYear
+                      (option) => option.value === selectedYear,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -364,7 +387,7 @@ const MarkAnalysis = ({ syst_level }) => {
                   options={termOptions}
                   value={
                     termOptions.find(
-                      (option) => option.value === selectedTerm
+                      (option) => option.value === selectedTerm,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -496,7 +519,7 @@ const MarkAnalysis = ({ syst_level }) => {
                         options={getFormulaOptions()}
                         value={
                           getFormulaOptions().find(
-                            (opt) => opt.value === selectedFormula
+                            (opt) => opt.value === selectedFormula,
                           ) || undefined
                         }
                         onChange={(e) => setSelectedFormula(e.target.value)}
@@ -533,29 +556,86 @@ const MarkAnalysis = ({ syst_level }) => {
           className="ml-0 mr-0 ring-1 bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md"
           collapsible={true}
         >
-          {pdfUrl ? (
-            <div
-              className="flex flex-col h-full p-0"
-              style={{ minHeight: "70vh" }}
-            >
-              <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
-                Subject Analysis Report:
-              </h2>
-              <div className="flex-1 overflow-hidden rounded-md border border-gray-200 dark:border-gray-600">
-                <iframe
-                  src={pdfUrl}
-                  title="PDF Report"
-                  width="100%"
-                  height="100%"
-                  className="min-h-[70vh]"
-                />
+          <div className="p-2 md:p-4">
+            {pdfUrl ? (
+              <div
+                className="flex flex-col h-full"
+                style={{ minHeight: "70vh" }}
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                  <h2 className="text-lg font-medium text-gray-800 dark:text-white">
+                    Subject Analysis Report
+                  </h2>
+
+                  {/* Download button for all devices */}
+                  <a
+                    href={pdfUrl}
+                    download={getFileName()}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
+                  >
+                    <GrDocumentDownload />
+                    Download PDF
+                  </a>
+                </div>
+
+                {/* Responsive PDF Viewer */}
+                <div className="flex-1 overflow-hidden rounded-md border border-gray-200 dark:border-gray-600">
+                  {/* Desktop: iframe (hidden on mobile) */}
+                  <div className="hidden md:block h-full">
+                    <iframe
+                      src={pdfUrl}
+                      title="Subject Analysis PDF"
+                      width="100%"
+                      height="100%"
+                      className="min-h-[70vh]"
+                      style={{ border: "none" }}
+                    />
+                  </div>
+
+                  {/* Mobile: Google Docs Viewer + Options (visible only on mobile) */}
+                  <div className="block md:hidden">
+                    <div className="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-700 min-h-[50vh]">
+                      <p className="text-center mb-6 text-gray-600 dark:text-gray-300">
+                        PDF preview is optimized for larger screens. Choose how
+                        you'd like to view on your mobile device.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                        <a
+                          href={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg text-center transition-colors"
+                        >
+                          View in Google Docs
+                        </a>
+                        <a
+                          href={pdfUrl}
+                          download={getFileName()}
+                          className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-center transition-colors"
+                        >
+                          Download PDF
+                        </a>
+                      </div>
+
+                      {/* Optional: Open in new tab option */}
+                      <a
+                        href={pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        Or open in new tab
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex justify-center items-center h-64 text-gray-500 dark:text-gray-400">
-              Configure and process exams to generate report
-            </div>
-          )}
+            ) : (
+              <div className="flex justify-center items-center h-64 text-gray-500 dark:text-gray-400">
+                Configure and process exams to generate report
+              </div>
+            )}
+          </div>
         </ReusableDiv>
       </div>
     </div>

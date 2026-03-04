@@ -5,7 +5,11 @@ import { FaUsersGear, FaSpinner } from "react-icons/fa6";
 import { GrDocumentDownload } from "react-icons/gr";
 import api from "../../../hooks/api";
 import { useToast } from "../../ui/Toast";
-import { formOptions, yearOptions, termOptions } from "../../../utils/CommonData";
+import {
+  formOptions,
+  yearOptions,
+  termOptions,
+} from "../../../utils/CommonData";
 
 const Marksheet = ({ syst_level }) => {
   const { showToast } = useToast();
@@ -21,10 +25,11 @@ const Marksheet = ({ syst_level }) => {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const setFormOptions = formOptions.find((option) => option.label === syst_level)?.options || [];
+  const setFormOptions =
+    formOptions.find((option) => option.label === syst_level)?.options || [];
 
-    let isCBC;
-    syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
+  let isCBC;
+  syst_level === "Secondary (8-4-4)" ? (isCBC = false) : (isCBC = true);
 
   const resetBelow = (field) => {
     switch (field) {
@@ -59,6 +64,15 @@ const Marksheet = ({ syst_level }) => {
         break;
     }
   };
+
+  // Clean up blob URL when component unmounts or when pdfUrl changes
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
 
   const fetchStreamOptions = async () => {
     if (selectedForm && selectedYear) {
@@ -95,7 +109,7 @@ const Marksheet = ({ syst_level }) => {
         const formatted = response.data.map((exam) => ({
           value: exam.exam_name,
           label: exam.exam_name,
-          key: exam.id
+          key: exam.id,
         }));
 
         setExamOptions(formatted);
@@ -136,7 +150,7 @@ const Marksheet = ({ syst_level }) => {
             exam: selectedExam,
             stream: streamId,
           },
-          { responseType: "blob" }
+          { responseType: "blob" },
         );
 
         const pdfBlob = new Blob([response.data], { type: "application/pdf" });
@@ -147,19 +161,25 @@ const Marksheet = ({ syst_level }) => {
           position: "top-right",
         });
       } catch (error) {
-        console.log(error)
+        console.log(error);
         showToast(
           error?.response?.data.message || "Error fetching PDF",
           "error",
           {
             duration: 3000,
             position: "top-right",
-          }
+          },
         );
       } finally {
         setLoading(false);
       }
     }
+  };
+
+  // Get stream name for filename
+  const getStreamName = () => {
+    const stream = streamOptions.find((s) => s.value === selectedStream);
+    return stream ? stream.label : "stream";
   };
 
   return (
@@ -202,7 +222,7 @@ const Marksheet = ({ syst_level }) => {
                   options={yearOptions}
                   value={
                     yearOptions.find(
-                      (option) => option.value === selectedYear
+                      (option) => option.value === selectedYear,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -228,7 +248,7 @@ const Marksheet = ({ syst_level }) => {
                   options={setFormOptions}
                   value={
                     setFormOptions.find(
-                      (option) => option.value === selectedForm
+                      (option) => option.value === selectedForm,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -255,7 +275,7 @@ const Marksheet = ({ syst_level }) => {
                   options={termOptions}
                   value={
                     termOptions.find(
-                      (option) => option.value === selectedTerm
+                      (option) => option.value === selectedTerm,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -282,12 +302,12 @@ const Marksheet = ({ syst_level }) => {
                   options={examOptions}
                   value={
                     examOptions.find(
-                      (option) => option.label === selectedExam
+                      (option) => option.label === selectedExam,
                     ) || undefined
                   }
                   onChange={(e) => {
                     const selected = examOptions.find(
-                      (opt) => opt.value === e.target.value
+                      (opt) => opt.value === e.target.value,
                     );
                     setSelectedExam(selected ? selected.label : null);
                     resetBelow("exam");
@@ -310,7 +330,7 @@ const Marksheet = ({ syst_level }) => {
                   options={streamOptions}
                   value={
                     streamOptions.find(
-                      (option) => option.value === selectedStream
+                      (option) => option.value === selectedStream,
                     ) || undefined
                   }
                   onChange={(e) => {
@@ -333,7 +353,7 @@ const Marksheet = ({ syst_level }) => {
             className="ml-0 mr-0 ring-1 bg-white dark:bg-gray-800 rounded-md shadow-sm dark:shadow-md h-full"
             collapsible={true}
           >
-            <div className="p-0">
+            <div className="p-2 md:p-4">
               {loading ? (
                 <div className="flex justify-center items-center h-64">
                   <FaSpinner className="animate-spin text-xl text-blue-600 dark:text-blue-400" />
@@ -346,17 +366,72 @@ const Marksheet = ({ syst_level }) => {
                   className="flex flex-col h-full"
                   style={{ minHeight: "70vh" }}
                 >
-                  <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
-                    Marksheet:
-                  </h2>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                    <h2 className="text-lg font-medium text-gray-800 dark:text-white">
+                      Marksheet: {selectedForm} - {getStreamName()}
+                    </h2>
+
+                    {/* Download button for all devices */}
+                    <a
+                      href={pdfUrl}
+                      download={`marksheet_${selectedForm}_${getStreamName()}_${selectedTerm}_${selectedExam}_${selectedYear}.pdf`}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
+                    >
+                      <GrDocumentDownload />
+                      Download PDF
+                    </a>
+                  </div>
+
+                  {/* Responsive PDF Viewer */}
                   <div className="flex-1 overflow-hidden rounded-md border border-gray-200 dark:border-gray-600">
-                    <iframe
-                      src={pdfUrl}
-                      title="Marksheet PDF"
-                      width="100%"
-                      height="100%"
-                      className="min-h-[70vh]"
-                    />
+                    {/* Desktop: iframe (hidden on mobile) */}
+                    <div className="hidden md:block h-full">
+                      <iframe
+                        src={pdfUrl}
+                        title="Marksheet PDF"
+                        width="100%"
+                        height="100%"
+                        className="min-h-[70vh]"
+                        style={{ border: "none" }}
+                      />
+                    </div>
+
+                    {/* Mobile: Google Docs Viewer + Options (visible only on mobile) */}
+                    <div className="block md:hidden">
+                      <div className="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-700 min-h-[50vh]">
+                        <p className="text-center mb-6 text-gray-600 dark:text-gray-300">
+                          PDF preview is optimized for larger screens. Choose
+                          how you'd like to view on your mobile device.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                          <a
+                            href={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg text-center transition-colors"
+                          >
+                            View in Google Docs
+                          </a>
+                          <a
+                            href={pdfUrl}
+                            download={`marksheet_${selectedForm}_${getStreamName()}_${selectedTerm}_${selectedExam}_${selectedYear}.pdf`}
+                            className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-center transition-colors"
+                          >
+                            Download PDF
+                          </a>
+                        </div>
+
+                        {/* Optional: Open in new tab option */}
+                        <a
+                          href={pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-4 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          Or open in new tab
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (

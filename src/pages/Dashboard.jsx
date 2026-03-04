@@ -423,89 +423,89 @@ const Dashboard = () => {
             },
           ],
         },
-        {
-          id: "ai",
-          label: "AI",
-          icon: <FiCalendar className="text-lg" />,
-          subItems: [
-            {
-              id: "upload_ingestion",
-              label: "Upload Ing.",
-              component: <UploadIngestion />,
-            },
-            {
-              id: "content_management",
-              label: "Content Mgt.",
-              component: <ContentManagement />,
-            },
-            {
-              id: "content_generation",
-              label: "Generate Content",
-              component: <ContentGeneration />,
-            },
-            {
-              id: "analytics",
-              label: "Analytics",
-              component: <Analytics />,
-            },
-            {
-              id: "Presentation",
-              label: "Presentation",
-              component: <Presentation />,
-            },
-            {
-              id: "Settings",
-              label: "Settings",
-              component: <Settings />,
-            },
-          ],
-        },
-        {
-          label: "Timetable",
-          icon: <FiCalendar className="text-lg" />,
-          subItems: [
-            {
-              id: "manange-tt",
-              label: "Manage Timetables",
-              component: <OptimizeTT syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
-            },
-            {
-              id: "print-tt",
-              label: "Print Timetables",
-              component: <TTPDFReport syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
-            },
-            {
-              id: "day-clusters",
-              label: "Day Clusters",
-              component: <DayClusters />,
-            },
-            {
-              id: "time-clusters",
-              label: "Timeslots",
-              component: <TimeSlots syst_level={systLevel} />,
-            },
-            {
-              id: "subject-config",
-              label: "Subject Configuration",
-              component: <TimeTableSubjects syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
-            },
-            {
-              id: "manage-subjects",
-              label: "Manage Subjects",
-              component: <Subject syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
-            },
-            {
-              id: "subject-teachers",
-              label: "Subject Teachers",
-              component: <SubjectTeacher syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
-            },
-            {
-              id: "manage-stream",
-              label: "Streams",
-              component: <Stream syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
-            },
-          ],
-        },
+        // {
+        //   id: "ai",
+        //   label: "AI",
+        //   icon: <FiCalendar className="text-lg" />,
+        //   subItems: [
+        //     {
+        //       id: "upload_ingestion",
+        //       label: "Upload Ing.",
+        //       component: <UploadIngestion />,
+        //     },
+        //     {
+        //       id: "content_management",
+        //       label: "Content Mgt.",
+        //       component: <ContentManagement />,
+        //     },
+        //     {
+        //       id: "content_generation",
+        //       label: "Generate Content",
+        //       component: <ContentGeneration />,
+        //     },
+        //     {
+        //       id: "analytics",
+        //       label: "Analytics",
+        //       component: <Analytics />,
+        //     },
+        //     {
+        //       id: "Presentation",
+        //       label: "Presentation",
+        //       component: <Presentation />,
+        //     },
+        //     {
+        //       id: "Settings",
+        //       label: "Settings",
+        //       component: <Settings />,
+        //     },
+        //   ],
+        // },
+        // {
+        //   label: "Timetable",
+        //   icon: <FiCalendar className="text-lg" />,
+        //   subItems: [
+        //     {
+        //       id: "manange-tt",
+        //       label: "Manage Timetables",
+        //       component: <OptimizeTT syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
+        //     },
+        //     {
+        //       id: "print-tt",
+        //       label: "Print Timetables",
+        //       component: <TTPDFReport syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
+        //     },
+        //     {
+        //       id: "day-clusters",
+        //       label: "Day Clusters",
+        //       component: <DayClusters />,
+        //     },
+        //     {
+        //       id: "time-clusters",
+        //       label: "Timeslots",
+        //       component: <TimeSlots syst_level={systLevel} />,
+        //     },
+        //     {
+        //       id: "subject-config",
+        //       label: "Subject Configuration",
+        //       component: <TimeTableSubjects syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
+        //     },
+        //     {
+        //       id: "manage-subjects",
+        //       label: "Manage Subjects",
+        //       component: <Subject syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
+        //     },
+        //     {
+        //       id: "subject-teachers",
+        //       label: "Subject Teachers",
+        //       component: <SubjectTeacher syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
+        //     },
+        //     {
+        //       id: "manage-stream",
+        //       label: "Streams",
+        //       component: <Stream syst_level={systLevel} />, // Fixed: systLevel instead of syst_level
+        //     },
+        //   ],
+        // },
         {
           id: "exams",
           label: "Examinations",
