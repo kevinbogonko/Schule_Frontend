@@ -29,6 +29,7 @@ const AddMarkTeacher = ({ staffId, syst_level }) => {
   const [selectedStream, setSelectedStream] = useState("");
   const [selectedTerm, setSelectedTerm] = useState("");
   const [selectedExam, setSelectedExam] = useState("");
+  const [selectedExamKey, setSelectedExamKey] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [examOptions, setExamOptions] = useState([]);
   const [subjectOptions, setSubjectOptions] = useState([]);
@@ -220,7 +221,8 @@ const AddMarkTeacher = ({ staffId, syst_level }) => {
             response.data.map((exam) => ({
               value: exam.exam_name,
               label: exam.exam_name,
-            }))
+              key: exam.id,
+            })),
           );
         } catch (err) {
           resetBelow("term");
@@ -241,8 +243,8 @@ const AddMarkTeacher = ({ staffId, syst_level }) => {
         try {
           const response = await api.post("grading/gradingscale", {
             form: selectedForm,
-            exam: selectedExam,
             subject: selectedSubject,
+            exam_id: selectedExamKey,
           });
           setGradingScale(response.data);
         } catch (error) {
@@ -259,12 +261,11 @@ const AddMarkTeacher = ({ staffId, syst_level }) => {
   const fetchStudents = async () => {
     if (selectedForm && selectedExam && selectedSubject && selectedStream) {
       setIsRefreshing(true);
-      const paperSetupPayload = {
-        form: selectedForm,
-        exam: selectedExam,
-        subject: selectedSubject,
-        stream: selectedStream,
-      };
+          const paperSetupPayload = {
+            form: selectedForm,
+            exam_id: selectedExamKey,
+            subject: selectedSubject,
+          };
 
       try {
         const setupResponse = await api.post(
@@ -282,6 +283,7 @@ const AddMarkTeacher = ({ staffId, syst_level }) => {
           );
         }
       } catch (err) {
+        console.log(err)
         showToast(
           err.response?.data?.message || "Failed to fetch paper setup",
           "error",
@@ -665,6 +667,11 @@ const AddMarkTeacher = ({ staffId, syst_level }) => {
                   value={selectedExam}
                   onChange={(e) => {
                     setSelectedExam(e.target.value);
+                    setSelectedExamKey(
+                      examOptions.find(
+                        (opt) => opt.value === String(e.target.value),
+                      )?.key,
+                    );
                     resetBelow("exam");
                   }}
                   disabled={!selectedTerm}
