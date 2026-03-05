@@ -183,7 +183,7 @@ const MarkAnalysis = ({ syst_level }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const payload = {
         form: selectedForm,
         exams: {},
@@ -194,17 +194,23 @@ const MarkAnalysis = ({ syst_level }) => {
         examname: "",
       };
 
-      // examname: single exam -> that exam value; multiple -> global alias
-      if (examRows.length > 1) {
-        payload.examname = examAliasSingle.trim();
-      } else {
-        payload.examname = examRows[0]?.exam || "";
+      // Ensure examname comes from selected exam
+      const firstExam = examRows[0];
+
+      if (firstExam) {
+        const examObj = examOptions.find((opt) => opt.value === firstExam.exam);
+
+        payload.examname = examObj?.key
       }
 
+      // Build exam payload
       examRows.forEach((row, index) => {
-        const aliasVal = row.exam; // per your choice C: keep alias as exam value
-        const nameKey =
-          examOptions.find((opt) => opt.value === row.exam)?.key || row.exam;
+        const examObj = examOptions.find((opt) => opt.value === row.exam);
+
+        const aliasVal = row.exam;
+
+        const nameKey = examObj?.key || row.exam;
+
         payload.exams[`exam_${index + 1}`] = {
           alias: aliasVal,
           name: nameKey,
@@ -219,8 +225,9 @@ const MarkAnalysis = ({ syst_level }) => {
       const pdfBlob = new Blob([response.data], { type: "application/pdf" });
       const url = URL.createObjectURL(pdfBlob);
       setPdfUrl(url);
+
     } catch (err) {
-      console.error("Error fetching PDF:", err);
+
       setError("Failed to load PDF. Please try again.");
       showToast("Failed to load PDF. Please try again.", "error", {
         duration: 2000,

@@ -97,7 +97,7 @@ const Marklist2 = ({syst_level}) => {
           year: selectedYear,
           term: selectedTerm,
           examname: examOptions.find((exam) => exam.value === selectedExam)
-            ?.value,
+            ?.key,
         });
 
         // console.log(response.data)
@@ -162,7 +162,7 @@ const Marklist2 = ({syst_level}) => {
           year: selectedYear,
         });
         const formattedStreams = response.data.map((stream) => ({
-          value: stream.stream_id,
+          value: stream.id,
           label: stream.stream_name,
         }));
         setStreamOptions(formattedStreams);

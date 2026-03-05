@@ -111,7 +111,7 @@ const COSMS = ({ syst_level }) => {
       if (error.response?.status === 404) {
         setSmsLogs([]);
       } else {
-        showToast("Failed to fetch SMS logs", "error", { duration: 2000 });
+        // showToast("Failed to fetch SMS logs", "error", { duration: 2000 });
       }
     } finally {
       setLoading(false);
@@ -193,6 +193,7 @@ const COSMS = ({ syst_level }) => {
         forms: Array.isArray(selectedForm) ? selectedForm : [selectedForm],
       };
 
+      console.log(eventData)
       await api.post("/sms/sendcosms", eventData);
 
       showToast("SMS sent successfully!", "success", { duration: 3000 });

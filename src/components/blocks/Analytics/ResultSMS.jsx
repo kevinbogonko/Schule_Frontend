@@ -186,7 +186,7 @@ const ResultSMS = ({ syst_level }) => {
       if (error.response?.status === 404) {
         setSmsLogs([]);
       } else {
-        showToast("Failed to fetch SMS logs", "error", { duration: 2000 });
+        // showToast("Failed to fetch SMS logs", "error", { duration: 2000 });
       }
     }
   };
@@ -295,17 +295,22 @@ const ResultSMS = ({ syst_level }) => {
         examname: "",
       };
 
-      // Set examname: if multiple exams use the single alias input, otherwise use the selected exam value
-      if (examRows.length > 1) {
-        payload.examname = examAliasSingle;
-      } else {
-        payload.examname = examRows[0]?.exam || "";
+      const firstExam = examRows[0];
+
+      if (firstExam) {
+        const examObj = examOptions.find((opt) => opt.value === firstExam.exam);
+
+        payload.examname = examObj?.key;
       }
 
+      // Build exam payload
       examRows.forEach((row, index) => {
-        const aliasVal = row.exam; // alias should be exam value (Option A)
-        const nameKey =
-          examOptions.find((opt) => opt.value === row.exam)?.key || row.exam;
+        const examObj = examOptions.find((opt) => opt.value === row.exam);
+
+        const aliasVal = row.exam;
+
+        const nameKey = examObj?.key || row.exam;
+
         payload.exams[`exam_${index + 1}`] = {
           alias: aliasVal,
           name: nameKey,
@@ -313,7 +318,6 @@ const ResultSMS = ({ syst_level }) => {
         };
       });
 
-      // console.log(payload);
 
       const response = await api.post("/sms/smsres", payload);
       setSchoolDetails(response.data.schoolDetails);
@@ -405,7 +409,7 @@ const ResultSMS = ({ syst_level }) => {
           });
 
           const formattedStreams = response.data.map((stream) => ({
-            value: stream.stream_id,
+            value: stream.id,
             label: stream.stream_name,
           }));
 
@@ -467,54 +471,56 @@ const ResultSMS = ({ syst_level }) => {
     setSelectedStudents([]);
   };
 
-  const handleSend = async () => {
-    try {
-      setSMSLoading(true);
-      setSMSError(null);
+const handleSend = async () => {
+  try {
+    setSMSLoading(true);
+    setSMSError(null);
 
-      const payload = {
-        form: selectedForm,
-        exams: {},
-        formula: selectedFormula || "self",
-        yearValue: selectedYear,
-        selectedStudents: selectedStudents,
-        unival: uniVal,
-        examname: "",
-        year: selectedYear,
-        term: selectedTerm
-      };
+    const payload = {
+      form: selectedForm,
+      exams: {},
+      formula: selectedFormula || "self",
+      yearValue: selectedYear,
+      selectedStudents: selectedStudents,
+      unival: uniVal,
+      examname: "",
+      year: selectedYear,
+      term: selectedTerm,
+    };
 
-      if (examRows.length > 1) {
-        payload.examname = examAliasSingle;
-      } else {
-        payload.examname = examRows[0]?.exam || "";
-      }
-
-      examRows.forEach((row, index) => {
-        const aliasVal = row.exam;
-        const nameKey =
-          examOptions.find((opt) => opt.value === row.exam)?.key || row.exam;
-        payload.exams[`exam_${index + 1}`] = {
-          alias: aliasVal,
-          name: nameKey,
-          outof: row.outOf || "100",
-        };
-      });
-
-      console.log(payload)
-      await api.post("/sms/sendresultsms", payload);
-      showToast("SMS sent successfully!", "success", { duration: 3000 });
-      fetchSmsLogs(uniVal);
-    } catch (err) {
-      console.log(err)
-      setSMSError("Failed to send SMS. Please try again.");
-      showToast(err?.response?.data?.message || "Failed to send SMS", "error", {
-        duration: 3000,
-      });
-    } finally {
-      setSMSLoading(false);
+    const firstExam = examRows[0];
+    if (firstExam) {
+      const examObj = examOptions.find((opt) => opt.value === firstExam.exam);
+      payload.examname = examObj?.key;
     }
-  };
+
+    // Build exam payload
+    examRows.forEach((row, index) => {
+      const examObj = examOptions.find((opt) => opt.value === row.exam);
+      const aliasVal = row.exam;
+      const nameKey = examObj?.key || row.exam;
+
+      payload.exams[`exam_${index + 1}`] = {
+        alias: aliasVal,
+        name: nameKey,
+        outof: row.outOf || "100",
+      };
+    });
+
+
+    const response = await api.post("/sms/sendresultsms", payload);
+
+    showToast("SMS sent successfully!", "success", { duration: 3000 });
+    fetchSmsLogs(uniVal);
+  } catch (err) {
+    setSMSError("Failed to send SMS. Please try again.");
+    showToast(err?.response?.data?.message || "Failed to send SMS", "error", {
+      duration: 3000,
+    });
+  } finally {
+    setSMSLoading(false);
+  }
+};
 
   return (
     <div className="p-0">
@@ -714,7 +720,7 @@ const ResultSMS = ({ syst_level }) => {
                         options={getFormulaOptions()}
                         value={
                           getFormulaOptions().find(
-                            (opt) => opt.value === selectedFormula
+                            (opt) => opt.value === selectedFormula,
                           ) || undefined
                         }
                         onChange={(e) => setSelectedFormula(e.target.value)}
@@ -801,7 +807,20 @@ const ResultSMS = ({ syst_level }) => {
                           options={phoneNumbers}
                           selectedValues={selectedStudents}
                           onChange={(values) => {
-                            setSelectedStudents(values);
+                            // Extract the actual selected values
+                            let selectedValues = [];
+
+                            if (values && values.target) {
+                              // Handle event object format
+                              const targetValue = values.target.value;
+                              selectedValues = Array.isArray(targetValue)
+                                ? targetValue
+                                : [targetValue];
+                            } else if (Array.isArray(values)) {
+                              // Handle array format
+                              selectedValues = values;
+                            }
+                            setSelectedStudents(selectedValues);
                           }}
                           name="phone_numbers"
                         />

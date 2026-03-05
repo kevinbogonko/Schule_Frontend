@@ -83,7 +83,7 @@ const Marksheet = ({ syst_level }) => {
         });
 
         const formattedStreams = response.data.map((stream) => ({
-          value: stream.stream_id,
+          value: stream.id,
           label: stream.stream_name,
         }));
 

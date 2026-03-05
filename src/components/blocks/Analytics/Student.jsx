@@ -75,8 +75,9 @@ const Student = ({ user, syst_level }) => {
             year: selectedYear,
             form: selectedForm,
           });
+          console.log(streamRes)
           const formattedStreams = streamRes.data.map((item) => ({
-            value: item.stream_id,
+            value: item.id,
             label: item.stream_name,
           }));
 

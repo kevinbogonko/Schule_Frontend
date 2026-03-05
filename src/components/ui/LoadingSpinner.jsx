@@ -10,7 +10,7 @@ export default function LoadingSpinner() {
         transition={{ duration: 0.5 }}
         className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500"
       >
-        Schule
+        Escuela
       </motion.div>
 
       {/* Loading indicator with smooth pulse */}

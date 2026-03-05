@@ -227,7 +227,6 @@ const StudentReport = ({ syst_level }) => {
         };
       });
 
-      console.log(payload);
       const response = await api.post("/pdfr/pdfr", payload, {
         responseType: "blob",
       });

@@ -72,7 +72,7 @@ const SelectiveStudents = ({ syst_level }) => {
         year: selectedYear,
       });
       const formattedStreams = streamsResponse.data.map((stream) => ({
-        value: stream.stream_id,
+        value: stream.id,
         label: stream.stream_name,
       }));
       setStreamOptions(formattedStreams);
@@ -123,7 +123,6 @@ const SelectiveStudents = ({ syst_level }) => {
       setCheckedState(currentChecks);
       setAllChecked(allSelected);
     } catch (error) {
-      console.log(error)
       setRefinedStudents([]);
       showToast(
         error.response?.data?.message || "Failed to fetch students",

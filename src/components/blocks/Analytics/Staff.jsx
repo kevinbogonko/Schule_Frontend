@@ -5,6 +5,7 @@ import { BsEye, BsPencil, BsTrash } from "react-icons/bs";
 import ReusableDiv from "../../ui/ReusableDiv";
 import ReusableSelect from "../../ui/ReusableSelect";
 import { FaSpinner} from "react-icons/fa";
+import { FaUsersGear } from "react-icons/fa6";
 import api from "../../../hooks/api";
 import { useToast } from "../../ui/Toast";
 import { yearOptions } from "../../../utils/CommonData";
@@ -130,7 +131,7 @@ const Staff = () => {
           <ReusableDiv
             className="ml-0 mr-0 mb-2 ring-1 h-fit bg-blue-100 dark:bg-gray-800"
             tag="Manage Teachers"
-            icon={FaSpinner}
+            icon={FaUsersGear}
           >
             <div className="flex flex-col space-y-3 pb-4">
               <div className="w-full">
@@ -146,7 +147,7 @@ const Staff = () => {
                   options={yearOptions}
                   value={
                     yearOptions.find(
-                      (option) => option.value === selectedYear
+                      (option) => option.value === selectedYear,
                     ) || undefined
                   }
                   onChange={(e) => setSelectedYear(e.target.value)}

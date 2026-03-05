@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import { BsEye, BsPencil, BsTrash } from "react-icons/bs";
 import { GoSearch } from "react-icons/go";
 import { FiPlus, FiSun, FiMoon, FiUpload } from "react-icons/fi";
@@ -56,6 +62,9 @@ const TableComponent = ({
     );
   });
 
+  // Add ref for search input
+  const searchInputRef = useRef(null);
+
   // Apply dark mode
   useEffect(() => {
     const html = document.documentElement;
@@ -105,21 +114,20 @@ const TableComponent = ({
   }, [columns, excludedColumns]);
 
   const pages = Math.ceil(formattedData.length / rowsPerPage);
-  const hasSearchFilter = Boolean(filterValue);
 
   const filteredItems = useMemo(() => {
     let filteredData = [...formattedData];
-    if (hasSearchFilter) {
+    if (filterValue) {
       filteredData = filteredData.filter((item) =>
         Object.values(item).some(
           (value) =>
             value &&
-            value.toString().toLowerCase().includes(filterValue.toLowerCase())
-        )
+            value.toString().toLowerCase().includes(filterValue.toLowerCase()),
+        ),
       );
     }
     return filteredData;
-  }, [formattedData, filterValue, hasSearchFilter]);
+  }, [formattedData, filterValue]);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -217,7 +225,7 @@ const TableComponent = ({
       rowsPerPage,
       columns,
       toggleSelectRow,
-    ]
+    ],
   );
 
   const onRowsPerPageChange = useCallback((e) => {
@@ -230,134 +238,116 @@ const TableComponent = ({
     setPage(1);
   }, []);
 
-  const TopContent = useMemo(
-    () => () =>
-      (
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between gap-3 items-end">
-            <div className="w-full sm:max-w-[44%]">
-              <div className="relative flex items-center border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800">
-                <div className="absolute left-3 text-gray-300 dark:text-gray-500">
-                  <GoSearch className="w-4 h-4" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-full pl-10 pr-3 py-2 text-sm bg-transparent outline-none dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-                  value={filterValue}
-                  onChange={onSearchChange}
-                  onFocus={(e) => e.target.select()}
-                />
-                {filterValue && (
-                  <button
-                    className="absolute right-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300"
-                    onClick={() => {
-                      setFilterValue("");
-                      document.querySelector('input[type="text"]')?.focus();
-                    }}
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
+  const clearSearch = useCallback(() => {
+    setFilterValue("");
+    // Focus the search input after clearing
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, []);
+
+  // FIXED: Move TopContent and BottomContent outside of useMemo to prevent recreation
+  const TopContent = (
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between gap-3 items-end">
+        <div className="w-full sm:max-w-[44%]">
+          <div className="relative flex items-center border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800">
+            <div className="absolute left-3 text-gray-300 dark:text-gray-500">
+              <GoSearch className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-2">
-              {/* <button
-                onClick={toggleDarkMode}
-                className="p-1 rounded-full text-gray-600 dark:text-yellow-300 hover:text-gray-900 dark:hover:text-yellow-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center h-8 w-8 transition-all duration-500 transform hover:scale-110"
-                aria-label={
-                  darkMode ? "Switch to light mode" : "Switch to dark mode"
-                }
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search..."
+              className="w-full pl-10 pr-3 py-2 text-sm bg-transparent outline-none dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+              value={filterValue}
+              onChange={onSearchChange}
+              onFocus={(e) => e.target.select()}
+            />
+            {filterValue && (
+              <button
+                className="absolute right-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300"
+                onClick={clearSearch}
               >
-                {darkMode ? (
-                  <FiSun className="h-5 w-5 transition-transform duration-500" />
-                ) : (
-                  <FiMoon className="h-5 w-5 transition-transform duration-500" />
-                )}
-              </button> */}
-              {buttons.addButton?.show && (
-                <button
-                  className={`bg-black dark:bg-indigo-600 text-white rounded-md px-3 py-2 text-sm font-medium flex items-center gap-1 transition-colors duration-300`}
-                  onClick={() => buttons.addButton.onClick?.()}
-                >
-                  {buttons.addButton.label}
-                  {buttons.addButton.icon}
-                </button>
-              )}
-              {buttons.uploadButton?.show && (
-                <button
-                  className={`bg-black dark:bg-indigo-600 text-white rounded-md px-3 py-2 text-sm font-medium flex items-center gap-1 transition-colors duration-300`}
-                  onClick={() => buttons.uploadButton.onClick?.()}
-                >
-                  {buttons.uploadButton.label}
-                  {buttons.uploadButton.icon}
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-400 dark:text-gray-500 text-sm">
-              Total {formattedData.length} records
-            </span>
-            <label className="flex items-center text-gray-400 dark:text-gray-500 text-sm gap-1 mb-2">
-              Rows per page:
-              <select
-                className="bg-transparent outline-none text-gray-400 dark:text-gray-500 text-sm border rounded px-1 py-0.5 dark:bg-gray-800 dark:border-gray-700"
-                onChange={onRowsPerPageChange}
-                value={rowsPerPage}
-              >
-                {[10, 25, 50].map((option) => (
-                  <option key={`rows-option-${option}`} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
+                ×
+              </button>
+            )}
           </div>
         </div>
-      ),
-    [
-      filterValue,
-      onSearchChange,
-      onRowsPerPageChange,
-      rowsPerPage,
-      buttons.addButton,
-      buttons.uploadButton,
-      formattedData.length,
-      darkMode,
-      toggleDarkMode,
-    ]
-  );
-
-  const BottomContent = useMemo(
-    () => () =>
-      (
-        <div className="py-2 px-2 flex justify-between items-center">
-          <Pagination
-            currentPage={page}
-            totalPages={pages}
-            onPageChange={setPage}
-            disabled={hasSearchFilter}
-            darkMode={darkMode}
-          />
-          {showSelectAllCheckbox && (
-            <span className="text-sm text-gray-400 dark:text-gray-500">
-              {selectedKeys.size === items.length && items.length > 0
-                ? "All items selected"
-                : `${selectedKeys.size} of ${items.length} selected`}
-            </span>
+        <div className="flex items-center gap-2">
+          {/* Dark mode toggle button - uncomment if needed */}
+          {/* <button
+            onClick={toggleDarkMode}
+            className="p-1 rounded-full text-gray-600 dark:text-yellow-300 hover:text-gray-900 dark:hover:text-yellow-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center h-8 w-8 transition-all duration-500 transform hover:scale-110"
+            aria-label={
+              darkMode ? "Switch to light mode" : "Switch to dark mode"
+            }
+          >
+            {darkMode ? (
+              <FiSun className="h-5 w-5 transition-transform duration-500" />
+            ) : (
+              <FiMoon className="h-5 w-5 transition-transform duration-500" />
+            )}
+          </button> */}
+          {buttons.addButton?.show && (
+            <button
+              className={`bg-black dark:bg-indigo-600 text-white rounded-md px-3 py-2 text-sm font-medium flex items-center gap-1 transition-colors duration-300`}
+              onClick={() => buttons.addButton.onClick?.()}
+            >
+              {buttons.addButton.label}
+              {buttons.addButton.icon}
+            </button>
+          )}
+          {buttons.uploadButton?.show && (
+            <button
+              className={`bg-black dark:bg-indigo-600 text-white rounded-md px-3 py-2 text-sm font-medium flex items-center gap-1 transition-colors duration-300`}
+              onClick={() => buttons.uploadButton.onClick?.()}
+            >
+              {buttons.uploadButton.label}
+              {buttons.uploadButton.icon}
+            </button>
           )}
         </div>
-      ),
-    [
-      page,
-      pages,
-      hasSearchFilter,
-      showSelectAllCheckbox,
-      selectedKeys.size,
-      items.length,
-      darkMode,
-    ]
+      </div>
+      <div className="flex justify-between items-center">
+        <span className="text-gray-400 dark:text-gray-500 text-sm">
+          Total {filteredItems.length} records
+        </span>
+        <label className="flex items-center text-gray-400 dark:text-gray-500 text-sm gap-1 mb-2">
+          Rows per page:
+          <select
+            className="bg-transparent outline-none text-gray-400 dark:text-gray-500 text-sm border rounded px-1 py-0.5 dark:bg-gray-800 dark:border-gray-700"
+            onChange={onRowsPerPageChange}
+            value={rowsPerPage}
+          >
+            {[10, 25, 50].map((option) => (
+              <option key={`rows-option-${option}`} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </div>
+  );
+
+  const BottomContent = (
+    <div className="py-2 px-2 flex justify-between items-center">
+      <Pagination
+        currentPage={page}
+        totalPages={pages}
+        onPageChange={setPage}
+        disabled={filteredItems.length === 0}
+        darkMode={darkMode}
+      />
+      {showSelectAllCheckbox && (
+        <span className="text-sm text-gray-400 dark:text-gray-500">
+          {selectedKeys.size === items.length && items.length > 0
+            ? "All items selected"
+            : `${selectedKeys.size} of ${items.length} selected`}
+        </span>
+      )}
+    </div>
   );
 
   const calculateStickyLeft = (columnKey, index) => {
@@ -388,7 +378,7 @@ const TableComponent = ({
 
   return (
     <div className="flex flex-col h-full flex-1 overflow-hidden">
-      <TopContent />
+      {TopContent}
       <div
         className={`border border-${borderColor} dark:border-gray-700 rounded-md overflow-hidden flex-1 flex flex-col bg-white dark:bg-gray-900 transition-colors duration-500`}
       >
@@ -408,7 +398,7 @@ const TableComponent = ({
                         column.uid === "checkbox"
                           ? `sticky ${calculateStickyLeft(
                               column.uid,
-                              index
+                              index,
                             )} ${staticColumnBg} ${staticColumnShadow} z-10`
                           : ""
                       }`}
@@ -478,7 +468,7 @@ const TableComponent = ({
                               column.uid === "checkbox"
                                 ? `sticky ${calculateStickyLeft(
                                     column.uid,
-                                    colIndex
+                                    colIndex,
                                   )} ${staticColumnBg} ${staticColumnShadow} z-1 ${rowColorClass} ${stripeClass}`
                                 : ""
                             } ${column.uid === "actions" ? "text-center" : ""}`}
@@ -504,7 +494,7 @@ const TableComponent = ({
           </div>
         </div>
       </div>
-      <BottomContent />
+      {BottomContent}
     </div>
   );
 };
